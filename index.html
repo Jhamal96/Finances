@@ -505,6 +505,18 @@
             width: auto;
         }
 
+        .btn-rollover {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            width: auto;
+        }
+
         .btn-print {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
@@ -644,7 +656,6 @@
         <button class="tab-btn" data-page="page3">Combined</button>
     </div>
 
-    <!-- PAGE 1: HIS PAGE -->
     <div id="page1" class="page-content active">
         <div class="summary-grid">
             <div class="stat-card">
@@ -706,7 +717,6 @@
         <div class="categories-grid" id="hisCategoriesGrid"></div>
     </div>
 
-    <!-- PAGE 2: HER PAGE -->
     <div id="page2" class="page-content">
         <div class="summary-grid">
             <div class="stat-card">
@@ -768,7 +778,6 @@
         <div class="categories-grid" id="herCategoriesGrid"></div>
     </div>
 
-    <!-- PAGE 3: COMBINED PAGE -->
     <div id="page3" class="page-content">
         <div class="summary-grid">
             <div class="stat-card">
@@ -795,13 +804,13 @@
 
     <div class="actions">
         <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn-rollover" onclick="forceRolloverCurrentMonth()">Sync / Reset Rollover</button>
         <button class="btn-import" onclick="document.getElementById('importFileInput').click()">Import Data (JSON)</button>
         <button class="btn-secondary" id="exportBtn">Download Month Data (JSON)</button>
         <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleJSONImport(event)">
     </div>
 </div>
 
-<!-- EDIT ITEM MODAL -->
 <div class="modal" id="editModal">
     <div class="modal-content">
         <h3>Edit Item</h3>
@@ -923,14 +932,25 @@
     });
 
     function getStoredData() {
-        return JSON.parse(localStorage.getItem('household_finance_v10')) || {
+        return JSON.parse(localStorage.getItem('household_finance_v12')) || {
             months: {}
         };
     }
 
+    function advanceDateByDays(dateStr, days) {
+        const d = parseLocalDate(dateStr);
+        if (!d) return dateStr;
+        d.setDate(d.getDate() + days);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
     function advanceDateByOneMonth(dateStr, targetYearMonth) {
         if (!dateStr) return '';
-        const [currYear, currMonth, currDay] = dateStr.split('-').map(Number);
+        const parts = dateStr.split('-');
+        const currDay = Number(parts[2]);
         const [targetYear, targetMonth] = targetYearMonth.split('-').map(Number);
 
         const maxDaysInTargetMonth = new Date(targetYear, targetMonth, 0).getDate();
@@ -939,42 +959,103 @@
         return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(adjustedDay).padStart(2, '0')}`;
     }
 
-    function getMonthData(data, selectedMonth) {
-        if (!data.months[selectedMonth]) {
-            const availableMonths = Object.keys(data.months).sort();
-            const prevMonthKey = availableMonths.filter(m => m < selectedMonth).pop();
+    function generateRecurringEntries(baseItem) {
+        const entries = [];
+        const count = baseItem.recurrence === 'weekly' ? 4 : (baseItem.recurrence === 'bi-weekly' ? 2 : 1);
+        const daysStep = baseItem.recurrence === 'weekly' ? 7 : (baseItem.recurrence === 'bi-weekly' ? 14 : 0);
 
-            let rolledHisItems = [];
-            let rolledHerItems = [];
-
-            if (prevMonthKey && data.months[prevMonthKey]) {
-                const prevData = data.months[prevMonthKey];
-
-                rolledHisItems = (prevData.his || []).map(item => ({
-                    ...item,
-                    dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
-                    isPaid: false
-                }));
-
-                rolledHerItems = (prevData.her || []).map(item => ({
-                    ...item,
-                    dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
-                    isPaid: false
-                }));
-            }
-
-            data.months[selectedMonth] = {
-                his: rolledHisItems,
-                her: rolledHerItems,
-                hisPay: [],
-                herPay: []
-            };
+        for (let i = 0; i < count; i++) {
+            entries.push({
+                ...baseItem,
+                id: `${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+                dueDate: i === 0 ? baseItem.dueDate : advanceDateByDays(baseItem.dueDate, i * daysStep)
+            });
         }
+
+        return entries;
+    }
+
+    function getMonthData(data, selectedMonth) {
+        // If target month exists and has items, return it directly
+        if (data.months[selectedMonth] && (data.months[selectedMonth].his.length > 0 || data.months[selectedMonth].her.length > 0)) {
+            return data.months[selectedMonth];
+        }
+
+        // Search for the closest prior month that contains entries
+        const availableMonths = Object.keys(data.months).sort();
+        const prevMonthKey = availableMonths.filter(m => m < selectedMonth && (data.months[m].his.length > 0 || data.months[m].her.length > 0)).pop();
+
+        let rolledHisItems = [];
+        let rolledHerItems = [];
+
+        if (prevMonthKey && data.months[prevMonthKey]) {
+            const prevData = data.months[prevMonthKey];
+
+            rolledHisItems = (prevData.his || []).map(item => ({
+                ...item,
+                id: `${Date.now()}_his_${Math.random().toString(36).substring(2, 7)}`,
+                dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
+                isPaid: false
+            }));
+
+            rolledHerItems = (prevData.her || []).map(item => ({
+                ...item,
+                id: `${Date.now()}_her_${Math.random().toString(36).substring(2, 7)}`,
+                dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
+                isPaid: false
+            }));
+        }
+
+        data.months[selectedMonth] = {
+            his: rolledHisItems,
+            her: rolledHerItems,
+            hisPay: data.months[selectedMonth]?.hisPay || [],
+            herPay: data.months[selectedMonth]?.herPay || []
+        };
+
         return data.months[selectedMonth];
     }
 
+    function forceRolloverCurrentMonth() {
+        const selectedMonth = monthPicker.value;
+        const data = getStoredData();
+
+        const availableMonths = Object.keys(data.months).sort();
+        const prevMonthKey = availableMonths.filter(m => m < selectedMonth && (data.months[m].his.length > 0 || data.months[m].her.length > 0)).pop();
+
+        if (!prevMonthKey) {
+            alert('No previous month data found to copy from.');
+            return;
+        }
+
+        if (confirm(`Copy all recurring items from ${prevMonthKey} to ${selectedMonth}?`)) {
+            const prevData = data.months[prevMonthKey];
+
+            data.months[selectedMonth] = {
+                his: (prevData.his || []).map(item => ({
+                    ...item,
+                    id: `${Date.now()}_his_${Math.random().toString(36).substring(2, 7)}`,
+                    dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
+                    isPaid: false
+                })),
+                her: (prevData.her || []).map(item => ({
+                    ...item,
+                    id: `${Date.now()}_her_${Math.random().toString(36).substring(2, 7)}`,
+                    dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
+                    isPaid: false
+                })),
+                hisPay: [],
+                herPay: []
+            };
+
+            saveData(data);
+            render();
+            alert(`Rollover complete for ${selectedMonth}!`);
+        }
+    }
+
     function saveData(data) {
-        localStorage.setItem('household_finance_v10', JSON.stringify(data));
+        localStorage.setItem('household_finance_v12', JSON.stringify(data));
         triggerSaveIndicator();
     }
 
@@ -1276,8 +1357,7 @@
         const recurrence = form.querySelector('.itemRecurrence').value;
         const category = form.querySelector('.itemCategory').value;
 
-        const newItem = {
-            id: Date.now().toString(),
+        const baseItem = {
             name,
             amount,
             dueDate,
@@ -1287,9 +1367,11 @@
             isPaid: false
         };
 
+        const newItems = generateRecurringEntries(baseItem);
+
         const data = getStoredData();
         const monthData = getMonthData(data, selectedMonth);
-        monthData[owner].push(newItem);
+        monthData[owner].push(...newItems);
 
         saveData(data);
         form.reset();
@@ -1371,7 +1453,6 @@
         }
     }
 
-    // JSON Import Handler
     function handleJSONImport(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -1382,17 +1463,12 @@
                 const imported = JSON.parse(e.target.result);
                 const data = getStoredData();
 
-                // Format 1: Single Month Export Payload ({ month: "YYYY-MM", data: { his, her, hisPay, herPay } })
                 if (imported.month && imported.data) {
                     data.months[imported.month] = imported.data;
                     monthPicker.value = imported.month;
-                }
-                // Format 2: Full Database Dump ({ months: { "YYYY-MM": { ... } } })
-                else if (imported.months && typeof imported.months === 'object') {
+                } else if (imported.months && typeof imported.months === 'object') {
                     data.months = { ...data.months, ...imported.months };
-                }
-                // Format 3: Bare Month Object ({ his: [], her: [], ... })
-                else if (imported.his || imported.her) {
+                } else if (imported.his || imported.her) {
                     const currentMonth = monthPicker.value;
                     data.months[currentMonth] = {
                         his: imported.his || [],
@@ -1411,7 +1487,7 @@
             } catch (err) {
                 alert('Error parsing JSON file. Please make sure the file is not corrupted.');
             } finally {
-                event.target.value = ''; // Reset input
+                event.target.value = '';
             }
         };
         reader.readAsText(file);
