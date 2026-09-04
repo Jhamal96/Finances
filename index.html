@@ -474,6 +474,7 @@
 
         .actions {
             display: flex;
+            flex-wrap: wrap;
             gap: 12px;
             justify-content: flex-end;
             margin-bottom: 25px;
@@ -491,6 +492,18 @@
         }
 
         .btn-secondary:hover { color: var(--text); border-color: var(--text-muted); }
+
+        .btn-import {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            width: auto;
+        }
 
         .btn-print {
             background: linear-gradient(135deg, #10b981, #059669);
@@ -782,7 +795,9 @@
 
     <div class="actions">
         <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn-import" onclick="document.getElementById('importFileInput').click()">Import Data (JSON)</button>
         <button class="btn-secondary" id="exportBtn">Download Month Data (JSON)</button>
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleJSONImport(event)">
     </div>
 </div>
 
@@ -913,23 +928,19 @@
         };
     }
 
-    // Helper to calculate next month's due date preserving day-of-month
     function advanceDateByOneMonth(dateStr, targetYearMonth) {
         if (!dateStr) return '';
         const [currYear, currMonth, currDay] = dateStr.split('-').map(Number);
         const [targetYear, targetMonth] = targetYearMonth.split('-').map(Number);
 
-        // Calculate max possible days in the target month
         const maxDaysInTargetMonth = new Date(targetYear, targetMonth, 0).getDate();
         const adjustedDay = Math.min(currDay, maxDaysInTargetMonth);
 
         return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(adjustedDay).padStart(2, '0')}`;
     }
 
-    // Helper to get or rollover data to target month
     function getMonthData(data, selectedMonth) {
         if (!data.months[selectedMonth]) {
-            // Find most recent prior month to copy recurring items from
             const availableMonths = Object.keys(data.months).sort();
             const prevMonthKey = availableMonths.filter(m => m < selectedMonth).pop();
 
@@ -942,21 +953,21 @@
                 rolledHisItems = (prevData.his || []).map(item => ({
                     ...item,
                     dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
-                    isPaid: false // Reset paid status for the new month
+                    isPaid: false
                 }));
 
                 rolledHerItems = (prevData.her || []).map(item => ({
                     ...item,
                     dueDate: advanceDateByOneMonth(item.dueDate, selectedMonth),
-                    isPaid: false // Reset paid status for the new month
+                    isPaid: false
                 }));
             }
 
             data.months[selectedMonth] = {
                 his: rolledHisItems,
                 her: rolledHerItems,
-                hisPay: [], // Clean slate for His paycheck log
-                herPay: []  // Clean slate for Her paycheck log
+                hisPay: [],
+                herPay: []
             };
         }
         return data.months[selectedMonth];
@@ -1212,9 +1223,8 @@
         const data = getStoredData();
         const selectedMonth = monthPicker.value;
 
-        // Fetch or auto-rollover items to target month
         const monthData = getMonthData(data, selectedMonth);
-        saveData(data); // Save rollover state if a new month was initialized
+        saveData(data);
 
         const hisIncome = renderPaychecks('his');
         const herIncome = renderPaychecks('her');
@@ -1359,6 +1369,52 @@
             closeEditModal();
             render();
         }
+    }
+
+    // JSON Import Handler
+    function handleJSONImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                const data = getStoredData();
+
+                // Format 1: Single Month Export Payload ({ month: "YYYY-MM", data: { his, her, hisPay, herPay } })
+                if (imported.month && imported.data) {
+                    data.months[imported.month] = imported.data;
+                    monthPicker.value = imported.month;
+                }
+                // Format 2: Full Database Dump ({ months: { "YYYY-MM": { ... } } })
+                else if (imported.months && typeof imported.months === 'object') {
+                    data.months = { ...data.months, ...imported.months };
+                }
+                // Format 3: Bare Month Object ({ his: [], her: [], ... })
+                else if (imported.his || imported.her) {
+                    const currentMonth = monthPicker.value;
+                    data.months[currentMonth] = {
+                        his: imported.his || [],
+                        her: imported.her || [],
+                        hisPay: imported.hisPay || [],
+                        herPay: imported.herPay || []
+                    };
+                } else {
+                    alert('Invalid file structure. Please select a valid household finance JSON file.');
+                    return;
+                }
+
+                saveData(data);
+                render();
+                alert('Data successfully imported!');
+            } catch (err) {
+                alert('Error parsing JSON file. Please make sure the file is not corrupted.');
+            } finally {
+                event.target.value = ''; // Reset input
+            }
+        };
+        reader.readAsText(file);
     }
 
     document.addEventListener('input', (e) => {
