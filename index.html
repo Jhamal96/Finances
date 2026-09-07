@@ -51,6 +51,13 @@
             --subscriptions: #38bdf8;
             --urgent: #ef4444;
             --paid: #10b981;
+
+            /* Recurrence badge color themes */
+            --rec-weekly: #38bdf8;
+            --rec-biweekly: #a855f7;
+            --rec-monthly: #34d399;
+            --rec-yearly: #fbbf24;
+            --rec-onetime: #94a3b8;
         }
 
         * {
@@ -579,6 +586,26 @@
             min-height: 48px;
         }
 
+        .search-bar-container {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-his);
+        }
+
         .categories-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -685,12 +712,18 @@
         }
 
         .badge {
-            background-color: rgba(255, 255, 255, 0.08);
             padding: 3px 8px;
             border-radius: 6px;
             font-size: 0.75rem;
             text-transform: capitalize;
+            font-weight: 600;
         }
+
+        .badge-weekly { background-color: rgba(56, 189, 248, 0.15); color: var(--rec-weekly); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-bi-weekly { background-color: rgba(168, 85, 247, 0.15); color: var(--rec-biweekly); border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-monthly { background-color: rgba(52, 211, 153, 0.15); color: var(--rec-monthly); border: 1px solid rgba(52, 211, 153, 0.3); }
+        .badge-yearly { background-color: rgba(251, 191, 36, 0.15); color: var(--rec-yearly); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .badge-onetime { background-color: rgba(148, 163, 184, 0.15); color: var(--rec-onetime); border: 1px solid rgba(148, 163, 184, 0.3); }
 
         .modal {
             display: none;
@@ -966,6 +999,10 @@
                 </form>
             </div>
 
+            <div class="search-bar-container">
+                <input type="text" id="hisSearchInput" class="search-input" placeholder="🔍 Search his entries..." oninput="render()">
+            </div>
+
             <div class="categories-grid" id="hisCategoriesGrid"></div>
         </div>
 
@@ -1033,6 +1070,10 @@
                 </form>
             </div>
 
+            <div class="search-bar-container">
+                <input type="text" id="herSearchInput" class="search-input" placeholder="🔍 Search her entries..." oninput="render()">
+            </div>
+
             <div class="categories-grid" id="herCategoriesGrid"></div>
         </div>
 
@@ -1055,6 +1096,10 @@
             <div class="upcoming-card">
                 <h3>⏳ Household Upcoming Dues</h3>
                 <div id="combinedUpcomingList">No items scheduled.</div>
+            </div>
+
+            <div class="search-bar-container">
+                <input type="text" id="combinedSearchInput" class="search-input" placeholder="🔍 Search household entries..." oninput="render()">
             </div>
 
             <div class="categories-grid" id="combinedCategoriesGrid"></div>
@@ -1102,6 +1147,10 @@
                 </div>
                 <button type="submit" class="btn-add">Save Entry</button>
             </form>
+        </div>
+
+        <div class="search-bar-container">
+            <input type="text" id="essoSearchInput" class="search-input" placeholder="🔍 Search ESSO slots..." oninput="render()">
         </div>
 
         <div class="esso-card">
@@ -1229,7 +1278,7 @@
         </div>
         <div>
             <label style="font-size:0.85rem;">Recurrence</label>
-            <select id="editItemRecurrence" required>
+            <select id="editItemRecurrence" required onchange="handleEditRecurrenceChange()">
                 <option value="one-time">One-Time</option>
                 <option value="weekly">Weekly</option>
                 <option value="bi-weekly">Bi-Weekly</option>
@@ -1332,6 +1381,9 @@
     let activeDateInputId = null;
     let currentFullDateYear = today.getFullYear();
     let currentFullDateMonth = today.getMonth();
+
+    let editingBaseMonthlyAmount = 0;
+    let editingOriginalRecurrence = 'monthly';
 
     function openCalendarModal() {
         const val = monthPicker.value;
@@ -1728,8 +1780,6 @@
         
         if (data.months[selectedMonth]) return data.months[selectedMonth];
 
-        // Instead of starting completely blank or relying only on previous month rollovers,
-        // we persist income/paychecks and expenses across month changes by carrying over active schedules.
         const availableMonths = Object.keys(data.months).filter(m => data.months[m]).sort();
         const prevMonthKey = availableMonths.filter(m => m < selectedMonth).pop();
 
@@ -1770,7 +1820,6 @@
             rolledEsso = (prevData.esso || [])
                 .map(i => ({ ...i, id: `${Date.now()}_esso_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, 'monthly'), isPaid: false }));
 
-            // Also carry forward recurring paycheck expectations if logged as templates, or keep them persistent
             rolledHisPay = (prevData.hisPay || []).map(p => ({ ...p, id: `${Date.now()}_hp_${Math.random().toString(36).substring(2,7)}`, date: advanceDateByRecurrence(p.date, selectedMonth, 'monthly') }));
             rolledHerPay = (prevData.herPay || []).map(p => ({ ...p, id: `${Date.now()}_hpr_${Math.random().toString(36).substring(2,7)}`, date: advanceDateByRecurrence(p.date, selectedMonth, 'monthly') }));
         }
@@ -1914,12 +1963,30 @@
         return `Alert: ${d}d Prior`;
     }
 
-    function renderCategoryGrid(containerId, items, isReadOnly = false) {
+    function getRecurrenceBadgeClass(rec) {
+        switch(rec) {
+            case 'weekly': return 'badge-weekly';
+            case 'bi-weekly': return 'badge-bi-weekly';
+            case 'monthly': return 'badge-monthly';
+            case 'yearly': return 'badge-yearly';
+            case 'one-time': default: return 'badge-onetime';
+        }
+    }
+
+    function renderCategoryGrid(containerId, items, searchTerm = '', isReadOnly = false) {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
 
+        const lowerSearch = searchTerm.toLowerCase();
+
         categories.forEach(cat => {
-            const catItems = items.filter(i => i.category === cat);
+            let catItems = items.filter(i => i.category === cat);
+            if (lowerSearch) {
+                catItems = catItems.filter(i => i.name.toLowerCase().includes(lowerSearch) || i.amount.toString().includes(lowerSearch));
+            }
+
+            if (lowerSearch && catItems.length === 0) return;
+
             const total = catItems.reduce((sum, i) => sum + i.amount, 0);
 
             const card = document.createElement('div');
@@ -1930,6 +1997,11 @@
                 const dateInfo = formatDueDateDisplay(item.dueDate, item.isPaid);
                 const dueClass = dateInfo.isPaid ? 'is-paid-text' : (dateInfo.urgent ? 'due-soon' : '');
                 const ownerTag = item.owner ? `<small style="opacity:0.6">(${item.owner === 'his' ? 'His' : 'Her'})</small> ` : '';
+                
+                const recType = item.recurrence || 'monthly';
+                const recClass = getRecurrenceBadgeClass(recType);
+                const recLabel = recType.charAt(0).toUpperCase() + recType.slice(1);
+                const recBadge = ` <span class="badge ${recClass}">${recLabel}</span>`;
 
                 listContent += `
                     <li class="item-row ${item.isPaid ? 'is-paid' : ''}">
@@ -1938,6 +2010,7 @@
                             <div class="item-meta">
                                 <span class="item-date ${dueClass}">${dateInfo.text}</span>
                                 <span class="badge">${formatReminderLabel(item.reminderDays ?? 1)}</span>
+                                ${recBadge}
                             </div>
                         </div>
                         <div class="item-actions">
@@ -1952,7 +2025,7 @@
                 `;
             });
 
-            card.innerHTML = `<div class="category-header"><h3>${cat}</h3><span>$${total.toFixed(2)}</span></div><ul class="item-list">${listContent}</ul>`;
+            card.innerHTML = `<div class="category-header"><h3>${cat}</h3><span>$${total.toFixed(2)}</span></div><ul class="item-list">${listContent || '<span style="color:var(--text-muted); font-size:0.85rem;">No matching items</span>'}</ul>`;
             container.appendChild(card);
         });
     }
@@ -2233,20 +2306,25 @@
         }
     }
 
-    function renderEssoView(monthData) {
+    function renderEssoView(monthData, searchTerm = '') {
         const essoListEl = document.getElementById('essoItemList');
-        const items = monthData.esso || [];
+        let items = monthData.esso || [];
         const data = getStoredData();
 
-        const totalAmount = items.reduce((sum, i) => sum + i.amount, 0);
-        const paidAmount = items.filter(i => i.isPaid).reduce((sum, i) => sum + i.amount, 0);
+        const lowerSearch = searchTerm.toLowerCase();
+        if (lowerSearch) {
+            items = items.filter(i => i.name.toLowerCase().includes(lowerSearch) || i.amount.toString().includes(lowerSearch));
+        }
+
+        const totalAmount = (monthData.esso || []).reduce((sum, i) => sum + i.amount, 0);
+        const paidAmount = (monthData.esso || []).filter(i => i.isPaid).reduce((sum, i) => sum + i.amount, 0);
 
         document.getElementById('essoTotalAmount').textContent = `$${totalAmount.toFixed(2)}`;
         document.getElementById('essoPendingAmount').textContent = `$${(totalAmount - paidAmount).toFixed(2)}`;
         document.getElementById('essoPaidAmount').textContent = `$${paidAmount.toFixed(2)}`;
 
         if (items.length === 0) {
-            essoListEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No ESSO slots logged.</span>';
+            essoListEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No ESSO slots logged matching search.</span>';
             return;
         }
 
@@ -2300,7 +2378,6 @@
         document.getElementById('herTotalOutflow').textContent = `$${herTotal.toFixed(2)}`;
         document.getElementById('combinedTotalOutflow').textContent = `$${combinedTotal.toFixed(2)}`;
 
-        // Calculate and display individual remaining (Income - Outflow)
         const hisRemainingVal = hisIncome - hisTotal;
         const hisRemainingEl = document.getElementById('hisRemaining');
         hisRemainingEl.textContent = `$${hisRemainingVal.toFixed(2)}`;
@@ -2316,15 +2393,20 @@
         surplusEl.textContent = `$${netSurplus.toFixed(2)}`;
         surplusEl.style.color = netSurplus >= 0 ? 'var(--savings)' : 'var(--urgent)';
 
-        renderCategoryGrid('hisCategoriesGrid', hisItems);
-        renderCategoryGrid('herCategoriesGrid', herItems);
-        renderCategoryGrid('combinedCategoriesGrid', [...hisItems, ...herItems], true);
+        const hisSearch = document.getElementById('hisSearchInput').value;
+        const herSearch = document.getElementById('herSearchInput').value;
+        const combinedSearch = document.getElementById('combinedSearchInput').value;
+        const essoSearch = document.getElementById('essoSearchInput').value;
+
+        renderCategoryGrid('hisCategoriesGrid', hisItems, hisSearch);
+        renderCategoryGrid('herCategoriesGrid', herItems, herSearch);
+        renderCategoryGrid('combinedCategoriesGrid', [...hisItems, ...herItems], combinedSearch, true);
 
         renderUpcoming('hisUpcomingList', hisItems);
         renderUpcoming('herUpcomingList', herItems);
         renderUpcoming('combinedUpcomingList', [...hisItems, ...herItems]);
 
-        renderEssoView(monthData);
+        renderEssoView(monthData, essoSearch);
         updateNotificationUI();
         checkAndTriggerNotifications();
     }
@@ -2390,8 +2472,34 @@
             document.getElementById('editItemReminder').value = item.reminderDays ?? 1;
             document.getElementById('editItemRecurrence').value = item.recurrence || 'monthly';
             document.getElementById('editItemCategory').value = item.category;
+
+            editingOriginalRecurrence = item.recurrence || 'monthly';
+            let amt = item.amount;
+            if (editingOriginalRecurrence === 'weekly') editingBaseMonthlyAmount = amt * 4.3333;
+            else if (editingOriginalRecurrence === 'bi-weekly') editingBaseMonthlyAmount = amt * 2.1666;
+            else if (editingOriginalRecurrence === 'yearly') editingBaseMonthlyAmount = amt / 12;
+            else editingBaseMonthlyAmount = amt;
+
             document.getElementById('editModal').classList.add('active');
         }
+    }
+
+    function handleEditRecurrenceChange() {
+        const newRec = document.getElementById('editItemRecurrence').value;
+        const amountInput = document.getElementById('editItemAmount');
+        let convertedAmt = editingBaseMonthlyAmount;
+
+        if (newRec === 'weekly') {
+            convertedAmt = editingBaseMonthlyAmount / 4.3333;
+        } else if (newRec === 'bi-weekly') {
+            convertedAmt = editingBaseMonthlyAmount / 2.1666;
+        } else if (newRec === 'yearly') {
+            convertedAmt = editingBaseMonthlyAmount * 12;
+        } else {
+            convertedAmt = editingBaseMonthlyAmount;
+        }
+
+        amountInput.value = convertedAmt.toFixed(2);
     }
 
     function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
