@@ -911,6 +911,10 @@
                     <h3>His Actual Monthly Income</h3>
                     <div class="amount" id="hisEstIncome">$0.00</div>
                 </div>
+                <div class="stat-card">
+                    <h3>His Remaining (Income - Outflow)</h3>
+                    <div class="amount" id="hisRemaining">$0.00</div>
+                </div>
             </div>
 
             <div class="income-card">
@@ -974,6 +978,10 @@
                 <div class="stat-card">
                     <h3>Her Actual Monthly Income</h3>
                     <div class="amount" id="herEstIncome">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Her Remaining (Income - Outflow)</h3>
+                    <div class="amount" id="herRemaining">$0.00</div>
                 </div>
             </div>
 
@@ -1698,11 +1706,9 @@
         const [targetYear, targetMonth] = targetYearMonth.split('-').map(Number);
 
         if (recurrence === 'yearly') {
-            // For yearly items, advance the date into the target year while keeping the original month & day
             const maxDays = new Date(targetYear, currMonth, 0).getDate();
             return `${targetYear}-${String(currMonth).padStart(2, '0')}-${String(Math.min(currDay, maxDays)).padStart(2, '0')}`;
         } else {
-            // For monthly or other recurring items
             const maxDays = new Date(targetYear, targetMonth, 0).getDate();
             return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(Math.min(currDay, maxDays)).padStart(2, '0')}`;
         }
@@ -1722,10 +1728,12 @@
         
         if (data.months[selectedMonth]) return data.months[selectedMonth];
 
+        // Instead of starting completely blank or relying only on previous month rollovers,
+        // we persist income/paychecks and expenses across month changes by carrying over active schedules.
         const availableMonths = Object.keys(data.months).filter(m => data.months[m]).sort();
         const prevMonthKey = availableMonths.filter(m => m < selectedMonth).pop();
 
-        let rolledHis = [], rolledHer = [], rolledEsso = [];
+        let rolledHis = [], rolledHer = [], rolledEsso = [], rolledHisPay = [], rolledHerPay = [];
 
         if (prevMonthKey && data.months[prevMonthKey]) {
             const prevData = data.months[prevMonthKey];
@@ -1735,7 +1743,6 @@
                 .filter(i => {
                     if (i.recurrence === 'one-time') return false;
                     if (i.recurrence === 'yearly') {
-                        // Only rollover into the specific target month if the original due month matches
                         if (i.dueDate) {
                             const origMonth = Number(i.dueDate.split('-')[1]);
                             return origMonth === targetMonth;
@@ -1762,9 +1769,13 @@
             
             rolledEsso = (prevData.esso || [])
                 .map(i => ({ ...i, id: `${Date.now()}_esso_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, 'monthly'), isPaid: false }));
+
+            // Also carry forward recurring paycheck expectations if logged as templates, or keep them persistent
+            rolledHisPay = (prevData.hisPay || []).map(p => ({ ...p, id: `${Date.now()}_hp_${Math.random().toString(36).substring(2,7)}`, date: advanceDateByRecurrence(p.date, selectedMonth, 'monthly') }));
+            rolledHerPay = (prevData.herPay || []).map(p => ({ ...p, id: `${Date.now()}_hpr_${Math.random().toString(36).substring(2,7)}`, date: advanceDateByRecurrence(p.date, selectedMonth, 'monthly') }));
         }
 
-        data.months[selectedMonth] = { his: rolledHis, her: rolledHer, esso: rolledEsso, hisPay: [], herPay: [] };
+        data.months[selectedMonth] = { his: rolledHis, her: rolledHer, esso: rolledEsso, hisPay: rolledHisPay, herPay: rolledHerPay };
         return data.months[selectedMonth];
     }
 
@@ -2288,6 +2299,17 @@
         document.getElementById('hisTotalOutflow').textContent = `$${hisTotal.toFixed(2)}`;
         document.getElementById('herTotalOutflow').textContent = `$${herTotal.toFixed(2)}`;
         document.getElementById('combinedTotalOutflow').textContent = `$${combinedTotal.toFixed(2)}`;
+
+        // Calculate and display individual remaining (Income - Outflow)
+        const hisRemainingVal = hisIncome - hisTotal;
+        const hisRemainingEl = document.getElementById('hisRemaining');
+        hisRemainingEl.textContent = `$${hisRemainingVal.toFixed(2)}`;
+        hisRemainingEl.style.color = hisRemainingVal >= 0 ? 'var(--savings)' : 'var(--urgent)';
+
+        const herRemainingVal = herIncome - herTotal;
+        const herRemainingEl = document.getElementById('herRemaining');
+        herRemainingEl.textContent = `$${herRemainingVal.toFixed(2)}`;
+        herRemainingEl.style.color = herRemainingVal >= 0 ? 'var(--savings)' : 'var(--urgent)';
 
         const surplusEl = document.getElementById('netSurplus');
         const netSurplus = combinedIncome - combinedTotal;
