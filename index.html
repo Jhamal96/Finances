@@ -80,13 +80,20 @@
 
         header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
             gap: 12px;
             margin-bottom: 20px;
         }
 
-        .header-title-group {
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .header-left-group {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -95,50 +102,16 @@
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             position: relative;
         }
 
-        @media (max-width: 767px) {
-            header {
-                gap: 6px;
-            }
-            .header-title-group {
-                gap: 4px;
-                flex-wrap: nowrap;
-                min-width: 0;
-            }
-            .header-title-group h1 {
-                font-size: clamp(1.05rem, 4vw, 1.35rem);
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .header-controls {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 4px;
-            }
-            .header-buttons-row {
-                display: flex;
-                gap: 4px;
-            }
-            .month-picker-wrapper {
-                position: absolute;
-                top: 48px;
-                right: 0;
-            }
-            /* Match dimensions of standard inputs */
-            .month-picker-wrapper input[type="month"] {
-                font-size: 0.95rem;
-                padding: 10px 12px;
-                min-height: 42px;
-            }
-        }
+        .desktop-month-picker { display: block; }
+        .mobile-month-icon-btn { display: none; }
 
-        @media (min-width: 768px) {
-            .header-buttons-row {
-                display: contents;
-            }
+        @media (max-width: 767px) {
+            .desktop-month-picker { display: none; }
+            .mobile-month-icon-btn { display: flex; }
         }
 
         h1 {
@@ -148,7 +121,7 @@
             background: linear-gradient(to right, #38bdf8, #a855f7, #ec4899);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            white-space: nowrap;
+            width: 100%;
         }
 
         .save-indicator {
@@ -161,6 +134,7 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
+            margin-left: auto;
         }
 
         .save-indicator.active { opacity: 1; }
@@ -179,6 +153,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             flex-shrink: 0;
+            position: relative;
         }
 
         .btn-icon-hdr:hover {
@@ -193,6 +168,137 @@
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        /* Custom Styled Picker Modal (Used for both Month and Date Selectors) */
+        .picker-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+            padding: 20px;
+        }
+        .picker-modal.active { display: flex; }
+
+        .picker-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .picker-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .picker-nav-header h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .picker-nav-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .picker-nav-btn:hover { border-color: var(--accent-his); background: rgba(56, 189, 248, 0.1); }
+
+        .picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .picker-grid.days-grid {
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .picker-cell {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 12px 0;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .picker-cell.day-cell {
+            padding: 10px 0;
+            font-size: 0.85rem;
+        }
+
+        .picker-cell.weekday-header {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            padding: 4px 0;
+            cursor: default;
+        }
+
+        .picker-cell:hover:not(.weekday-header) {
+            border-color: var(--accent-his);
+            color: var(--text);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .picker-cell.selected {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(168, 85, 247, 0.25));
+            border-color: var(--accent-his);
+            color: var(--accent-his);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+        }
+
+        /* Custom Date Input Styling for Mobile (hiding native input, using custom styled button wrapper) */
+        .custom-date-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text);
+            cursor: pointer;
+            width: 100%;
+            min-height: 42px;
+            font-size: 0.95rem;
+        }
+        .custom-date-trigger:hover {
+            border-color: var(--accent-his);
         }
 
         .side-drawer {
@@ -708,26 +814,24 @@
 
 <div class="container">
     <header>
-        <div class="header-title-group">
-            <button class="btn-icon-hdr" onclick="switchMainPage('dashboard')" title="Home Dashboard">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-            </button>
-            <button class="btn-icon-hdr" onclick="openDrawer()" title="Open Menu">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-            <h1 id="mainPageHeaderTitle">Household Dashboard</h1>
-            <span class="save-indicator" id="saveIndicator">✓ Synced</span>
-        </div>
-        
-        <div class="header-controls">
-            <div class="header-buttons-row">
+        <div class="header-top-row">
+            <div class="header-left-group">
+                <button class="btn-icon-hdr" onclick="switchMainPage('dashboard')" title="Home Dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </button>
+                <button class="btn-icon-hdr" onclick="openDrawer()" title="Open Menu">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="header-controls">
                 <button class="btn-icon-hdr" id="essoNotifyBtn" onclick="openEssoNotificationModal()" title="ESSO Alert Settings">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -741,12 +845,32 @@
                         <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 0.8a10 10 0 0 0 18.8-4.3"></path>
                     </svg>
                 </button>
-            </div>
-            <div class="month-picker-wrapper" id="homeMonthPickerGroup">
-                <input type="month" id="monthPicker">
+
+                <!-- Desktop Selector View -->
+                <div class="desktop-month-picker" id="desktopMonthPickerGroup">
+                    <input type="month" id="desktopMonthPicker">
+                </div>
+
+                <!-- Mobile Calendar Icon Button View -->
+                <button class="btn-icon-hdr mobile-month-icon-btn" onclick="openCalendarModal()" title="Select Month">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </button>
             </div>
         </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <h1 id="mainPageHeaderTitle">Household Dashboard</h1>
+            <span class="save-indicator" id="saveIndicator">✓ Synced</span>
+        </div>
     </header>
+
+    <!-- Hidden shared month picker value sync reference -->
+    <input type="month" id="monthPicker" style="display:none;">
 
     <div class="notification-banner" id="notifyBanner">
         <span id="notifyStatus">🔔 Enable bill reminders & live update alerts across devices.</span>
@@ -777,7 +901,11 @@
                 <h3>His Paycheck Log</h3>
                 <form class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'his')">
                     <input type="number" class="payAmount" step="0.01" min="0" placeholder="Paycheck Amount ($)" required>
-                    <input type="date" class="payDate" required>
+                    <!-- Custom Date Trigger Box -->
+                    <div class="custom-date-wrapper" onclick="openDateModal('hisPayDateInput')">
+                        <div id="hisPayDateDisplay" class="custom-date-trigger">Select Date</div>
+                        <input type="date" id="hisPayDateInput" class="payDate" required style="display:none;" onchange="updateDateDisplay('hisPayDateInput', 'hisPayDateDisplay')">
+                    </div>
                     <button type="submit" class="btn-add">Log Paycheck</button>
                 </form>
                 <ul class="paycheck-log-list" id="hisPaycheckList"></ul>
@@ -792,7 +920,11 @@
                 <form class="form-grid" onsubmit="handleFormSubmit(event, 'his')">
                     <input type="text" class="itemName auto-cap" placeholder="Item Name" required oninput="autoCategorize(this)">
                     <input type="number" class="itemAmount" step="0.01" min="0" placeholder="Amount ($)" required>
-                    <input type="date" class="itemDueDate" required>
+                    <!-- Custom Date Trigger Box -->
+                    <div class="custom-date-wrapper" onclick="openDateModal('hisItemDueDateInput')">
+                        <div id="hisItemDueDateDisplay" class="custom-date-trigger">Select Due Date</div>
+                        <input type="date" id="hisItemDueDateInput" class="itemDueDate" required style="display:none;" onchange="updateDateDisplay('hisItemDueDateInput', 'hisItemDueDateDisplay')">
+                    </div>
                     <select class="itemReminder" required>
                         <option value="0">Notify: Same Day</option>
                         <option value="1" selected>Notify: 1 Day Prior</option>
@@ -834,7 +966,11 @@
                 <h3>Her Paycheck Log</h3>
                 <form class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'her')">
                     <input type="number" class="payAmount" step="0.01" min="0" placeholder="Paycheck Amount ($)" required>
-                    <input type="date" class="payDate" required>
+                    <!-- Custom Date Trigger Box -->
+                    <div class="custom-date-wrapper" onclick="openDateModal('herPayDateInput')">
+                        <div id="herPayDateDisplay" class="custom-date-trigger">Select Date</div>
+                        <input type="date" id="herPayDateInput" class="payDate" required style="display:none;" onchange="updateDateDisplay('herPayDateInput', 'herPayDateDisplay')">
+                    </div>
                     <button type="submit" class="btn-add">Log Paycheck</button>
                 </form>
                 <ul class="paycheck-log-list" id="herPaycheckList"></ul>
@@ -849,7 +985,11 @@
                 <form class="form-grid" onsubmit="handleFormSubmit(event, 'her')">
                     <input type="text" class="itemName auto-cap" placeholder="Item Name" required oninput="autoCategorize(this)">
                     <input type="number" class="itemAmount" step="0.01" min="0" placeholder="Amount ($)" required>
-                    <input type="date" class="itemDueDate" required>
+                    <!-- Custom Date Trigger Box -->
+                    <div class="custom-date-wrapper" onclick="openDateModal('herItemDueDateInput')">
+                        <div id="herItemDueDateDisplay" class="custom-date-trigger">Select Due Date</div>
+                        <input type="date" id="herItemDueDateInput" class="itemDueDate" required style="display:none;" onchange="updateDateDisplay('herItemDueDateInput', 'herItemDueDateDisplay')">
+                    </div>
                     <select class="itemReminder" required>
                         <option value="0">Notify: Same Day</option>
                         <option value="1" selected>Notify: 1 Day Prior</option>
@@ -932,7 +1072,11 @@
             <form id="essoForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleEssoSubmit(event)">
                 <input type="text" id="essoNameInput" class="auto-cap" placeholder="Recipient / Slot Name" required>
                 <input type="number" id="essoAmountInput" step="0.01" min="0" placeholder="Payment Amount ($)" required>
-                <input type="date" id="essoDueDateInput" required>
+                <!-- Custom Date Trigger Box -->
+                <div class="custom-date-wrapper" onclick="openDateModal('essoDueDateInput')">
+                    <div id="essoDueDateDisplay" class="custom-date-trigger">Select Due Date</div>
+                    <input type="date" id="essoDueDateInput" required style="display:none;" onchange="updateDateDisplay('essoDueDateInput', 'essoDueDateDisplay')">
+                </div>
                 <button type="submit" class="btn-add">Save Entry</button>
             </form>
         </div>
@@ -959,6 +1103,36 @@
         <button class="btn-import" onclick="document.getElementById('importFileInput').click()">Import JSON</button>
         <button class="btn-secondary" id="exportBtn">Download Backup (JSON)</button>
         <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleJSONImport(event)">
+    </div>
+</div>
+
+<!-- Custom Styled Calendar Month Picker Modal -->
+<div class="picker-modal" id="calendarModal">
+    <div class="picker-card">
+        <div class="picker-nav-header">
+            <button class="picker-nav-btn" onclick="changeCalendarYear(-1)">&#10094;</button>
+            <h3 id="calYearDisplay">2026</h3>
+            <button class="picker-nav-btn" onclick="changeCalendarYear(1)">&#10095;</button>
+        </div>
+        <div class="picker-grid" id="calMonthsGrid"></div>
+        <div class="modal-buttons" style="margin-top:0;">
+            <button type="button" class="btn-secondary" onclick="closeCalendarModal()" style="width:100%;">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styled Full Day Date Picker Modal -->
+<div class="picker-modal" id="fullDateModal">
+    <div class="picker-card" style="max-width: 340px;">
+        <div class="picker-nav-header">
+            <button class="picker-nav-btn" onclick="changeFullDateMonth(-1)">&#10094;</button>
+            <h3 id="fullDateTitleDisplay">September 2026</h3>
+            <button class="picker-nav-btn" onclick="changeFullDateMonth(1)">&#10095;</button>
+        </div>
+        <div class="picker-grid days-grid" id="fullDateDaysGrid"></div>
+        <div class="modal-buttons" style="margin-top:0;">
+            <button type="button" class="btn-secondary" onclick="closeFullDateModal()" style="width:100%;">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -1003,7 +1177,10 @@
         </div>
         <div>
             <label style="font-size:0.8rem;">Due Date</label>
-            <input type="date" id="editItemDueDate" required>
+            <div class="custom-date-wrapper" onclick="openDateModal('editItemDueDate')">
+                <div id="editItemDueDateDisplay" class="custom-date-trigger">Select Date</div>
+                <input type="date" id="editItemDueDate" required style="display:none;" onchange="updateDateDisplay('editItemDueDate', 'editItemDueDateDisplay')">
+            </div>
         </div>
         <div>
             <label style="font-size:0.8rem;">Reminder Timing</label>
@@ -1053,7 +1230,10 @@
         </div>
         <div>
             <label style="font-size:0.8rem;">Due Date</label>
-            <input type="date" id="editEssoDueDate" required>
+            <div class="custom-date-wrapper" onclick="openDateModal('editEssoDueDate')">
+                <div id="editEssoDueDateDisplay" class="custom-date-trigger">Select Date</div>
+                <input type="date" id="editEssoDueDate" required style="display:none;" onchange="updateDateDisplay('editEssoDueDate', 'editEssoDueDateDisplay')">
+            </div>
         </div>
         <div>
             <label style="font-size:0.8rem;">Notification Timing</label>
@@ -1089,11 +1269,181 @@
 
     const categories = ['Bills', 'Debts', 'Savings', 'Subscriptions'];
     const monthPicker = document.getElementById('monthPicker');
+    const desktopMonthPicker = document.getElementById('desktopMonthPicker');
     
     const today = new Date();
-    monthPicker.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const initialMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    monthPicker.value = initialMonthStr;
+    desktopMonthPicker.value = initialMonthStr;
 
+    let currentCalYear = today.getFullYear();
     let isSelectModeActive = false;
+
+    // Full Date Modal State variables
+    let activeDateInputId = null;
+    let currentFullDateYear = today.getFullYear();
+    let currentFullDateMonth = today.getMonth();
+
+    desktopMonthPicker.addEventListener('change', (e) => {
+        monthPicker.value = e.target.value;
+        render();
+    });
+
+    function openCalendarModal() {
+        const val = monthPicker.value;
+        if (val) {
+            currentCalYear = parseInt(val.split('-')[0], 10);
+        }
+        renderCalendarGrid();
+        document.getElementById('calendarModal').classList.add('active');
+    }
+
+    function closeCalendarModal() {
+        document.getElementById('calendarModal').classList.remove('active');
+    }
+
+    function changeCalendarYear(delta) {
+        currentCalYear += delta;
+        renderCalendarGrid();
+    }
+
+    function renderCalendarGrid() {
+        document.getElementById('calYearDisplay').textContent = currentCalYear;
+        const grid = document.getElementById('calMonthsGrid');
+        grid.innerHTML = '';
+
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentSelected = monthPicker.value;
+
+        monthNames.forEach((name, index) => {
+            const mNum = String(index + 1).padStart(2, '0');
+            const monthKey = `${currentCalYear}-${mNum}`;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'picker-cell';
+            if (monthKey === currentSelected) {
+                btn.classList.add('selected');
+            }
+            btn.textContent = name;
+            btn.onclick = () => {
+                monthPicker.value = monthKey;
+                desktopMonthPicker.value = monthKey;
+                closeCalendarModal();
+                render();
+            };
+            grid.appendChild(btn);
+        });
+    }
+
+    // Custom Full Date Picker Modal Logic
+    function openDateModal(inputId) {
+        activeDateInputId = inputId;
+        const inputEl = document.getElementById(inputId);
+        let d = inputEl.value ? new Date(inputEl.value + 'T00:00:00') : new Date();
+        if (isNaN(d.getTime())) d = new Date();
+
+        currentFullDateYear = d.getFullYear();
+        currentFullDateMonth = d.getMonth();
+        renderFullDateGrid();
+        document.getElementById('fullDateModal').classList.add('active');
+    }
+
+    function closeFullDateModal() {
+        document.getElementById('fullDateModal').classList.remove('active');
+        activeDateInputId = null;
+    }
+
+    function changeFullDateMonth(delta) {
+        currentFullDateMonth += delta;
+        if (currentFullDateMonth > 11) {
+            currentFullDateMonth = 0;
+            currentFullDateYear++;
+        } else if (currentFullDateMonth < 0) {
+            currentFullDateMonth = 11;
+            currentFullDateYear--;
+        }
+        renderFullDateGrid();
+    }
+
+    function renderFullDateGrid() {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        document.getElementById('fullDateTitleDisplay').textContent = `${monthNames[currentFullDateMonth]} ${currentFullDateYear}`;
+
+        const grid = document.getElementById('fullDateDaysGrid');
+        grid.innerHTML = '';
+
+        // Weekday headers
+        ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(day => {
+            const div = document.createElement('div');
+            div.className = 'picker-cell weekday-header';
+            div.textContent = day;
+            grid.appendChild(div);
+        });
+
+        const firstDayIndex = new Date(currentFullDateYear, currentFullDateMonth, 1).getDay();
+        const totalDays = new Date(currentFullDateYear, currentFullDateMonth + 1, 0).getDate();
+
+        const inputEl = activeDateInputId ? document.getElementById(activeDateInputId) : null;
+        const selectedDateStr = inputEl ? inputEl.value : '';
+
+        // Blank cells for preceding offset days
+        for (let i = 0; i < firstDayIndex; i++) {
+            const empty = document.createElement('div');
+            grid.appendChild(empty);
+        }
+
+        // Days of month
+        for (let d = 1; d <= totalDays; d++) {
+            const mStr = String(currentFullDateMonth + 1).padStart(2, '0');
+            const dStr = String(d).padStart(2, '0');
+            const dateKey = `${currentFullDateYear}-${mStr}-${dStr}`;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'picker-cell day-cell';
+            if (dateKey === selectedDateStr) {
+                btn.classList.add('selected');
+            }
+            btn.textContent = d;
+            btn.onclick = () => {
+                if (inputEl) {
+                    inputEl.value = dateKey;
+                    inputEl.dispatchEvent(new Event('change'));
+                }
+                closeFullDateModal();
+            };
+            grid.appendChild(btn);
+        }
+    }
+
+    function updateDateDisplay(inputId, displayId) {
+        const inputEl = document.getElementById(inputId);
+        const displayEl = document.getElementById(displayId);
+        if (inputEl && displayEl && inputEl.value) {
+            const d = new Date(inputEl.value + 'T00:00:00');
+            if (!isNaN(d.getTime())) {
+                displayEl.textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                displayEl.style.color = 'var(--text)';
+            }
+        }
+    }
+
+    function initializeAllDateDisplays() {
+        document.querySelectorAll('input[type="date"]').forEach(inp => {
+            const wrapper = inp.closest('.custom-date-wrapper');
+            if (wrapper) {
+                let display = wrapper.querySelector('.custom-date-trigger');
+                if (inp.value) {
+                    const d = new Date(inp.value + 'T00:00:00');
+                    if (!isNaN(d.getTime())) {
+                        display.textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                        display.style.color = 'var(--text)';
+                    }
+                }
+            }
+        });
+    }
 
     function openDrawer() {
         document.getElementById('sideDrawer').classList.add('open');
@@ -1111,7 +1461,8 @@
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navEsso = document.getElementById('navEsso');
-        const monthGroup = document.getElementById('homeMonthPickerGroup');
+        const desktopPickerGroup = document.getElementById('desktopMonthPickerGroup');
+        const mobileIconBtn = document.querySelector('.mobile-month-icon-btn');
 
         if (view === 'esso') {
             dashboardView.style.display = 'none';
@@ -1119,18 +1470,39 @@
             headerTitle.textContent = 'ESSO Due Date';
             navDashboard.classList.remove('active');
             navEsso.classList.add('active');
-            monthGroup.style.display = 'none';
+            desktopPickerGroup.style.display = 'none';
+            mobileIconBtn.style.display = 'none';
         } else {
             dashboardView.style.display = 'block';
             essoView.style.display = 'none';
             headerTitle.textContent = 'Household Dashboard';
             navDashboard.classList.add('active');
             navEsso.classList.remove('active');
-            monthGroup.style.display = 'block';
+            if (window.innerWidth >= 768) {
+                desktopPickerGroup.style.display = 'block';
+                mobileIconBtn.style.display = 'none';
+            } else {
+                desktopPickerGroup.style.display = 'none';
+                mobileIconBtn.style.display = 'flex';
+            }
         }
         closeDrawer();
         render();
     }
+
+    window.addEventListener('resize', () => {
+        const desktopPickerGroup = document.getElementById('desktopMonthPickerGroup');
+        const mobileIconBtn = document.querySelector('.mobile-month-icon-btn');
+        if (document.getElementById('mainDashboardView').style.display !== 'none') {
+            if (window.innerWidth >= 768) {
+                desktopPickerGroup.style.display = 'block';
+                mobileIconBtn.style.display = 'none';
+            } else {
+                desktopPickerGroup.style.display = 'none';
+                mobileIconBtn.style.display = 'flex';
+            }
+        }
+    });
 
     function autoCapitalizeWords(str) {
         return str.replace(/\b\w/g, l => l.toUpperCase());
@@ -1367,6 +1739,7 @@
 
         saveData(data);
         form.reset();
+        initializeAllDateDisplays();
         render();
     }
 
@@ -1625,6 +1998,7 @@
 
         saveData(data);
         e.target.reset();
+        initializeAllDateDisplays();
         render();
     }
 
@@ -1715,6 +2089,7 @@
             document.getElementById('editEssoName').value = item.name;
             document.getElementById('editEssoAmount').value = item.amount;
             document.getElementById('editEssoDueDate').value = item.dueDate;
+            updateDateDisplay('editEssoDueDate', 'editEssoDueDateDisplay');
             document.getElementById('editEssoReminderDays').value = item.reminderDays ?? (data.essoReminderLead ?? 1);
             document.getElementById('essoEditModal').classList.add('active');
         }
@@ -1787,6 +2162,10 @@
         const data = getStoredData();
         const monthData = getMonthData(data, monthPicker.value);
 
+        if (desktopMonthPicker.value !== monthPicker.value) {
+            desktopMonthPicker.value = monthPicker.value;
+        }
+
         const hisIncome = renderPaychecks('his');
         const herIncome = renderPaychecks('her');
         const combinedIncome = hisIncome + herIncome;
@@ -1845,6 +2224,7 @@
 
         saveData(data);
         form.reset();
+        initializeAllDateDisplays();
         render();
     }
 
@@ -1880,6 +2260,7 @@
             document.getElementById('editItemName').value = item.name;
             document.getElementById('editItemAmount').value = item.amount;
             document.getElementById('editItemDueDate').value = item.dueDate;
+            updateDateDisplay('editItemDueDate', 'editItemDueDateDisplay');
             document.getElementById('editItemReminder').value = item.reminderDays ?? 1;
             document.getElementById('editItemRecurrence').value = item.recurrence || 'monthly';
             document.getElementById('editItemCategory').value = item.category;
@@ -1943,7 +2324,10 @@
 
     monthPicker.addEventListener('change', render);
 
-    syncFromCloud().then(() => render());
+    syncFromCloud().then(() => {
+        initializeAllDateDisplays();
+        render();
+    });
 </script>
 
 </body>
