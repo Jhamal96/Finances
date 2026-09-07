@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Household Finance Dashboard</title>
 
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#090d16">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,7 +24,7 @@
         "start_url": ".",
         "display": "standalone",
         "background_color": "#090d16",
-        "theme_color": "#0f172a",
+        "theme_color": "#090d16",
         "icons": [
             {
                 "src": "data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 rx=%22100%22 fill=%22%23090d16%22/><defs><linearGradient id=%22g1%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22><stop offset=%220%25%22 stop-color=%22%2338bdf8%22/><stop offset=%2250%25%22 stop-color=%22%23a855f7%22/><stop offset=%22100%25%22 stop-color=%22%23ec4899%22/></linearGradient></defs><circle cx=%22256%22 cy=%22256%22 r=%22220%22 fill=%22%23131c2e%22 stroke=%22%2322324d%22 stroke-width=%228%22/><path d=%22M 140 330 L 220 250 L 280 290 L 370 180%22 fill=%22none%22 stroke=%22url(%23g1)%22 stroke-width=%2228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/><polygon points=%22370,180 340,180 370,210%22 fill=%22%23ec4899%22/><circle cx=%22140%22 cy=%22330%22 r=%2214%22 fill=%22%2338bdf8%22/><circle cx=%22220%22 cy=%22250%22 r=%2214%22 fill=%22%2338bdf8%22/><circle cx=%22280%22 cy=%22290%22 r=%2214%22 fill=%22%23a855f7%22/><circle cx=%22370%22 cy=%22180%22 r=%2214%22 fill=%22%23ec4899%22/></svg>",
@@ -61,15 +61,24 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html {
+            background-color: var(--bg);
+            height: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             background-color: var(--bg);
             background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg) 70%);
             color: var(--text);
-            padding: clamp(10px, 3vw, 25px);
-            padding-top: max(clamp(10px, 3vw, 25px), env(safe-area-inset-top));
-            padding-bottom: max(clamp(10px, 3vw, 25px), env(safe-area-inset-bottom));
-            min-height: 100vh;
-            font-size: clamp(14px, 1.2vw, 16px);
+            padding-top: max(16px, env(safe-area-inset-top));
+            padding-bottom: max(34px, env(safe-area-inset-bottom));
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            min-height: 100%;
+            font-size: 15px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
@@ -96,26 +105,37 @@
         .header-left-group {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+        }
+
+        .icon-btn-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .icon-btn-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.2px;
+            line-height: 1;
         }
 
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             position: relative;
         }
 
-        .desktop-month-picker { display: block; }
-        .mobile-month-icon-btn { display: none; }
-
-        @media (max-width: 767px) {
-            .desktop-month-picker { display: none; }
-            .mobile-month-icon-btn { display: flex; }
-        }
-
         h1 {
-            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            font-size: clamp(1.2rem, 3.5vw, 1.8rem);
             font-weight: 800;
             letter-spacing: -0.5px;
             background: linear-gradient(to right, #38bdf8, #a855f7, #ec4899);
@@ -135,6 +155,7 @@
             transition: opacity 0.3s ease;
             pointer-events: none;
             margin-left: auto;
+            flex-shrink: 0;
         }
 
         .save-indicator.active { opacity: 1; }
@@ -143,10 +164,10 @@
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
             color: var(--text);
-            width: clamp(38px, 5vw, 44px);
-            height: clamp(38px, 5vw, 44px);
+            width: 42px;
+            height: 42px;
             padding: 0;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -170,7 +191,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Custom Styled Picker Modal (Used for both Month and Date Selectors) */
         .picker-modal {
             display: none;
             position: fixed;
@@ -187,14 +207,14 @@
         .picker-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 18px;
+            border-radius: 20px;
             padding: 24px;
             width: 100%;
             max-width: 360px;
             display: flex;
             flex-direction: column;
             gap: 18px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
             animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -210,7 +230,7 @@
         }
 
         .picker-nav-header h3 {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--text);
         }
@@ -219,9 +239,9 @@
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--card-border);
             color: var(--text);
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1.1rem;
             display: flex;
@@ -246,7 +266,7 @@
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--card-border);
             color: var(--text-muted);
-            padding: 12px 0;
+            padding: 14px 0;
             border-radius: 12px;
             font-weight: 700;
             font-size: 0.95rem;
@@ -282,19 +302,18 @@
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
         }
 
-        /* Custom Date Input Styling for Mobile (hiding native input, using custom styled button wrapper) */
         .custom-date-trigger {
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: var(--bg);
             border: 1px solid var(--card-border);
-            border-radius: 10px;
-            padding: 10px 12px;
-            color: var(--text);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text-muted);
             cursor: pointer;
             width: 100%;
-            min-height: 42px;
+            min-height: 48px;
             font-size: 0.95rem;
         }
         .custom-date-trigger:hover {
@@ -304,15 +323,15 @@
         .side-drawer {
             position: fixed;
             top: 0;
-            left: -280px;
-            width: 280px;
+            left: -300px;
+            width: 300px;
             height: 100%;
             background: var(--card-bg);
             border-right: 1px solid var(--card-border);
-            box-shadow: 4px 0 25px rgba(0,0,0,0.5);
+            box-shadow: 6px 0 30px rgba(0,0,0,0.6);
             z-index: 2000;
-            transition: left 0.3s ease;
-            padding: 25px 20px;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: max(25px, env(safe-area-inset-top)) 20px max(25px, env(safe-area-inset-bottom)) 20px;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -323,8 +342,8 @@
         .drawer-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(3px);
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
             z-index: 1999;
             display: none;
         }
@@ -340,7 +359,7 @@
         }
 
         .drawer-title {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--text);
         }
@@ -349,9 +368,10 @@
             background: none;
             border: none;
             color: var(--text-muted);
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             cursor: pointer;
             width: auto;
+            min-height: auto;
         }
 
         .drawer-nav {
@@ -364,8 +384,8 @@
             background: transparent;
             border: 1px solid transparent;
             color: var(--text-muted);
-            padding: 12px 15px;
-            border-radius: 10px;
+            padding: 14px 16px;
+            border-radius: 12px;
             text-align: left;
             font-size: 1rem;
             font-weight: 600;
@@ -380,14 +400,14 @@
         }
 
         input, select, button, textarea {
-            padding: 10px 12px;
-            border-radius: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
             border: 1px solid var(--card-border);
             background-color: var(--bg);
             color: var(--text);
-            font-size: 0.95rem;
+            font-size: 1rem;
             width: 100%;
-            min-height: 42px;
+            min-height: 48px;
         }
 
         input[type="month"], input[type="date"] { color-scheme: dark; }
@@ -395,13 +415,13 @@
         .notification-banner {
             background: rgba(99, 102, 241, 0.1);
             border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 14px;
-            padding: 12px 16px;
+            border-radius: 16px;
+            padding: 14px 18px;
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
@@ -411,12 +431,13 @@
             background: linear-gradient(135deg, #6366f1, #a855f7);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             width: auto;
+            min-height: auto;
         }
 
         .tab-nav {
@@ -425,7 +446,7 @@
             gap: 8px;
             background-color: var(--card-bg);
             padding: 6px;
-            border-radius: 14px;
+            border-radius: 16px;
             border: 1px solid var(--card-border);
             margin-bottom: 20px;
         }
@@ -434,13 +455,14 @@
             background: none;
             border: none;
             color: var(--text-muted);
-            padding: 12px 8px;
+            padding: 14px 8px;
             font-weight: 700;
-            font-size: clamp(0.85rem, 1.5vw, 1rem);
-            border-radius: 10px;
+            font-size: 0.95rem;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
+            min-height: 46px;
         }
 
         .tab-btn.active[data-page="page1"] { background-color: rgba(56, 189, 248, 0.2); color: var(--accent-his); }
@@ -458,12 +480,12 @@
         }
 
         .stat-card {
-            background: rgba(19, 28, 46, 0.7);
-            backdrop-filter: blur(10px);
+            background: rgba(19, 28, 46, 0.75);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
 
         .stat-card h3 {
@@ -471,27 +493,27 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-muted);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .stat-card .amount {
-            font-size: clamp(1.5rem, 2.2vw, 2rem);
+            font-size: clamp(1.6rem, 2.5vw, 2.2rem);
             font-weight: 800;
         }
 
         .income-card, .form-card, .upcoming-card, .esso-card {
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 16px;
+            border-radius: 16px;
+            padding: 18px;
             margin-bottom: 20px;
         }
 
         .income-form-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-top: 12px;
         }
 
         @media (min-width: 640px) {
@@ -501,7 +523,7 @@
         .form-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 10px;
+            gap: 12px;
         }
 
         @media (min-width: 960px) {
@@ -513,18 +535,18 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-top: 10px;
+            margin-top: 12px;
         }
 
         .paycheck-chip {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--card-border);
-            padding: 6px 10px;
-            border-radius: 8px;
+            padding: 8px 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
+            gap: 10px;
+            font-size: 0.9rem;
         }
 
         .auto-cap { text-transform: capitalize; }
@@ -536,7 +558,8 @@
             border: none;
             cursor: pointer;
             transition: opacity 0.2s;
-            min-width: 110px;
+            min-width: 120px;
+            min-height: 48px;
         }
 
         .btn-ocr {
@@ -545,28 +568,28 @@
             font-weight: 700;
             border: none;
             cursor: pointer;
-            padding: 10px 16px;
-            border-radius: 10px;
+            padding: 12px 18px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             width: auto;
-            font-size: 0.85rem;
-            min-height: 42px;
+            font-size: 0.9rem;
+            min-height: 48px;
         }
 
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 18px;
             margin-bottom: 20px;
         }
 
         .category-card {
             background-color: var(--card-bg);
-            border-radius: 14px;
-            padding: 16px;
+            border-radius: 16px;
+            padding: 18px;
             border: 1px solid var(--card-border);
         }
 
@@ -579,8 +602,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
             border-bottom: 1px solid var(--card-border);
         }
 
@@ -590,21 +613,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            gap: 8px;
+            gap: 10px;
         }
 
         .item-row.is-paid { opacity: 0.55; }
         .item-row.is-paid .item-name { text-decoration: line-through; }
 
-        .item-details { display: flex; flex-direction: column; gap: 2px; }
+        .item-details { display: flex; flex-direction: column; gap: 3px; }
 
         .item-meta {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             display: flex;
-            gap: 6px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
@@ -615,7 +638,7 @@
         .item-actions {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             flex-shrink: 0;
         }
 
@@ -623,13 +646,13 @@
             background-color: transparent;
             border: 1px solid var(--paid);
             color: var(--paid);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             cursor: pointer;
             font-weight: 600;
             width: auto;
-            min-height: 32px;
+            min-height: 36px;
         }
 
         .btn-paid.active {
@@ -641,13 +664,13 @@
             background-color: transparent;
             border: 1px solid var(--card-border);
             color: var(--text-muted);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             cursor: pointer;
             font-weight: 600;
             width: auto;
-            min-height: 32px;
+            min-height: 36px;
         }
 
         .delete-btn {
@@ -655,17 +678,17 @@
             border: none;
             color: #f87171;
             cursor: pointer;
-            font-size: 1.2rem;
-            padding: 2px 4px;
+            font-size: 1.3rem;
+            padding: 4px 6px;
             width: auto;
-            min-height: 32px;
+            min-height: 36px;
         }
 
         .badge {
             background-color: rgba(255, 255, 255, 0.08);
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 6px;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             text-transform: capitalize;
         }
 
@@ -673,12 +696,12 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
             justify-content: center;
             align-items: center;
             z-index: 3000;
-            padding: 15px;
+            padding: 20px;
         }
 
         .modal.active { display: flex; }
@@ -686,39 +709,41 @@
         .modal-content {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 20px;
+            border-radius: 20px;
+            padding: 24px;
             width: 100%;
             max-width: 480px;
             max-height: 90vh;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
         }
 
         .modal-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: flex-end;
-            margin-top: 10px;
+            margin-top: 12px;
         }
 
         .actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
             justify-content: flex-end;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         .btn-secondary, .btn-import, .btn-rollover, .btn-print {
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-size: 0.85rem;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
             width: auto;
+            min-height: 48px;
         }
 
         .btn-secondary { background: transparent; border: 1px solid var(--card-border); color: var(--text-muted); }
@@ -730,28 +755,29 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 14px;
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--card-border);
-            border-radius: 10px;
-            margin-bottom: 8px;
-            gap: 8px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            gap: 10px;
         }
 
         .esso-item-row.is-completed { opacity: 0.5; text-decoration: line-through; }
 
         .esso-checkbox, .esso-select-checkbox {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             accent-color: var(--paid);
             cursor: pointer;
+            flex-shrink: 0;
         }
 
         .esso-select-checkbox {
             appearance: none;
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border: 2px solid var(--accent-combined);
             border-radius: 6px;
             background-color: var(--bg);
@@ -777,24 +803,19 @@
             left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
         }
 
         .scan-status-text {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--accent-his);
-            margin-top: 8px;
+            margin-top: 10px;
             display: none;
-            padding: 8px 12px;
+            padding: 10px 14px;
             background: rgba(56, 189, 248, 0.1);
             border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: 8px;
-        }
-
-        @media (pointer: coarse) {
-            button, select, input { min-height: 44px; }
-            .btn-edit, .btn-paid, .delete-btn { min-height: 38px; }
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -816,29 +837,29 @@
     <header>
         <div class="header-top-row">
             <div class="header-left-group">
-                <button class="btn-icon-hdr" onclick="switchMainPage('dashboard')" title="Home Dashboard">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                    </svg>
+                <button class="icon-btn-container" onclick="switchMainPage('dashboard')">
+                    <div class="btn-icon-hdr" title="Home Dashboard">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </div>
+                    <span class="icon-btn-label">Home</span>
                 </button>
-                <button class="btn-icon-hdr" onclick="openDrawer()" title="Open Menu">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
+
+                <button class="icon-btn-container" onclick="openDrawer()">
+                    <div class="btn-icon-hdr" title="Open Menu">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </div>
+                    <span class="icon-btn-label">Menu</span>
                 </button>
             </div>
             
             <div class="header-controls">
-                <button class="btn-icon-hdr" id="essoNotifyBtn" onclick="openEssoNotificationModal()" title="ESSO Alert Settings">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                </button>
-
                 <button class="btn-icon-hdr" id="refreshBtn" onclick="handleManualRefresh()" title="Sync & Refresh Dashboard">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
@@ -846,13 +867,8 @@
                     </svg>
                 </button>
 
-                <!-- Desktop Selector View -->
-                <div class="desktop-month-picker" id="desktopMonthPickerGroup">
-                    <input type="month" id="desktopMonthPicker">
-                </div>
-
-                <!-- Mobile Calendar Icon Button View -->
-                <button class="btn-icon-hdr mobile-month-icon-btn" onclick="openCalendarModal()" title="Select Month">
+                <!-- Unified Calendar Icon Button for both Desktop & Mobile -->
+                <button class="btn-icon-hdr" id="monthCalendarBtn" onclick="openCalendarModal()" title="Select Month">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -873,8 +889,8 @@
     <input type="month" id="monthPicker" style="display:none;">
 
     <div class="notification-banner" id="notifyBanner">
-        <span id="notifyStatus">🔔 Enable bill reminders & live update alerts across devices.</span>
-        <button class="btn-notify" id="enableNotifyBtn" onclick="requestNotificationPermission()">Enable Alerts</button>
+        <span id="notifyStatus">🔔 Enable notifications to receive bill and ESSO alerts on desktop and mobile.</span>
+        <button class="btn-notify" id="enableNotifyBtn" onclick="requestNotificationPermission()">Enable Notifications</button>
     </div>
 
     <!-- MAIN PAGE 1: Household Dashboard View -->
@@ -901,7 +917,6 @@
                 <h3>His Paycheck Log</h3>
                 <form class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'his')">
                     <input type="number" class="payAmount" step="0.01" min="0" placeholder="Paycheck Amount ($)" required>
-                    <!-- Custom Date Trigger Box -->
                     <div class="custom-date-wrapper" onclick="openDateModal('hisPayDateInput')">
                         <div id="hisPayDateDisplay" class="custom-date-trigger">Select Date</div>
                         <input type="date" id="hisPayDateInput" class="payDate" required style="display:none;" onchange="updateDateDisplay('hisPayDateInput', 'hisPayDateDisplay')">
@@ -920,7 +935,6 @@
                 <form class="form-grid" onsubmit="handleFormSubmit(event, 'his')">
                     <input type="text" class="itemName auto-cap" placeholder="Item Name" required oninput="autoCategorize(this)">
                     <input type="number" class="itemAmount" step="0.01" min="0" placeholder="Amount ($)" required>
-                    <!-- Custom Date Trigger Box -->
                     <div class="custom-date-wrapper" onclick="openDateModal('hisItemDueDateInput')">
                         <div id="hisItemDueDateDisplay" class="custom-date-trigger">Select Due Date</div>
                         <input type="date" id="hisItemDueDateInput" class="itemDueDate" required style="display:none;" onchange="updateDateDisplay('hisItemDueDateInput', 'hisItemDueDateDisplay')">
@@ -966,7 +980,6 @@
                 <h3>Her Paycheck Log</h3>
                 <form class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'her')">
                     <input type="number" class="payAmount" step="0.01" min="0" placeholder="Paycheck Amount ($)" required>
-                    <!-- Custom Date Trigger Box -->
                     <div class="custom-date-wrapper" onclick="openDateModal('herPayDateInput')">
                         <div id="herPayDateDisplay" class="custom-date-trigger">Select Date</div>
                         <input type="date" id="herPayDateInput" class="payDate" required style="display:none;" onchange="updateDateDisplay('herPayDateInput', 'herPayDateDisplay')">
@@ -985,7 +998,6 @@
                 <form class="form-grid" onsubmit="handleFormSubmit(event, 'her')">
                     <input type="text" class="itemName auto-cap" placeholder="Item Name" required oninput="autoCategorize(this)">
                     <input type="number" class="itemAmount" step="0.01" min="0" placeholder="Amount ($)" required>
-                    <!-- Custom Date Trigger Box -->
                     <div class="custom-date-wrapper" onclick="openDateModal('herItemDueDateInput')">
                         <div id="herItemDueDateDisplay" class="custom-date-trigger">Select Due Date</div>
                         <input type="date" id="herItemDueDateInput" class="itemDueDate" required style="display:none;" onchange="updateDateDisplay('herItemDueDateInput', 'herItemDueDateDisplay')">
@@ -1072,7 +1084,6 @@
             <form id="essoForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleEssoSubmit(event)">
                 <input type="text" id="essoNameInput" class="auto-cap" placeholder="Recipient / Slot Name" required>
                 <input type="number" id="essoAmountInput" step="0.01" min="0" placeholder="Payment Amount ($)" required>
-                <!-- Custom Date Trigger Box -->
                 <div class="custom-date-wrapper" onclick="openDateModal('essoDueDateInput')">
                     <div id="essoDueDateDisplay" class="custom-date-trigger">Select Due Date</div>
                     <input type="date" id="essoDueDateInput" required style="display:none;" onchange="updateDateDisplay('essoDueDateInput', 'essoDueDateDisplay')">
@@ -1084,15 +1095,22 @@
         <div class="esso-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem;">ESSO Payment Slots</h3>
+                
+                <!-- ESSO Notification Preferences Icon Button -->
+                <button class="btn-icon-hdr" onclick="openEssoNotificationModal()" title="ESSO Notification Preferences">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </button>
             </div>
             
             <div id="essoItemList">No ESSO slots scheduled.</div>
 
-            <!-- Bottom action buttons for ESSO page -->
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; border-top: 1px solid var(--card-border); padding-top: 16px;">
-                <button type="button" class="btn-secondary" id="toggleSelectModeBtn" style="padding: 8px 14px; font-size: 0.85rem;" onclick="toggleSelectMode()">Select to Delete</button>
-                <button type="button" class="btn-secondary" id="executeBulkDeleteBtn" style="display: none; padding: 8px 14px; font-size: 0.85rem; border-color: var(--urgent); color: #f87171;" onclick="deleteSelectedEssoItems()">Delete Selected</button>
-                <button type="button" class="btn-secondary" style="padding: 8px 14px; font-size: 0.85rem; border-color: var(--urgent); color: #f87171;" onclick="clearEssoPageData()">Clear Page</button>
+                <button type="button" class="btn-secondary" id="toggleSelectModeBtn" style="padding: 10px 16px; font-size: 0.9rem;" onclick="toggleSelectMode()">Select to Delete</button>
+                <button type="button" class="btn-secondary" id="executeBulkDeleteBtn" style="display: none; padding: 10px 16px; font-size: 0.9rem; border-color: var(--urgent); color: #f87171;" onclick="deleteSelectedEssoItems()">Delete Selected</button>
+                <button type="button" class="btn-secondary" style="padding: 10px 16px; font-size: 0.9rem; border-color: var(--urgent); color: #f87171;" onclick="clearEssoPageData()">Clear Page</button>
             </div>
         </div>
     </div>
@@ -1136,14 +1154,14 @@
     </div>
 </div>
 
-<!-- ESSO Notification Settings Modal -->
+<!-- ESSO Notification Settings & Test Modal -->
 <div class="modal" id="essoNotifyModal">
     <div class="modal-content">
         <h3>🔔 ESSO Notification Preferences</h3>
-        <p style="font-size:0.85rem; color:var(--text-muted);">Adjust when system notifications arrive before an ESSO item becomes due.</p>
+        <p style="font-size:0.9rem; color:var(--text-muted);">Configure when system alerts arrive and test notifications on desktop or mobile.</p>
         
-        <div class="input-group">
-            <label style="display:block; margin-bottom:4px; font-size:0.85rem;">Default ESSO Reminder Lead Time</label>
+        <div class="input-group" style="margin-top:8px;">
+            <label style="display:block; margin-bottom:6px; font-size:0.85rem;">Default ESSO Reminder Lead Time</label>
             <select id="essoGlobalReminderDays">
                 <option value="0">Notify: Same Day</option>
                 <option value="1" selected>Notify: 1 Day Prior</option>
@@ -1153,9 +1171,15 @@
             </select>
         </div>
 
+        <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 14px; margin-top: 4px;">
+            <h4 style="font-size: 0.9rem; color: var(--accent-his); margin-bottom: 6px;">🧪 Notification Test</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Click below to test push notifications on your device (works on desktop browsers and mobile PWA/add-to-home screen).</p>
+            <button type="button" class="btn-ocr" style="width: 100%; min-height: 42px;" onclick="testSendNotification()">Send Test Notification Now</button>
+        </div>
+
         <div class="modal-buttons">
             <button type="button" class="btn-secondary" onclick="closeEssoNotificationModal()">Cancel</button>
-            <button type="button" class="btn-add" style="width:auto; padding:8px 16px;" onclick="saveEssoNotificationPreferences()">Save Preference</button>
+            <button type="button" class="btn-add" style="width:auto; padding:10px 18px;" onclick="saveEssoNotificationPreferences()">Save Preference</button>
         </div>
     </div>
 </div>
@@ -1168,22 +1192,22 @@
         <input type="hidden" id="editItemOwner">
         
         <div>
-            <label style="font-size:0.8rem;">Item Name</label>
+            <label style="font-size:0.85rem;">Item Name</label>
             <input type="text" id="editItemName" class="auto-cap" required oninput="autoCategorize(this, 'editItemCategory')">
         </div>
         <div>
-            <label style="font-size:0.8rem;">Amount ($)</label>
+            <label style="font-size:0.85rem;">Amount ($)</label>
             <input type="number" id="editItemAmount" step="0.01" min="0" required>
         </div>
         <div>
-            <label style="font-size:0.8rem;">Due Date</label>
+            <label style="font-size:0.85rem;">Due Date</label>
             <div class="custom-date-wrapper" onclick="openDateModal('editItemDueDate')">
                 <div id="editItemDueDateDisplay" class="custom-date-trigger">Select Date</div>
                 <input type="date" id="editItemDueDate" required style="display:none;" onchange="updateDateDisplay('editItemDueDate', 'editItemDueDateDisplay')">
             </div>
         </div>
         <div>
-            <label style="font-size:0.8rem;">Reminder Timing</label>
+            <label style="font-size:0.85rem;">Reminder Timing</label>
             <select id="editItemReminder" required>
                 <option value="0">Notify: Same Day</option>
                 <option value="1">Notify: 1 Day Prior</option>
@@ -1192,14 +1216,14 @@
             </select>
         </div>
         <div>
-            <label style="font-size:0.8rem;">Recurrence</label>
+            <label style="font-size:0.85rem;">Recurrence</label>
             <select id="editItemRecurrence" required>
                 <option value="one-time">One-Time</option>
                 <option value="monthly">Monthly</option>
             </select>
         </div>
         <div>
-            <label style="font-size:0.8rem;">Category</label>
+            <label style="font-size:0.85rem;">Category</label>
             <select id="editItemCategory" required>
                 <option value="Bills">Bills</option>
                 <option value="Debts">Debts</option>
@@ -1209,7 +1233,7 @@
         </div>
         <div class="modal-buttons">
             <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
-            <button type="button" class="btn-add" style="width:auto; padding:8px 16px;" onclick="saveItemEdit()">Save Changes</button>
+            <button type="button" class="btn-add" style="width:auto; padding:10px 18px;" onclick="saveItemEdit()">Save Changes</button>
         </div>
     </div>
 </div>
@@ -1221,22 +1245,22 @@
         <input type="hidden" id="editEssoId">
         
         <div>
-            <label style="font-size:0.8rem;">Slot / Recipient Name</label>
+            <label style="font-size:0.85rem;">Slot / Recipient Name</label>
             <input type="text" id="editEssoName" class="auto-cap" required>
         </div>
         <div>
-            <label style="font-size:0.8rem;">Payment Amount ($)</label>
+            <label style="font-size:0.85rem;">Payment Amount ($)</label>
             <input type="number" id="editEssoAmount" step="0.01" min="0" required>
         </div>
         <div>
-            <label style="font-size:0.8rem;">Due Date</label>
+            <label style="font-size:0.85rem;">Due Date</label>
             <div class="custom-date-wrapper" onclick="openDateModal('editEssoDueDate')">
                 <div id="editEssoDueDateDisplay" class="custom-date-trigger">Select Date</div>
                 <input type="date" id="editEssoDueDate" required style="display:none;" onchange="updateDateDisplay('editEssoDueDate', 'editEssoDueDateDisplay')">
             </div>
         </div>
         <div>
-            <label style="font-size:0.8rem;">Notification Timing</label>
+            <label style="font-size:0.85rem;">Notification Timing</label>
             <select id="editEssoReminderDays" required>
                 <option value="0">Notify: Same Day</option>
                 <option value="1">Notify: 1 Day Prior</option>
@@ -1247,20 +1271,33 @@
         </div>
         <div class="modal-buttons">
             <button type="button" class="btn-secondary" onclick="closeEssoEditModal()">Cancel</button>
-            <button type="button" class="btn-add" style="width:auto; padding:8px 16px;" onclick="saveEssoEdit()">Save Changes</button>
+            <button type="button" class="btn-add" style="width:auto; padding:10px 18px;" onclick="saveEssoEdit()">Save Changes</button>
         </div>
     </div>
 </div>
 
 <script>
+    let registeredServiceWorkerReg = null;
+
     if ('serviceWorker' in navigator) {
         const swCode = `
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('activate', (e) => self.clients.claim());
             self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+            self.addEventListener('notificationclick', (e) => {
+                e.notification.close();
+                e.waitUntil(clients.matchAll({ type: 'window' }).then(clientList => {
+                    if (clientList.length > 0) {
+                        return clientList[0].focus();
+                    }
+                    return clients.openWindow('/');
+                }));
+            });
         `;
         const blob = new Blob([swCode], { type: 'text/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => {});
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).then(reg => {
+            registeredServiceWorkerReg = reg;
+        }).catch(err => {});
     }
 
     const SUPABASE_URL = 'https://vxpufrahrnwmtgltjstd.supabase.co';
@@ -1269,25 +1306,17 @@
 
     const categories = ['Bills', 'Debts', 'Savings', 'Subscriptions'];
     const monthPicker = document.getElementById('monthPicker');
-    const desktopMonthPicker = document.getElementById('desktopMonthPicker');
     
     const today = new Date();
     const initialMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     monthPicker.value = initialMonthStr;
-    desktopMonthPicker.value = initialMonthStr;
 
     let currentCalYear = today.getFullYear();
     let isSelectModeActive = false;
 
-    // Full Date Modal State variables
     let activeDateInputId = null;
     let currentFullDateYear = today.getFullYear();
     let currentFullDateMonth = today.getMonth();
-
-    desktopMonthPicker.addEventListener('change', (e) => {
-        monthPicker.value = e.target.value;
-        render();
-    });
 
     function openCalendarModal() {
         const val = monthPicker.value;
@@ -1328,7 +1357,6 @@
             btn.textContent = name;
             btn.onclick = () => {
                 monthPicker.value = monthKey;
-                desktopMonthPicker.value = monthKey;
                 closeCalendarModal();
                 render();
             };
@@ -1336,7 +1364,6 @@
         });
     }
 
-    // Custom Full Date Picker Modal Logic
     function openDateModal(inputId) {
         activeDateInputId = inputId;
         const inputEl = document.getElementById(inputId);
@@ -1373,7 +1400,6 @@
         const grid = document.getElementById('fullDateDaysGrid');
         grid.innerHTML = '';
 
-        // Weekday headers
         ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(day => {
             const div = document.createElement('div');
             div.className = 'picker-cell weekday-header';
@@ -1387,13 +1413,11 @@
         const inputEl = activeDateInputId ? document.getElementById(activeDateInputId) : null;
         const selectedDateStr = inputEl ? inputEl.value : '';
 
-        // Blank cells for preceding offset days
         for (let i = 0; i < firstDayIndex; i++) {
             const empty = document.createElement('div');
             grid.appendChild(empty);
         }
 
-        // Days of month
         for (let d = 1; d <= totalDays; d++) {
             const mStr = String(currentFullDateMonth + 1).padStart(2, '0');
             const dStr = String(d).padStart(2, '0');
@@ -1461,8 +1485,7 @@
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navEsso = document.getElementById('navEsso');
-        const desktopPickerGroup = document.getElementById('desktopMonthPickerGroup');
-        const mobileIconBtn = document.querySelector('.mobile-month-icon-btn');
+        const monthCalendarBtn = document.getElementById('monthCalendarBtn');
 
         if (view === 'esso') {
             dashboardView.style.display = 'none';
@@ -1470,39 +1493,18 @@
             headerTitle.textContent = 'ESSO Due Date';
             navDashboard.classList.remove('active');
             navEsso.classList.add('active');
-            desktopPickerGroup.style.display = 'none';
-            mobileIconBtn.style.display = 'none';
+            monthCalendarBtn.style.display = 'none';
         } else {
             dashboardView.style.display = 'block';
             essoView.style.display = 'none';
             headerTitle.textContent = 'Household Dashboard';
             navDashboard.classList.add('active');
             navEsso.classList.remove('active');
-            if (window.innerWidth >= 768) {
-                desktopPickerGroup.style.display = 'block';
-                mobileIconBtn.style.display = 'none';
-            } else {
-                desktopPickerGroup.style.display = 'none';
-                mobileIconBtn.style.display = 'flex';
-            }
+            monthCalendarBtn.style.display = 'flex';
         }
         closeDrawer();
         render();
     }
-
-    window.addEventListener('resize', () => {
-        const desktopPickerGroup = document.getElementById('desktopMonthPickerGroup');
-        const mobileIconBtn = document.querySelector('.mobile-month-icon-btn');
-        if (document.getElementById('mainDashboardView').style.display !== 'none') {
-            if (window.innerWidth >= 768) {
-                desktopPickerGroup.style.display = 'block';
-                mobileIconBtn.style.display = 'none';
-            } else {
-                desktopPickerGroup.style.display = 'none';
-                mobileIconBtn.style.display = 'flex';
-            }
-        }
-    });
 
     function autoCapitalizeWords(str) {
         return str.replace(/\b\w/g, l => l.toUpperCase());
@@ -1549,6 +1551,48 @@
         closeEssoNotificationModal();
         triggerSaveIndicator('✓ ESSO Alerts Saved');
         checkAndTriggerNotifications();
+    }
+
+    async function testSendNotification() {
+        if (!('Notification' in window)) {
+            alert('This device or browser does not support notifications.');
+            return;
+        }
+
+        if (Notification.permission !== 'granted') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('Notification permission was denied. Please enable notifications in your browser/device settings.');
+                updateNotificationUI();
+                return;
+            }
+        }
+
+        updateNotificationUI();
+
+        const title = '🔔 Test Notification';
+        const options = {
+            body: 'Success! Push notifications are correctly working on your device.',
+            icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png',
+            badge: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png',
+            tag: 'test-notification'
+        };
+
+        if (registeredServiceWorkerReg && registeredServiceWorkerReg.showNotification) {
+            try {
+                await registeredServiceWorkerReg.showNotification(title, options);
+                return;
+            } catch (e) {
+                console.log('SW notification fallback to regular constructor:', e);
+            }
+        }
+
+        try {
+            new Notification(title, options);
+        } catch (err) {
+            console.error('Notification error:', err);
+            alert('Could not trigger notification. Ensure your browser is permitted to show notifications.');
+        }
     }
 
     function autoCategorize(inputEl, targetCategorySelectId = null) {
@@ -1615,7 +1659,13 @@
 
     function triggerCloudUpdateNotification() {
         if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Household Finance Updated', { body: 'Data was updated remotely from another device.', icon: '💎' });
+            const title = 'Household Finance Updated';
+            const options = { body: 'Data was updated remotely from another device.', icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png' };
+            if (registeredServiceWorkerReg && registeredServiceWorkerReg.showNotification) {
+                registeredServiceWorkerReg.showNotification(title, options);
+            } else {
+                new Notification(title, options);
+            }
         }
     }
 
@@ -1684,10 +1734,17 @@
     }
 
     function requestNotificationPermission() {
-        if (!('Notification' in window)) return;
-        Notification.requestPermission().then(() => {
+        if (!('Notification' in window)) {
+            alert('Notifications are not supported on this device/browser.');
+            return;
+        }
+        Notification.requestPermission().then(permission => {
             updateNotificationUI();
-            checkAndTriggerNotifications();
+            if (permission === 'granted') {
+                testSendNotification();
+            } else {
+                alert('Notification permission was denied.');
+            }
         });
     }
 
@@ -1695,6 +1752,8 @@
         const banner = document.getElementById('notifyBanner');
         if ('Notification' in window && Notification.permission === 'granted') {
             banner.classList.add('hidden');
+        } else {
+            banner.classList.remove('hidden');
         }
     }
 
@@ -1721,7 +1780,15 @@
 
             const diffDays = Math.round((dueDate - now) / (1000 * 60 * 60 * 24));
             if (diffDays === parseInt(item.reminderDays ?? 1, 10)) {
-                new Notification(`Reminder: ${item.name} Due`, { body: `${item.owner} - ${item.name} ($${item.amount.toFixed(2)}) is due in ${diffDays === 0 ? 'Today' : diffDays + ' day(s)'}!` });
+                const title = `Reminder: ${item.name} Due`;
+                const body = `${item.owner} - ${item.name} ($${item.amount.toFixed(2)}) is due in ${diffDays === 0 ? 'Today' : diffDays + ' day(s)'}!`;
+                const options = { body, icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png' };
+
+                if (registeredServiceWorkerReg && registeredServiceWorkerReg.showNotification) {
+                    registeredServiceWorkerReg.showNotification(title, options);
+                } else {
+                    new Notification(title, options);
+                }
             }
         });
     }
@@ -1843,13 +1910,13 @@
         const unpaid = items.filter(i => !i.isPaid).sort((a, b) => parseLocalDate(a.dueDate) - parseLocalDate(b.dueDate)).slice(0, 3);
 
         if (unpaid.length === 0) {
-            container.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">No unpaid upcoming items.</span>';
+            container.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No unpaid upcoming items.</span>';
             return;
         }
 
         container.innerHTML = unpaid.map(item => {
             const dateInfo = formatDueDateDisplay(item.dueDate, false);
-            return `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;"><span><strong>${item.name}</strong></span><span class="${dateInfo.urgent ? 'item-date due-soon' : ''}">$${item.amount.toFixed(2)} - ${dateInfo.text}</span></div>`;
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;"><span><strong>${item.name}</strong></span><span class="${dateInfo.urgent ? 'item-date due-soon' : ''}">$${item.amount.toFixed(2)} - ${dateInfo.text}</span></div>`;
         }).join('');
     }
 
@@ -2127,7 +2194,7 @@
         document.getElementById('essoPaidAmount').textContent = `$${paidAmount.toFixed(2)}`;
 
         if (items.length === 0) {
-            essoListEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">No ESSO slots logged.</span>';
+            essoListEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No ESSO slots logged.</span>';
             return;
         }
 
@@ -2137,7 +2204,7 @@
 
             return `
                 <div class="esso-item-row ${item.isPaid ? 'is-completed' : ''}">
-                    <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
                         <input type="checkbox" class="esso-select-checkbox ${isSelectModeActive ? 'active' : ''}" data-id="${item.id}" title="Select for bulk delete">
                         <input type="checkbox" class="esso-checkbox" ${item.isPaid ? 'checked' : ''} onchange="toggleEssoPaid('${item.id}')" title="Mark as Paid">
                         <div>
@@ -2161,10 +2228,6 @@
     function render() {
         const data = getStoredData();
         const monthData = getMonthData(data, monthPicker.value);
-
-        if (desktopMonthPicker.value !== monthPicker.value) {
-            desktopMonthPicker.value = monthPicker.value;
-        }
 
         const hisIncome = renderPaychecks('his');
         const herIncome = renderPaychecks('her');
@@ -2321,8 +2384,6 @@
         anchor.click();
         anchor.remove();
     });
-
-    monthPicker.addEventListener('change', render);
 
     syncFromCloud().then(() => {
         initializeAllDateDisplays();
