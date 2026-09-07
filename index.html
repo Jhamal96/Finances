@@ -11,22 +11,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Finance Tracker">
 
+    <!-- PWA Web App Manifest with Embedded Custom SVG Icon -->
     <link rel="manifest" href='data:application/manifest+json,{
         "name": "Household Finance Dashboard",
         "short_name": "FinanceTracker",
         "start_url": ".",
         "display": "standalone",
-        "background_color": "#0f172a",
+        "background_color": "#090d16",
         "theme_color": "#0f172a",
-        "icons": [{
-            "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>",
-            "sizes": "512x512",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        }]
+        "icons": [
+            {
+                "src": "data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 rx=%22100%22 fill=%22%23090d16%22/><defs><linearGradient id=%22g1%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22><stop offset=%220%25%22 stop-color=%22%2338bdf8%22/><stop offset=%2250%25%22 stop-color=%22%23a855f7%22/><stop offset=%22100%25%22 stop-color=%22%23ec4899%22/></linearGradient><linearGradient id=%22g2%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22><stop offset=%220%25%22 stop-color=%22%2338bdf8%22/><stop offset=%22100%25%22 stop-color=%22%2334d399%22/></linearGradient></defs><circle cx=%22256%22 cy=%22256%22 r=%22220%22 fill=%22%23131c2e%22 stroke=%22%2322324d%22 stroke-width=%228%22/><path d=%22M 140 330 L 220 250 L 280 290 L 370 180%22 fill=%22none%22 stroke=%22url(%23g1)%22 stroke-width=%2228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/><polygon points=%22370,180 340,180 370,210%22 fill=%22%23ec4899%22/><circle cx=%22140%22 cy=%22330%22 r=%2214%22 fill=%22%2338bdf8%22/><circle cx=%22220%22 cy=%22250%22 r=%2214%22 fill=%22%2338bdf8%22/><circle cx=%22280%22 cy=%22290%22 r=%2214%22 fill=%22%23a855f7%22/><circle cx=%22370%22 cy=%22180%22 r=%2214%22 fill=%22%23ec4899%22/><path d=%22M 256 120 C 210 120 180 150 180 190 C 180 250 256 260 256 295 M 256 325 L 256 335%22 fill=%22none%22 opacity=%220.15%22 stroke=%22%2334d399%22 stroke-dasharray=%2210 10%22/></svg>",
+                "sizes": "512x512",
+                "type": "image/svg+xml",
+                "purpose": "any maskable"
+            }
+        ]
     }'>
 
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230f172a%22/><text x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-size=%2260%22>💎</text></svg>">
+    <!-- Apple Touch Icon for iOS Home Screen -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 rx=%22110%22 fill=%22%23090d16%22/><defs><linearGradient id=%22g1%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22><stop offset=%220%25%22 stop-color=%22%2338bdf8%22/><stop offset=%2250%25%22 stop-color=%22%23a855f7%22/><stop offset=%22100%25%22 stop-color=%22%23ec4899%22/></linearGradient></defs><rect x=%2220%22 y=%2220%22 width=%22472%22 height=%22472%22 rx=%2290%22 fill=%22%23131c2e%22 stroke=%22%2322324d%22 stroke-width=%228%22/><path d=%22M 120 340 L 210 240 L 280 290 L 390 170%22 fill=%22none%22 stroke=%22url(%23g1)%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/><path d=%22M 350 170 L 390 170 L 390 210%22 fill=%22none%22 stroke=%22%23ec4899%22 stroke-width=%2232%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/><circle cx=%22120%22 cy=%22340%22 r=%2216%22 fill=%22%2338bdf8%22/><circle cx=%22210%22 cy=%22240%22 r=%2216%22 fill=%22%2338bdf8%22/><circle cx=%22280%22 cy=%22290%22 r=%2216%22 fill=%22%23a855f7%22/><circle cx=%22390%22 cy=%22170%22 r=%2216%22 fill=%22%23ec4899%22/></svg>">
 
     <style>
         :root {
@@ -639,6 +643,22 @@
 <div class="container">
     <header>
         <div class="header-title-group">
+            <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                <defs>
+                    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="50%" stop-color="#a855f7" />
+                        <stop offset="100%" stop-color="#ec4899" />
+                    </linearGradient>
+                </defs>
+                <rect width="100" height="100" rx="22" fill="#131c2e" stroke="#22324d" stroke-width="3"/>
+                <path d="M 22 68 L 42 45 L 58 55 L 78 30" stroke="url(#headerGrad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 68 30 H 78 V 40" stroke="#ec4899" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="22" cy="68" r="4" fill="#38bdf8"/>
+                <circle cx="42" cy="45" r="4" fill="#38bdf8"/>
+                <circle cx="58" cy="55" r="4" fill="#a855f7"/>
+                <circle cx="78" cy="30" r="4" fill="#ec4899"/>
+            </svg>
             <h1>Household Budget Dashboard</h1>
             <span class="save-indicator" id="saveIndicator">✓ Saved</span>
         </div>
@@ -976,12 +996,10 @@
     }
 
     function getMonthData(data, selectedMonth) {
-        // If target month exists and has items, return it directly
         if (data.months[selectedMonth] && (data.months[selectedMonth].his.length > 0 || data.months[selectedMonth].her.length > 0)) {
             return data.months[selectedMonth];
         }
 
-        // Search for the closest prior month that contains entries
         const availableMonths = Object.keys(data.months).sort();
         const prevMonthKey = availableMonths.filter(m => m < selectedMonth && (data.months[m].his.length > 0 || data.months[m].her.length > 0)).pop();
 
@@ -1129,7 +1147,7 @@
             if (diffDays === reminderDays) {
                 const title = `Reminder: ${item.name} Due`;
                 const body = `${item.owner}'s ${item.name} ($${item.amount.toFixed(2)}) is due in ${diffDays === 0 ? 'Today' : diffDays + ' day(s)'}!`;
-                new Notification(title, { body, icon: '💎' });
+                new Notification(title, { body });
             }
         });
     }
@@ -1437,15 +1455,33 @@
 
         const data = getStoredData();
         const monthData = getMonthData(data, selectedMonth);
-        const item = (monthData[owner] || []).find(i => i.id === id);
+        const itemList = monthData[owner] || [];
 
-        if (item) {
-            item.name = autoCapitalizeWords(document.getElementById('editItemName').value.trim());
-            item.amount = parseFloat(document.getElementById('editItemAmount').value);
-            item.dueDate = document.getElementById('editItemDueDate').value;
-            item.reminderDays = parseInt(document.getElementById('editItemReminder').value, 10);
-            item.recurrence = document.getElementById('editItemRecurrence').value;
-            item.category = document.getElementById('editItemCategory').value;
+        const index = itemList.findIndex(i => i.id === id);
+
+        if (index !== -1) {
+            const oldItem = itemList[index];
+            const newRecurrence = document.getElementById('editItemRecurrence').value;
+            const newDueDate = document.getElementById('editItemDueDate').value;
+
+            const baseItem = {
+                name: autoCapitalizeWords(document.getElementById('editItemName').value.trim()),
+                amount: parseFloat(document.getElementById('editItemAmount').value),
+                dueDate: newDueDate,
+                reminderDays: parseInt(document.getElementById('editItemReminder').value, 10),
+                recurrence: newRecurrence,
+                category: document.getElementById('editItemCategory').value,
+                isPaid: oldItem.isPaid
+            };
+
+            if (oldItem.recurrence !== newRecurrence || oldItem.dueDate !== newDueDate) {
+                monthData[owner] = itemList.filter(i => !(i.name === oldItem.name && i.category === oldItem.category && i.recurrence === oldItem.recurrence));
+                
+                const regeneratedEntries = generateRecurringEntries(baseItem);
+                monthData[owner].push(...regeneratedEntries);
+            } else {
+                itemList[index] = { ...oldItem, ...baseItem };
+            }
 
             saveData(data);
             closeEditModal();
@@ -1500,7 +1536,6 @@
         }
     });
 
-    // Export Handler
     document.getElementById('exportBtn').addEventListener('click', () => {
         const selectedMonth = monthPicker.value;
         const data = getStoredData();
@@ -1522,9 +1557,9 @@
 
     monthPicker.addEventListener('change', render);
 
-    // Initial Setup
     render();
 </script>
 
 </body>
 </html>
+
