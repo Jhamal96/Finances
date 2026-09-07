@@ -889,7 +889,7 @@
     <input type="month" id="monthPicker" style="display:none;">
 
     <div class="notification-banner" id="notifyBanner">
-        <span id="notifyStatus">🔔 Enable notifications to receive bill and ESSO alerts on desktop and mobile.</span>
+        <span id="notifyStatus">🔔 Enable notifications to receive bill and ESSO alerts on mobile (iOS/Android) and desktop.</span>
         <button class="btn-notify" id="enableNotifyBtn" onclick="requestNotificationPermission()">Enable Notifications</button>
     </div>
 
@@ -950,6 +950,7 @@
                         <option value="weekly">Weekly</option>
                         <option value="bi-weekly">Bi-Weekly</option>
                         <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
                     </select>
                     <select class="itemCategory" required>
                         <option value="Bills">Bills</option>
@@ -1009,7 +1010,10 @@
                     </select>
                     <select class="itemRecurrence" required>
                         <option value="one-time">One-Time</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="bi-weekly">Bi-Weekly</option>
                         <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
                     </select>
                     <select class="itemCategory" required>
                         <option value="Bills">Bills</option>
@@ -1157,11 +1161,11 @@
 <!-- ESSO Notification Settings & Test Modal -->
 <div class="modal" id="essoNotifyModal">
     <div class="modal-content">
-        <h3>🔔 ESSO Notification Preferences</h3>
-        <p style="font-size:0.9rem; color:var(--text-muted);">Configure when system alerts arrive and test notifications on desktop or mobile.</p>
+        <h3>🔔 Notification Preferences & Multi-Device Test</h3>
+        <p style="font-size:0.9rem; color:var(--text-muted);">Configure push alert lead times and test notifications on your Android, iOS, Web, or Desktop device.</p>
         
         <div class="input-group" style="margin-top:8px;">
-            <label style="display:block; margin-bottom:6px; font-size:0.85rem;">Default ESSO Reminder Lead Time</label>
+            <label style="display:block; margin-bottom:6px; font-size:0.85rem;">Default Reminder Lead Time</label>
             <select id="essoGlobalReminderDays">
                 <option value="0">Notify: Same Day</option>
                 <option value="1" selected>Notify: 1 Day Prior</option>
@@ -1172,8 +1176,8 @@
         </div>
 
         <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 14px; margin-top: 4px;">
-            <h4 style="font-size: 0.9rem; color: var(--accent-his); margin-bottom: 6px;">🧪 Notification Test</h4>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Click below to test push notifications on your device (works on desktop browsers and mobile PWA/add-to-home screen).</p>
+            <h4 style="font-size: 0.9rem; color: var(--accent-his); margin-bottom: 6px;">🧪 Multi-Device Push Test</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Works on Android browsers, iOS Home Screen web apps, and desktop browsers (Chrome, Safari, Edge, Firefox).</p>
             <button type="button" class="btn-ocr" style="width: 100%; min-height: 42px;" onclick="testSendNotification()">Send Test Notification Now</button>
         </div>
 
@@ -1219,7 +1223,10 @@
             <label style="font-size:0.85rem;">Recurrence</label>
             <select id="editItemRecurrence" required>
                 <option value="one-time">One-Time</option>
+                <option value="weekly">Weekly</option>
+                <option value="bi-weekly">Bi-Weekly</option>
                 <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
             </select>
         </div>
         <div>
@@ -1555,14 +1562,14 @@
 
     async function testSendNotification() {
         if (!('Notification' in window)) {
-            alert('This device or browser does not support notifications.');
+            alert('Notifications are not supported on this device/browser (Note: On iOS, make sure to add this web app to your Home Screen from Safari first).');
             return;
         }
 
         if (Notification.permission !== 'granted') {
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                alert('Notification permission was denied. Please enable notifications in your browser/device settings.');
+                alert('Notification permission was denied. Please allow notifications in your browser or device settings.');
                 updateNotificationUI();
                 return;
             }
@@ -1570,12 +1577,14 @@
 
         updateNotificationUI();
 
-        const title = '🔔 Test Notification';
+        const title = '🔔 Multi-Device Notification Test';
         const options = {
-            body: 'Success! Push notifications are correctly working on your device.',
+            body: 'Success! Push notifications are successfully active on your device (Android, iOS, Web, or Desktop).',
             icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png',
             badge: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png',
-            tag: 'test-notification'
+            tag: 'test-notification',
+            renotify: true,
+            requireInteraction: true
         };
 
         if (registeredServiceWorkerReg && registeredServiceWorkerReg.showNotification) {
@@ -1591,7 +1600,7 @@
             new Notification(title, options);
         } catch (err) {
             console.error('Notification error:', err);
-            alert('Could not trigger notification. Ensure your browser is permitted to show notifications.');
+            alert('Could not trigger notification. Ensure notifications are allowed.');
         }
     }
 
@@ -1681,13 +1690,22 @@
         })
         .subscribe();
 
-    function advanceDateByOneMonth(dateStr, targetYearMonth) {
+    function advanceDateByRecurrence(dateStr, targetYearMonth, recurrence) {
         if (!dateStr) return '';
         const parts = dateStr.split('-');
         const currDay = Number(parts[2]);
+        const currMonth = Number(parts[1]);
         const [targetYear, targetMonth] = targetYearMonth.split('-').map(Number);
-        const maxDays = new Date(targetYear, targetMonth, 0).getDate();
-        return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(Math.min(currDay, maxDays)).padStart(2, '0')}`;
+
+        if (recurrence === 'yearly') {
+            // For yearly items, advance the date into the target year while keeping the original month & day
+            const maxDays = new Date(targetYear, currMonth, 0).getDate();
+            return `${targetYear}-${String(currMonth).padStart(2, '0')}-${String(Math.min(currDay, maxDays)).padStart(2, '0')}`;
+        } else {
+            // For monthly or other recurring items
+            const maxDays = new Date(targetYear, targetMonth, 0).getDate();
+            return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(Math.min(currDay, maxDays)).padStart(2, '0')}`;
+        }
     }
 
     function forceRolloverCurrentMonth() {
@@ -1711,16 +1729,39 @@
 
         if (prevMonthKey && data.months[prevMonthKey]) {
             const prevData = data.months[prevMonthKey];
+            const [targetYear, targetMonth] = selectedMonth.split('-').map(Number);
+
             rolledHis = (prevData.his || [])
-                .filter(i => i.recurrence !== 'one-time')
-                .map(i => ({ ...i, id: `${Date.now()}_his_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByOneMonth(i.dueDate, selectedMonth), isPaid: false }));
+                .filter(i => {
+                    if (i.recurrence === 'one-time') return false;
+                    if (i.recurrence === 'yearly') {
+                        // Only rollover into the specific target month if the original due month matches
+                        if (i.dueDate) {
+                            const origMonth = Number(i.dueDate.split('-')[1]);
+                            return origMonth === targetMonth;
+                        }
+                        return false;
+                    }
+                    return true;
+                })
+                .map(i => ({ ...i, id: `${Date.now()}_his_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
             
             rolledHer = (prevData.her || [])
-                .filter(i => i.recurrence !== 'one-time')
-                .map(i => ({ ...i, id: `${Date.now()}_her_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByOneMonth(i.dueDate, selectedMonth), isPaid: false }));
+                .filter(i => {
+                    if (i.recurrence === 'one-time') return false;
+                    if (i.recurrence === 'yearly') {
+                        if (i.dueDate) {
+                            const origMonth = Number(i.dueDate.split('-')[1]);
+                            return origMonth === targetMonth;
+                        }
+                        return false;
+                    }
+                    return true;
+                })
+                .map(i => ({ ...i, id: `${Date.now()}_her_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
             
             rolledEsso = (prevData.esso || [])
-                .map(i => ({ ...i, id: `${Date.now()}_esso_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByOneMonth(i.dueDate, selectedMonth), isPaid: false }));
+                .map(i => ({ ...i, id: `${Date.now()}_esso_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, 'monthly'), isPaid: false }));
         }
 
         data.months[selectedMonth] = { his: rolledHis, her: rolledHer, esso: rolledEsso, hisPay: [], herPay: [] };
@@ -1782,7 +1823,7 @@
             if (diffDays === parseInt(item.reminderDays ?? 1, 10)) {
                 const title = `Reminder: ${item.name} Due`;
                 const body = `${item.owner} - ${item.name} ($${item.amount.toFixed(2)}) is due in ${diffDays === 0 ? 'Today' : diffDays + ' day(s)'}!`;
-                const options = { body, icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png' };
+                const options = { body, icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png', tag: item.id };
 
                 if (registeredServiceWorkerReg && registeredServiceWorkerReg.showNotification) {
                     registeredServiceWorkerReg.showNotification(title, options);
