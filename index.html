@@ -508,7 +508,7 @@
             font-weight: 800;
         }
 
-        .income-card, .form-card, .upcoming-card, .esso-card {
+        .income-card, .form-card, .upcoming-card, .esso-card, .plan-card {
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
@@ -784,7 +784,7 @@
         .btn-rollover { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; }
         .btn-print { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
 
-        .esso-item-row {
+        .esso-item-row, .plan-item-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -863,6 +863,7 @@
     <div class="drawer-nav">
         <button class="drawer-link active" id="navDashboard" onclick="switchMainPage('dashboard')">📊 Household Dashboard</button>
         <button class="drawer-link" id="navEsso" onclick="switchMainPage('esso')">📅 ESSO Due Date</button>
+        <button class="drawer-link" id="navPaymentPlan" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button>
     </div>
 </div>
 
@@ -1176,6 +1177,65 @@
         </div>
     </div>
 
+    <!-- MAIN PAGE 3: Payment Plans View -->
+    <div id="mainPaymentPlanView" style="display: none;">
+        <div class="summary-grid">
+            <div class="stat-card">
+                <h3>Active Plans Total Debt</h3>
+                <div class="amount" id="planTotalDebt" style="color: var(--accent-combined);">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Installment Total (Per Period)</h3>
+                <div class="amount" id="planInstallmentTotal" style="color: var(--savings);">$0.00</div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3 style="color: var(--text); margin-bottom: 12px;">Create Payment Plan</h3>
+            <form id="paymentPlanForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));" onsubmit="handlePaymentPlanSubmit(event)">
+                <input type="text" id="planNameInput" class="auto-cap" placeholder="Plan / Creditor Name" required>
+                <input type="number" id="planAmountInput" step="0.01" min="0" placeholder="Total Amount ($)" required>
+                <select id="planFrequencyInput" required onchange="autoComputePlanEndDate()">
+                    <option value="weekly">Weekly Frequency</option>
+                    <option value="bi-weekly">Bi-Weekly Frequency</option>
+                    <option value="monthly" selected>Monthly Frequency</option>
+                </select>
+                <select id="planDurationInput" required onchange="autoComputePlanEndDate()">
+                    <option value="" disabled selected>Duration / Installments</option>
+                    <option value="2">2 Installments</option>
+                    <option value="3">3 Installments</option>
+                    <option value="4">4 Installments</option>
+                    <option value="6">6 Installments</option>
+                    <option value="8">8 Installments</option>
+                    <option value="10">10 Installments</option>
+                    <option value="12">12 Installments</option>
+                    <option value="18">18 Installments</option>
+                    <option value="24">24 Installments</option>
+                    <option value="36">36 Installments</option>
+                    <option value="52">52 Installments</option>
+                </select>
+                <div class="custom-date-wrapper" onclick="openDateModal('planStartDateInput')">
+                    <div id="planStartDateDisplay" class="custom-date-trigger">Start Date</div>
+                    <input type="date" id="planStartDateInput" required style="display:none;" onchange="updateDateDisplay('planStartDateInput', 'planStartDateDisplay'); autoComputePlanEndDate();">
+                </div>
+                <div class="custom-date-wrapper" onclick="openDateModal('planEndDateInput')">
+                    <div id="planEndDateDisplay" class="custom-date-trigger">End Date</div>
+                    <input type="date" id="planEndDateInput" required style="display:none;" onchange="updateDateDisplay('planEndDateInput', 'planEndDateDisplay')">
+                </div>
+                <button type="submit" class="btn-add">Save Plan</button>
+            </form>
+        </div>
+
+        <div class="search-bar-container">
+            <input type="text" id="planSearchInput" class="search-input" placeholder="🔍 Search payment plans..." oninput="render()">
+        </div>
+
+        <div class="plan-card">
+            <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 12px;">Active Payment Plans</h3>
+            <div id="paymentPlanList">No payment plans scheduled.</div>
+        </div>
+    </div>
+
     <div class="actions">
         <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
         <button class="btn-rollover" onclick="forceRolloverCurrentMonth()">Sync / Rollover</button>
@@ -1336,6 +1396,64 @@
         <div class="modal-buttons">
             <button type="button" class="btn-secondary" onclick="closeEssoEditModal()">Cancel</button>
             <button type="button" class="btn-add" style="width:auto; padding:10px 18px;" onclick="saveEssoEdit()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Plan Specific Edit Modal -->
+<div class="modal" id="paymentPlanEditModal">
+    <div class="modal-content">
+        <h3>Edit Payment Plan</h3>
+        <input type="hidden" id="editPlanId">
+        <div>
+            <label style="font-size:0.85rem;">Plan / Creditor Name</label>
+            <input type="text" id="editPlanName" class="auto-cap" required>
+        </div>
+        <div>
+            <label style="font-size:0.85rem;">Total Amount ($)</label>
+            <input type="number" id="editPlanAmount" step="0.01" min="0" required>
+        </div>
+        <div>
+            <label style="font-size:0.85rem;">Frequency</label>
+            <select id="editPlanFrequency" required onchange="autoComputeEditPlanEndDate()">
+                <option value="weekly">Weekly Frequency</option>
+                <option value="bi-weekly">Bi-Weekly Frequency</option>
+                <option value="monthly">Monthly Frequency</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size:0.85rem;">Duration / Installments</label>
+            <select id="editPlanDuration" required onchange="autoComputeEditPlanEndDate()">
+                <option value="2">2 Installments</option>
+                <option value="3">3 Installments</option>
+                <option value="4">4 Installments</option>
+                <option value="6">6 Installments</option>
+                <option value="8">8 Installments</option>
+                <option value="10">10 Installments</option>
+                <option value="12">12 Installments</option>
+                <option value="18">18 Installments</option>
+                <option value="24">24 Installments</option>
+                <option value="36">36 Installments</option>
+                <option value="52">52 Installments</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size:0.85rem;">Start Date</label>
+            <div class="custom-date-wrapper" onclick="openDateModal('editPlanStartDate')">
+                <div id="editPlanStartDateDisplay" class="custom-date-trigger">Select Start Date</div>
+                <input type="date" id="editPlanStartDate" required style="display:none;" onchange="updateDateDisplay('editPlanStartDate', 'editPlanStartDateDisplay'); autoComputeEditPlanEndDate();">
+            </div>
+        </div>
+        <div>
+            <label style="font-size:0.85rem;">End Date</label>
+            <div class="custom-date-wrapper" onclick="openDateModal('editPlanEndDate')">
+                <div id="editPlanEndDateDisplay" class="custom-date-trigger">Select End Date</div>
+                <input type="date" id="editPlanEndDate" required style="display:none;" onchange="updateDateDisplay('editPlanEndDate', 'editPlanEndDateDisplay')">
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button type="button" class="btn-secondary" onclick="closePaymentPlanEditModal()">Cancel</button>
+            <button type="button" class="btn-add" style="width:auto; padding:10px 18px;" onclick="savePaymentPlanEdit()">Save Changes</button>
         </div>
     </div>
 </div>
@@ -1549,24 +1667,34 @@
     function switchMainPage(view) {
         const dashboardView = document.getElementById('mainDashboardView');
         const essoView = document.getElementById('mainEssoView');
+        const paymentPlanView = document.getElementById('mainPaymentPlanView');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navEsso = document.getElementById('navEsso');
+        const navPaymentPlan = document.getElementById('navPaymentPlan');
         const monthCalendarBtn = document.getElementById('monthCalendarBtn');
 
+        dashboardView.style.display = 'none';
+        essoView.style.display = 'none';
+        paymentPlanView.style.display = 'none';
+        navDashboard.classList.remove('active');
+        navEsso.classList.remove('active');
+        navPaymentPlan.classList.remove('active');
+
         if (view === 'esso') {
-            dashboardView.style.display = 'none';
             essoView.style.display = 'block';
             headerTitle.textContent = 'ESSO Due Date';
-            navDashboard.classList.remove('active');
             navEsso.classList.add('active');
+            monthCalendarBtn.style.display = 'none';
+        } else if (view === 'paymentPlan') {
+            paymentPlanView.style.display = 'block';
+            headerTitle.textContent = 'Payment Plans';
+            navPaymentPlan.classList.add('active');
             monthCalendarBtn.style.display = 'none';
         } else {
             dashboardView.style.display = 'block';
-            essoView.style.display = 'none';
             headerTitle.textContent = 'Household Dashboard';
             navDashboard.classList.add('active');
-            navEsso.classList.remove('active');
             monthCalendarBtn.style.display = 'flex';
         }
         closeDrawer();
@@ -1583,13 +1711,14 @@
         indicator.textContent = msg;
         indicator.classList.add('active');
         clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => { indicator.classList.remove('active'); }, 1500);
+        saveTimeout = setTimeout(() => { indicator.classList.remove('active'); }, 2000);
     }
 
     async function handleManualRefresh() {
         const btn = document.getElementById('refreshBtn');
         btn.classList.add('spinning');
         try {
+            checkAndAutoRollover();
             await syncFromCloud();
             triggerSaveIndicator('✓ Data Refreshed');
         } catch (err) {
@@ -1691,7 +1820,7 @@
     });
 
     function getStoredData() {
-        return JSON.parse(localStorage.getItem('household_finance_v12')) || { months: {}, essoReminderLead: 1 };
+        return JSON.parse(localStorage.getItem('household_finance_v12')) || { months: {}, esso: [], paymentPlans: [], essoReminderLead: 1 };
     }
 
     async function saveData(data) {
@@ -1726,6 +1855,12 @@
         }
     }
 
+    // Auto-sync on window focus / tab activation & auto-rollover check
+    window.addEventListener('focus', () => {
+        checkAndAutoRollover();
+        syncFromCloud();
+    });
+
     function triggerCloudUpdateNotification() {
         if ('Notification' in window && Notification.permission === 'granted') {
             const title = 'Household Finance Updated';
@@ -1753,8 +1888,8 @@
     function advanceDateByRecurrence(dateStr, targetYearMonth, recurrence) {
         if (!dateStr) return '';
         const parts = dateStr.split('-');
-        const currDay = Number(parts[2]);
-        const currMonth = Number(parts[1]);
+        const currDay = Number(parts[2] || 1);
+        const currMonth = Number(parts[1] || 1);
         const [targetYear, targetMonth] = targetYearMonth.split('-').map(Number);
 
         if (recurrence === 'yearly') {
@@ -1778,14 +1913,20 @@
     function getMonthData(data, selectedMonth) {
         if (!data.months) data.months = {};
         
-        if (data.months[selectedMonth]) return data.months[selectedMonth];
+        let monthObj = data.months[selectedMonth];
+        const isEmpty = !monthObj || ((!monthObj.his || monthObj.his.length === 0) && (!monthObj.her || monthObj.her.length === 0));
 
-        const availableMonths = Object.keys(data.months).filter(m => data.months[m]).sort();
+        if (monthObj && !isEmpty) return monthObj;
+
+        const availableMonths = Object.keys(data.months).filter(m => data.months[m] && ((data.months[m].his && data.months[m].his.length > 0) || (data.months[m].her && data.months[m].her.length > 0))).sort();
         const prevMonthKey = availableMonths.filter(m => m < selectedMonth).pop();
 
-        let rolledHis = [], rolledHer = [], rolledEsso = [], rolledHisPay = [], rolledHerPay = [];
+        let rolledHis = monthObj ? (monthObj.his || []) : [];
+        let rolledHer = monthObj ? (monthObj.her || []) : [];
+        let hisPay = monthObj ? (monthObj.hisPay || []) : [];
+        let herPay = monthObj ? (monthObj.herPay || []) : [];
 
-        if (prevMonthKey && data.months[prevMonthKey]) {
+        if (prevMonthKey && data.months[prevMonthKey] && (rolledHis.length === 0 && rolledHer.length === 0)) {
             const prevData = data.months[prevMonthKey];
             const [targetYear, targetMonth] = selectedMonth.split('-').map(Number);
 
@@ -1816,16 +1957,30 @@
                     return true;
                 })
                 .map(i => ({ ...i, id: `${Date.now()}_her_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
-            
-            rolledEsso = (prevData.esso || [])
-                .map(i => ({ ...i, id: `${Date.now()}_esso_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, 'monthly'), isPaid: false }));
-
-            rolledHisPay = (prevData.hisPay || []).map(p => ({ ...p, id: `${Date.now()}_hp_${Math.random().toString(36).substring(2,7)}`, date: advanceDateByRecurrence(p.date, selectedMonth, 'monthly') }));
-            rolledHerPay = (prevData.herPay || []).map(p => ({ ...p, id: `${Date.now()}_hpr_${Math.random().toString(36).substring(2,7)}`, date: advanceDateByRecurrence(p.date, selectedMonth, 'monthly') }));
+        } else if ((!data.months || Object.keys(data.months).length <= 1) && (rolledHis.length === 0 && rolledHer.length === 0) && (data.his || data.her)) {
+            rolledHis = (data.his || []).map(i => ({ ...i, id: `${Date.now()}_his_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
+            rolledHer = (data.her || []).map(i => ({ ...i, id: `${Date.now()}_her_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
         }
 
-        data.months[selectedMonth] = { his: rolledHis, her: rolledHer, esso: rolledEsso, hisPay: rolledHisPay, herPay: rolledHerPay };
+        // Paycheck log is NOT rolled over per user instructions
+        data.months[selectedMonth] = { his: rolledHis, her: rolledHer, hisPay: hisPay, herPay: herPay };
         return data.months[selectedMonth];
+    }
+
+    function checkAndAutoRollover() {
+        const now = new Date();
+        const currentRealMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const data = getStoredData();
+        if (!data.months) data.months = {};
+        
+        const currentMonthData = data.months[currentRealMonthStr];
+        const isCurrentEmpty = !currentMonthData || ((!currentMonthData.his || currentMonthData.his.length === 0) && (!currentMonthData.her || currentMonthData.her.length === 0));
+
+        if (isCurrentEmpty) {
+            getMonthData(data, currentRealMonthStr);
+            saveData(data);
+            triggerSaveIndicator('✓ Auto-Rollover Initiated');
+        }
     }
 
     function parseLocalDate(dateStr) {
@@ -1863,12 +2018,12 @@
 
         const data = getStoredData();
         const monthData = data.months[monthPicker.value];
-        if (!monthData) return;
+        const essoItems = data.esso || [];
 
         const allItems = [
-            ...(monthData.his || []).map(i => ({ ...i, owner: 'His' })),
-            ...(monthData.her || []).map(i => ({ ...i, owner: 'Her' })),
-            ...(monthData.esso || []).map(i => ({ ...i, owner: 'ESSO', reminderDays: i.reminderDays ?? (data.essoReminderLead ?? 1) }))
+            ...(monthData && monthData.his ? monthData.his.map(i => ({ ...i, owner: 'His' })) : []),
+            ...(monthData && monthData.her ? monthData.her.map(i => ({ ...i, owner: 'Her' })) : []),
+            ...essoItems.map(i => ({ ...i, owner: 'ESSO', reminderDays: i.reminderDays ?? (data.essoReminderLead ?? 1) }))
         ];
 
         const now = new Date();
@@ -1907,6 +2062,11 @@
 
         saveData(data);
         form.reset();
+        const trigger = form.querySelector('.custom-date-trigger');
+        if (trigger) {
+            trigger.textContent = 'Select Date';
+            trigger.style.color = 'var(--text-muted)';
+        }
         initializeAllDateDisplays();
         render();
     }
@@ -1941,8 +2101,10 @@
     }
 
     function formatDueDateDisplay(dateStr, isPaid) {
-        if (!dateStr) return { text: '', urgent: false };
+        if (!dateStr) return { text: 'No Due Date', urgent: false };
         const dateObj = parseLocalDate(dateStr);
+        if (!dateObj || isNaN(dateObj.getTime())) return { text: dateStr, urgent: false };
+
         const now = new Date();
         now.setHours(0,0,0,0);
         
@@ -2090,7 +2252,6 @@
 
             const extractedItems = [];
             const data = getStoredData();
-            const monthData = getMonthData(data, monthPicker.value);
 
             lines.forEach(line => {
                 if (/ESSO\s*Date/i.test(line)) return;
@@ -2127,8 +2288,8 @@
             });
 
             if (extractedItems.length > 0) {
-                if (!monthData.esso) monthData.esso = [];
-                monthData.esso.push(...extractedItems);
+                if (!data.esso) data.esso = [];
+                data.esso.push(...extractedItems);
 
                 saveData(data);
                 render();
@@ -2174,31 +2335,31 @@
     function handleEssoSubmit(e) {
         e.preventDefault();
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
+        const dueDateVal = document.getElementById('essoDueDateInput').value;
 
         const newEsso = {
             id: `esso_${Date.now()}_${Math.random().toString(36).substring(2,7)}`,
             name: autoCapitalizeWords(document.getElementById('essoNameInput').value.trim()),
             amount: parseFloat(document.getElementById('essoAmountInput').value),
-            dueDate: document.getElementById('essoDueDateInput').value,
+            dueDate: dueDateVal,
             reminderDays: data.essoReminderLead ?? 1,
             isPaid: false
         };
 
-        if (!monthData.esso) monthData.esso = [];
-        monthData.esso.push(newEsso);
+        if (!data.esso) data.esso = [];
+        data.esso.push(newEsso);
 
         saveData(data);
         e.target.reset();
-        initializeAllDateDisplays();
+        document.getElementById('essoDueDateDisplay').textContent = 'Select Due Date';
+        document.getElementById('essoDueDateDisplay').style.color = 'var(--text-muted)';
         render();
     }
 
     function toggleEssoPaid(id) {
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
-        if (monthData.esso) {
-            const item = monthData.esso.find(i => i.id === id);
+        if (data.esso) {
+            const item = data.esso.find(i => i.id === id);
             if (item) item.isPaid = !item.isPaid;
         }
         saveData(data);
@@ -2207,8 +2368,7 @@
 
     function deleteEssoItem(id) {
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
-        if (monthData.esso) monthData.esso = monthData.esso.filter(i => i.id !== id);
+        if (data.esso) data.esso = data.esso.filter(i => i.id !== id);
         saveData(data);
         render();
     }
@@ -2244,10 +2404,9 @@
 
         const idsToDelete = Array.from(checkboxes).map(cb => cb.dataset.id);
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
 
-        if (monthData.esso) {
-            monthData.esso = monthData.esso.filter(i => !idsToDelete.includes(i.id));
+        if (data.esso) {
+            data.esso = data.esso.filter(i => !idsToDelete.includes(i.id));
         }
 
         isSelectModeActive = false;
@@ -2260,27 +2419,25 @@
     }
 
     function clearEssoPageData() {
-        if (!confirm('Are you sure you want to clear all ESSO items on this page?')) return;
+        if (!confirm('Are you sure you want to clear all ESSO items?')) return;
 
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
-        monthData.esso = [];
+        data.esso = [];
 
         saveData(data);
         render();
-        triggerSaveIndicator('✓ ESSO Page Cleared');
+        triggerSaveIndicator('✓ ESSO Cleared');
     }
 
     function openEssoEditModal(id) {
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
-        const item = (monthData.esso || []).find(i => i.id === id);
+        const item = (data.esso || []).find(i => i.id === id);
 
         if (item) {
             document.getElementById('editEssoId').value = item.id;
             document.getElementById('editEssoName').value = item.name;
             document.getElementById('editEssoAmount').value = item.amount;
-            document.getElementById('editEssoDueDate').value = item.dueDate;
+            document.getElementById('editEssoDueDate').value = item.dueDate || '';
             updateDateDisplay('editEssoDueDate', 'editEssoDueDateDisplay');
             document.getElementById('editEssoReminderDays').value = item.reminderDays ?? (data.essoReminderLead ?? 1);
             document.getElementById('essoEditModal').classList.add('active');
@@ -2291,8 +2448,7 @@
 
     function saveEssoEdit() {
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
-        const item = (monthData.esso || []).find(i => i.id === document.getElementById('editEssoId').value);
+        const item = (data.esso || []).find(i => i.id === document.getElementById('editEssoId').value);
 
         if (item) {
             item.name = autoCapitalizeWords(document.getElementById('editEssoName').value.trim());
@@ -2306,18 +2462,18 @@
         }
     }
 
-    function renderEssoView(monthData, searchTerm = '') {
+    function renderEssoView(searchTerm = '') {
         const essoListEl = document.getElementById('essoItemList');
-        let items = monthData.esso || [];
         const data = getStoredData();
+        let items = data.esso || [];
 
         const lowerSearch = searchTerm.toLowerCase();
         if (lowerSearch) {
             items = items.filter(i => i.name.toLowerCase().includes(lowerSearch) || i.amount.toString().includes(lowerSearch));
         }
 
-        const totalAmount = (monthData.esso || []).reduce((sum, i) => sum + i.amount, 0);
-        const paidAmount = (monthData.esso || []).filter(i => i.isPaid).reduce((sum, i) => sum + i.amount, 0);
+        const totalAmount = (data.esso || []).reduce((sum, i) => sum + i.amount, 0);
+        const paidAmount = (data.esso || []).filter(i => i.isPaid).reduce((sum, i) => sum + i.amount, 0);
 
         document.getElementById('essoTotalAmount').textContent = `$${totalAmount.toFixed(2)}`;
         document.getElementById('essoPendingAmount').textContent = `$${(totalAmount - paidAmount).toFixed(2)}`;
@@ -2355,9 +2511,198 @@
         }).join('');
     }
 
+    // Payment Plans Handlers with Auto End Date Computation
+    function computePlanEndDate(startDateStr, duration, frequency) {
+        if (!startDateStr || !duration) return '';
+        const d = parseLocalDate(startDateStr);
+        if (!d || isNaN(d.getTime())) return '';
+
+        const count = parseInt(duration, 10);
+        if (isNaN(count) || count <= 0) return '';
+
+        const intervals = count - 1;
+
+        if (frequency === 'weekly') {
+            d.setDate(d.getDate() + (intervals * 7));
+        } else if (frequency === 'bi-weekly') {
+            d.setDate(d.getDate() + (intervals * 14));
+        } else { // monthly
+            d.setMonth(d.getMonth() + intervals);
+        }
+
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function autoComputePlanEndDate() {
+        const startVal = document.getElementById('planStartDateInput').value;
+        const durationVal = document.getElementById('planDurationInput').value;
+        const freqVal = document.getElementById('planFrequencyInput').value;
+
+        if (startVal && durationVal) {
+            const calculatedEnd = computePlanEndDate(startVal, durationVal, freqVal);
+            if (calculatedEnd) {
+                document.getElementById('planEndDateInput').value = calculatedEnd;
+                updateDateDisplay('planEndDateInput', 'planEndDateDisplay');
+            }
+        }
+    }
+
+    function autoComputeEditPlanEndDate() {
+        const startVal = document.getElementById('editPlanStartDate').value;
+        const durationVal = document.getElementById('editPlanDuration').value;
+        const freqVal = document.getElementById('editPlanFrequency').value;
+
+        if (startVal && durationVal) {
+            const calculatedEnd = computePlanEndDate(startVal, durationVal, freqVal);
+            if (calculatedEnd) {
+                document.getElementById('editPlanEndDate').value = calculatedEnd;
+                updateDateDisplay('editPlanEndDate', 'editPlanEndDateDisplay');
+            }
+        }
+    }
+
+    function handlePaymentPlanSubmit(e) {
+        e.preventDefault();
+        const data = getStoredData();
+
+        const newPlan = {
+            id: `plan_${Date.now()}_${Math.random().toString(36).substring(2,7)}`,
+            name: autoCapitalizeWords(document.getElementById('planNameInput').value.trim()),
+            totalAmount: parseFloat(document.getElementById('planAmountInput').value),
+            frequency: document.getElementById('planFrequencyInput').value,
+            duration: parseInt(document.getElementById('planDurationInput').value, 10),
+            startDate: document.getElementById('planStartDateInput').value,
+            endDate: document.getElementById('planEndDateInput').value,
+            createdAt: new Date().toISOString().split('T')[0]
+        };
+
+        if (!data.paymentPlans) data.paymentPlans = [];
+        data.paymentPlans.push(newPlan);
+
+        saveData(data);
+        e.target.reset();
+        document.getElementById('planFrequencyInput').value = 'monthly';
+        document.getElementById('planStartDateDisplay').textContent = 'Start Date';
+        document.getElementById('planStartDateDisplay').style.color = 'var(--text-muted)';
+        document.getElementById('planEndDateDisplay').textContent = 'End Date';
+        document.getElementById('planEndDateDisplay').style.color = 'var(--text-muted)';
+        render();
+        triggerSaveIndicator('✓ Payment Plan Saved');
+    }
+
+    function deletePaymentPlan(id) {
+        const data = getStoredData();
+        if (data.paymentPlans) {
+            data.paymentPlans = data.paymentPlans.filter(p => p.id !== id);
+        }
+        saveData(data);
+        render();
+        triggerSaveIndicator('✓ Payment Plan Deleted');
+    }
+
+    function openPaymentPlanEditModal(id) {
+        const data = getStoredData();
+        const plan = (data.paymentPlans || []).find(p => p.id === id);
+        if (plan) {
+            document.getElementById('editPlanId').value = plan.id;
+            document.getElementById('editPlanName').value = plan.name;
+            document.getElementById('editPlanAmount').value = plan.totalAmount;
+            document.getElementById('editPlanFrequency').value = plan.frequency || 'monthly';
+            document.getElementById('editPlanDuration').value = plan.duration || 12;
+            document.getElementById('editPlanStartDate').value = plan.startDate || '';
+            updateDateDisplay('editPlanStartDate', 'editPlanStartDateDisplay');
+            document.getElementById('editPlanEndDate').value = plan.endDate || '';
+            updateDateDisplay('editPlanEndDate', 'editPlanEndDateDisplay');
+            document.getElementById('paymentPlanEditModal').classList.add('active');
+        }
+    }
+
+    function closePaymentPlanEditModal() {
+        document.getElementById('paymentPlanEditModal').classList.remove('active');
+    }
+
+    function savePaymentPlanEdit() {
+        const data = getStoredData();
+        const plan = (data.paymentPlans || []).find(p => p.id === document.getElementById('editPlanId').value);
+        if (plan) {
+            plan.name = autoCapitalizeWords(document.getElementById('editPlanName').value.trim());
+            plan.totalAmount = parseFloat(document.getElementById('editPlanAmount').value);
+            plan.frequency = document.getElementById('editPlanFrequency').value;
+            plan.duration = parseInt(document.getElementById('editPlanDuration').value, 10);
+            plan.startDate = document.getElementById('editPlanStartDate').value;
+            plan.endDate = document.getElementById('editPlanEndDate').value;
+
+            saveData(data);
+            closePaymentPlanEditModal();
+            render();
+            triggerSaveIndicator('✓ Payment Plan Updated');
+        }
+    }
+
+    function renderPaymentPlanView(searchTerm = '') {
+        const planListEl = document.getElementById('paymentPlanList');
+        const data = getStoredData();
+        let plans = data.paymentPlans || [];
+
+        const lowerSearch = searchTerm.toLowerCase();
+        if (lowerSearch) {
+            plans = plans.filter(p => p.name.toLowerCase().includes(lowerSearch) || p.totalAmount.toString().includes(lowerSearch));
+        }
+
+        const totalDebt = (data.paymentPlans || []).reduce((sum, p) => sum + p.totalAmount, 0);
+        
+        const installmentSum = (data.paymentPlans || []).reduce((sum, p) => {
+            return sum + (p.totalAmount / p.duration);
+        }, 0);
+
+        document.getElementById('planTotalDebt').textContent = `$${totalDebt.toFixed(2)}`;
+        document.getElementById('planInstallmentTotal').textContent = `$${installmentSum.toFixed(2)} (Per Period)`;
+
+        if (plans.length === 0) {
+            planListEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No payment plans scheduled.</span>';
+            return;
+        }
+
+        planListEl.innerHTML = plans.map(p => {
+            const installmentAmount = p.totalAmount / p.duration;
+            const freqLabel = p.frequency === 'weekly' ? 'Weekly' : (p.frequency === 'bi-weekly' ? 'Bi-Weekly' : 'Monthly');
+            const freqBadgeClass = p.frequency === 'weekly' ? 'badge-weekly' : (p.frequency === 'bi-weekly' ? 'badge-bi-weekly' : 'badge-monthly');
+
+            const startObj = parseLocalDate(p.startDate);
+            const endObj = parseLocalDate(p.endDate);
+            const startStr = startObj ? startObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : (p.startDate || 'N/A');
+            const endStr = endObj ? endObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : (p.endDate || 'N/A');
+
+            return `
+                <div class="plan-item-row">
+                    <div>
+                        <strong>${p.name}</strong>
+                        <div class="item-meta">
+                            <span>Total: <strong>$${p.totalAmount.toFixed(2)}</strong></span>
+                            <span>Duration: <strong style="color: var(--accent-his);">${p.duration} Installments</strong></span>
+                            <span class="badge ${freqBadgeClass}">${freqLabel}: $${installmentAmount.toFixed(2)} / ${p.frequency === 'weekly' ? 'wk' : (p.frequency === 'bi-weekly' ? 'bi-wk' : 'mo')}</span>
+                            <span style="opacity:0.8; font-size:0.75rem;">📅 ${startStr} to ${endStr}</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-edit" onclick="openPaymentPlanEditModal('${p.id}')">Edit</button>
+                        <button class="delete-btn" onclick="deletePaymentPlan('${p.id}')">&times;</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     function render() {
         const data = getStoredData();
-        const monthData = getMonthData(data, monthPicker.value);
+        const selectedMonth = monthPicker.value;
+
+        // Ensure month data and auto-rollover are populated
+        getMonthData(data, selectedMonth);
+        const monthData = data.months[selectedMonth];
 
         const hisIncome = renderPaychecks('his');
         const herIncome = renderPaychecks('her');
@@ -2397,6 +2742,7 @@
         const herSearch = document.getElementById('herSearchInput').value;
         const combinedSearch = document.getElementById('combinedSearchInput').value;
         const essoSearch = document.getElementById('essoSearchInput').value;
+        const planSearch = document.getElementById('planSearchInput').value;
 
         renderCategoryGrid('hisCategoriesGrid', hisItems, hisSearch);
         renderCategoryGrid('herCategoriesGrid', herItems, herSearch);
@@ -2406,7 +2752,9 @@
         renderUpcoming('herUpcomingList', herItems);
         renderUpcoming('combinedUpcomingList', [...hisItems, ...herItems]);
 
-        renderEssoView(monthData, essoSearch);
+        renderEssoView(essoSearch);
+        renderPaymentPlanView(planSearch);
+
         updateNotificationUI();
         checkAndTriggerNotifications();
     }
@@ -2432,6 +2780,11 @@
 
         saveData(data);
         form.reset();
+        const trigger = form.querySelector('.custom-date-trigger');
+        if (trigger) {
+            trigger.textContent = 'Select Due Date';
+            trigger.style.color = 'var(--text-muted)';
+        }
         initializeAllDateDisplays();
         render();
     }
@@ -2467,7 +2820,7 @@
             document.getElementById('editItemOwner').value = owner;
             document.getElementById('editItemName').value = item.name;
             document.getElementById('editItemAmount').value = item.amount;
-            document.getElementById('editItemDueDate').value = item.dueDate;
+            document.getElementById('editItemDueDate').value = item.dueDate || '';
             updateDateDisplay('editItemDueDate', 'editItemDueDateDisplay');
             document.getElementById('editItemReminder').value = item.reminderDays ?? 1;
             document.getElementById('editItemRecurrence').value = item.recurrence || 'monthly';
@@ -2534,6 +2887,8 @@
                 const data = getStoredData();
 
                 if (imported.months) data.months = { ...data.months, ...imported.months };
+                if (imported.esso) data.esso = imported.esso;
+                if (imported.paymentPlans) data.paymentPlans = imported.paymentPlans;
                 saveData(data);
                 render();
                 alert('Data imported successfully!');
@@ -2547,14 +2902,18 @@
     }
 
     document.getElementById('exportBtn').addEventListener('click', () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getStoredData(), null, 2));
+        const fullMasterData = getStoredData();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullMasterData, null, 2));
         const anchor = document.createElement('a');
         anchor.setAttribute("href", dataStr);
-        anchor.setAttribute("download", `household_finance_full_backup.json`);
+        anchor.setAttribute("download", `household_finance_full_backup_${new Date().toISOString().split('T')[0]}.json`);
         document.body.appendChild(anchor);
         anchor.click();
         anchor.remove();
     });
+
+    // Auto-rollover and initial setup check on startup
+    checkAndAutoRollover();
 
     syncFromCloud().then(() => {
         initializeAllDateDisplays();
