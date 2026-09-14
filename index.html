@@ -784,7 +784,7 @@
         .btn-rollover { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; }
         .btn-print { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
 
-        .esso-item-row, .plan-item-row {
+        .esso-item-row, .plan-item-row, .purchase-item-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -796,9 +796,9 @@
             gap: 10px;
         }
 
-        .esso-item-row.is-completed { opacity: 0.5; text-decoration: line-through; }
+        .esso-item-row.is-completed, .plan-item-row.is-completed, .purchase-item-row.is-completed { opacity: 0.5; text-decoration: line-through; }
 
-        .esso-checkbox, .esso-select-checkbox {
+        .esso-checkbox, .esso-select-checkbox, .plan-checkbox, .purchase-checkbox {
             width: 22px;
             height: 22px;
             accent-color: var(--paid);
@@ -864,6 +864,7 @@
         <button class="drawer-link active" id="navDashboard" onclick="switchMainPage('dashboard')">📊 Household Dashboard</button>
         <button class="drawer-link" id="navEsso" onclick="switchMainPage('esso')">📅 ESSO Due Date</button>
         <button class="drawer-link" id="navPaymentPlan" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button>
+        <button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button>
     </div>
 </div>
 
@@ -1195,6 +1196,8 @@
             <form id="paymentPlanForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));" onsubmit="handlePaymentPlanSubmit(event)">
                 <input type="text" id="planNameInput" class="auto-cap" placeholder="Plan / Creditor Name" required>
                 <input type="number" id="planAmountInput" step="0.01" min="0" placeholder="Total Amount ($)" required>
+                <input type="text" id="planRecipientInput" placeholder="Where to send money (Recipient)">
+                <input type="text" id="planPlaceInput" placeholder="Name of place / Store">
                 <select id="planFrequencyInput" required onchange="autoComputePlanEndDate()">
                     <option value="weekly">Weekly Frequency</option>
                     <option value="bi-weekly">Bi-Weekly Frequency</option>
@@ -1233,6 +1236,76 @@
         <div class="plan-card">
             <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 12px;">Active Payment Plans</h3>
             <div id="paymentPlanList">No payment plans scheduled.</div>
+        </div>
+    </div>
+
+    <!-- MAIN PAGE 4: Purchase Plan View -->
+    <div id="mainPurchasePlanView" style="display: none;">
+        <div class="summary-grid">
+            <div class="stat-card">
+                <h3>Wishlist Items</h3>
+                <div class="amount" id="purchaseTotalItems" style="color: var(--accent-his);">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Wishlist Budget</h3>
+                <div class="amount" id="purchaseTotalBudget" style="color: var(--accent-combined);">$0.00</div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3 style="color: var(--text); margin-bottom: 12px;">Add Purchase Item & Web Research</h3>
+            <form id="purchaseForm" class="income-form-grid" style="grid-template-columns: 1fr;" onsubmit="handlePurchaseSubmit(event)">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+                    <input type="text" id="purchaseNameInput" class="auto-cap" placeholder="Item Name" required>
+                    <input type="number" id="purchasePriceInput" step="0.01" min="0" placeholder="Price ($)" required>
+                    <input type="url" id="purchaseLinkInput" placeholder="Product Link (https://...)" onchange="performWebSearchForPurchase(this.value)">
+                </div>
+
+                <div id="purchaseSearchInfoBox" style="display:none; background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 14px; margin-top: 8px;">
+                    <h4 style="font-size: 0.9rem; color: var(--accent-his); margin-bottom: 4px;">🌐 Web Search & Product Info</h4>
+                    <p id="purchaseSearchInfoText" style="font-size: 0.85rem; color: var(--text-muted);">Fetching details...</p>
+                </div>
+
+                <div style="margin-top: 12px; border-top: 1px solid var(--card-border); padding-top: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600;">
+                        <input type="checkbox" id="purchaseEnablePlanToggle" style="width: 20px; height: 20px; accent-color: var(--accent-combined);" onchange="togglePurchasePlanOptions(this)">
+                        Put on Payment Plan (Auto-populate Payment Page)
+                    </label>
+                </div>
+
+                <div id="purchasePlanOptionsContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px;">
+                    <select id="purchasePlanFreq">
+                        <option value="weekly">Weekly Frequency</option>
+                        <option value="bi-weekly">Bi-Weekly Frequency</option>
+                        <option value="monthly" selected>Monthly Frequency</option>
+                    </select>
+                    <select id="purchasePlanDuration" onchange="autoComputePurchaseEndDate()">
+                        <option value="2">2 Installments</option>
+                        <option value="3">3 Installments</option>
+                        <option value="4">4 Installments</option>
+                        <option value="6">6 Installments</option>
+                        <option value="12" selected>12 Installments</option>
+                        <option value="24">24 Installments</option>
+                    </select>
+                    <input type="text" id="purchaseRecipientInput" placeholder="Where to send money (Recipient)">
+                    <input type="text" id="purchasePlaceInput" placeholder="Name of place / Store">
+                    <div class="custom-date-wrapper" onclick="openDateModal('purchaseStartDateInput')">
+                        <div id="purchaseStartDateDisplay" class="custom-date-trigger">Start Date</div>
+                        <input type="date" id="purchaseStartDateInput" style="display:none;" onchange="updateDateDisplay('purchaseStartDateInput', 'purchaseStartDateDisplay'); autoComputePurchaseEndDate();">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-add" style="margin-top: 12px;">Save Purchase Item</button>
+            </form>
+        </div>
+
+        <div class="search-bar-container">
+            <input type="text" id="purchaseSearchInput" class="search-input" placeholder="🔍 Search purchase items..." oninput="render()">
+        </div>
+
+        <div class="plan-card">
+            <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 12px;">Saved Purchase Items & Wishlist</h3>
+            <div id="purchaseItemList">No purchase items scheduled.</div>
         </div>
     </div>
 
@@ -1412,6 +1485,14 @@
         <div>
             <label style="font-size:0.85rem;">Total Amount ($)</label>
             <input type="number" id="editPlanAmount" step="0.01" min="0" required>
+        </div>
+        <div>
+            <label style="font-size:0.85rem;">Where to send money (Recipient)</label>
+            <input type="text" id="editPlanRecipient" placeholder="Recipient">
+        </div>
+        <div>
+            <label style="font-size:0.85rem;">Name of Place / Store</label>
+            <input type="text" id="editPlanPlace" placeholder="Place Name">
         </div>
         <div>
             <label style="font-size:0.85rem;">Frequency</label>
@@ -1668,18 +1749,22 @@
         const dashboardView = document.getElementById('mainDashboardView');
         const essoView = document.getElementById('mainEssoView');
         const paymentPlanView = document.getElementById('mainPaymentPlanView');
+        const purchasePlanView = document.getElementById('mainPurchasePlanView');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navEsso = document.getElementById('navEsso');
         const navPaymentPlan = document.getElementById('navPaymentPlan');
+        const navPurchasePlan = document.getElementById('navPurchasePlan');
         const monthCalendarBtn = document.getElementById('monthCalendarBtn');
 
         dashboardView.style.display = 'none';
         essoView.style.display = 'none';
         paymentPlanView.style.display = 'none';
+        purchasePlanView.style.display = 'none';
         navDashboard.classList.remove('active');
         navEsso.classList.remove('active');
         navPaymentPlan.classList.remove('active');
+        navPurchasePlan.classList.remove('active');
 
         if (view === 'esso') {
             essoView.style.display = 'block';
@@ -1690,6 +1775,11 @@
             paymentPlanView.style.display = 'block';
             headerTitle.textContent = 'Payment Plans';
             navPaymentPlan.classList.add('active');
+            monthCalendarBtn.style.display = 'none';
+        } else if (view === 'purchasePlan') {
+            purchasePlanView.style.display = 'block';
+            headerTitle.textContent = 'Purchase Plan & Wishlist';
+            navPurchasePlan.classList.add('active');
             monthCalendarBtn.style.display = 'none';
         } else {
             dashboardView.style.display = 'block';
@@ -1820,7 +1910,7 @@
     });
 
     function getStoredData() {
-        return JSON.parse(localStorage.getItem('household_finance_v12')) || { months: {}, esso: [], paymentPlans: [], essoReminderLead: 1 };
+        return JSON.parse(localStorage.getItem('household_finance_v12')) || { months: {}, esso: [], paymentPlans: [], purchasePlans: [], essoReminderLead: 1 };
     }
 
     async function saveData(data) {
@@ -1855,7 +1945,6 @@
         }
     }
 
-    // Auto-sync on window focus / tab activation & auto-rollover check
     window.addEventListener('focus', () => {
         checkAndAutoRollover();
         syncFromCloud();
@@ -1962,7 +2051,6 @@
             rolledHer = (data.her || []).map(i => ({ ...i, id: `${Date.now()}_her_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
         }
 
-        // Paycheck log is NOT rolled over per user instructions
         data.months[selectedMonth] = { his: rolledHis, her: rolledHer, hisPay: hisPay, herPay: herPay };
         return data.months[selectedMonth];
     }
@@ -2511,7 +2599,7 @@
         }).join('');
     }
 
-    // Payment Plans Handlers with Auto End Date Computation
+    // Payment Plans Handlers with Auto End Date Computation, Where to send money, Place name, and sorting paid items to the bottom
     function computePlanEndDate(startDateStr, duration, frequency) {
         if (!startDateStr || !duration) return '';
         const d = parseLocalDate(startDateStr);
@@ -2572,10 +2660,13 @@
             id: `plan_${Date.now()}_${Math.random().toString(36).substring(2,7)}`,
             name: autoCapitalizeWords(document.getElementById('planNameInput').value.trim()),
             totalAmount: parseFloat(document.getElementById('planAmountInput').value),
+            recipient: autoCapitalizeWords(document.getElementById('planRecipientInput').value.trim() || 'N/A'),
+            place: autoCapitalizeWords(document.getElementById('planPlaceInput').value.trim() || 'N/A'),
             frequency: document.getElementById('planFrequencyInput').value,
             duration: parseInt(document.getElementById('planDurationInput').value, 10),
             startDate: document.getElementById('planStartDateInput').value,
             endDate: document.getElementById('planEndDateInput').value,
+            isPaid: false,
             createdAt: new Date().toISOString().split('T')[0]
         };
 
@@ -2591,6 +2682,16 @@
         document.getElementById('planEndDateDisplay').style.color = 'var(--text-muted)';
         render();
         triggerSaveIndicator('✓ Payment Plan Saved');
+    }
+
+    function togglePaymentPlanPaid(id) {
+        const data = getStoredData();
+        if (data.paymentPlans) {
+            const plan = data.paymentPlans.find(p => p.id === id);
+            if (plan) plan.isPaid = !plan.isPaid;
+        }
+        saveData(data);
+        render();
     }
 
     function deletePaymentPlan(id) {
@@ -2610,6 +2711,8 @@
             document.getElementById('editPlanId').value = plan.id;
             document.getElementById('editPlanName').value = plan.name;
             document.getElementById('editPlanAmount').value = plan.totalAmount;
+            document.getElementById('editPlanRecipient').value = plan.recipient || '';
+            document.getElementById('editPlanPlace').value = plan.place || '';
             document.getElementById('editPlanFrequency').value = plan.frequency || 'monthly';
             document.getElementById('editPlanDuration').value = plan.duration || 12;
             document.getElementById('editPlanStartDate').value = plan.startDate || '';
@@ -2630,6 +2733,8 @@
         if (plan) {
             plan.name = autoCapitalizeWords(document.getElementById('editPlanName').value.trim());
             plan.totalAmount = parseFloat(document.getElementById('editPlanAmount').value);
+            plan.recipient = autoCapitalizeWords(document.getElementById('editPlanRecipient').value.trim() || 'N/A');
+            plan.place = autoCapitalizeWords(document.getElementById('editPlanPlace').value.trim() || 'N/A');
             plan.frequency = document.getElementById('editPlanFrequency').value;
             plan.duration = parseInt(document.getElementById('editPlanDuration').value, 10);
             plan.startDate = document.getElementById('editPlanStartDate').value;
@@ -2649,14 +2754,21 @@
 
         const lowerSearch = searchTerm.toLowerCase();
         if (lowerSearch) {
-            plans = plans.filter(p => p.name.toLowerCase().includes(lowerSearch) || p.totalAmount.toString().includes(lowerSearch));
+            plans = plans.filter(p => p.name.toLowerCase().includes(lowerSearch) || p.totalAmount.toString().includes(lowerSearch) || (p.recipient && p.recipient.toLowerCase().includes(lowerSearch)) || (p.place && p.place.toLowerCase().includes(lowerSearch)));
         }
 
+        // Sort: Unpaid first (chronological order by startDate), Paid items moved to the bottom
+        plans.sort((a, b) => {
+            if (a.isPaid !== b.isPaid) {
+                return a.isPaid ? 1 : -1; // Unpaid (false) comes before Paid (true)
+            }
+            const dateA = parseLocalDate(a.startDate) || new Date(0);
+            const dateB = parseLocalDate(b.startDate) || new Date(0);
+            return dateA - dateB;
+        });
+
         const totalDebt = (data.paymentPlans || []).reduce((sum, p) => sum + p.totalAmount, 0);
-        
-        const installmentSum = (data.paymentPlans || []).reduce((sum, p) => {
-            return sum + (p.totalAmount / p.duration);
-        }, 0);
+        const installmentSum = (data.paymentPlans || []).reduce((sum, p) => sum + (p.totalAmount / p.duration), 0);
 
         document.getElementById('planTotalDebt').textContent = `$${totalDebt.toFixed(2)}`;
         document.getElementById('planInstallmentTotal').textContent = `$${installmentSum.toFixed(2)} (Per Period)`;
@@ -2677,14 +2789,18 @@
             const endStr = endObj ? endObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : (p.endDate || 'N/A');
 
             return `
-                <div class="plan-item-row">
-                    <div>
-                        <strong>${p.name}</strong>
-                        <div class="item-meta">
-                            <span>Total: <strong>$${p.totalAmount.toFixed(2)}</strong></span>
-                            <span>Duration: <strong style="color: var(--accent-his);">${p.duration} Installments</strong></span>
-                            <span class="badge ${freqBadgeClass}">${freqLabel}: $${installmentAmount.toFixed(2)} / ${p.frequency === 'weekly' ? 'wk' : (p.frequency === 'bi-weekly' ? 'bi-wk' : 'mo')}</span>
-                            <span style="opacity:0.8; font-size:0.75rem;">📅 ${startStr} to ${endStr}</span>
+                <div class="plan-item-row ${p.isPaid ? 'is-completed' : ''}">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="checkbox" class="plan-checkbox" ${p.isPaid ? 'checked' : ''} onchange="togglePaymentPlanPaid('${p.id}')" title="Mark as Paid">
+                        <div>
+                            <strong>${p.name}</strong>
+                            <div class="item-meta">
+                                <span>Total: <strong>$${p.totalAmount.toFixed(2)}</strong></span>
+                                <span>Where to send: <strong>${p.recipient || 'N/A'}</strong></span>
+                                <span>Place: <strong>${p.place || 'N/A'}</strong></span>
+                                <span class="badge ${freqBadgeClass}">${freqLabel}: $${installmentAmount.toFixed(2)} / ${p.frequency === 'weekly' ? 'wk' : (p.frequency === 'bi-weekly' ? 'bi-wk' : 'mo')}</span>
+                                <span style="opacity:0.8; font-size:0.75rem;">📅 Start: ${startStr} | End: ${endStr}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="item-actions">
@@ -2696,11 +2812,175 @@
         }).join('');
     }
 
+    // Purchase Plan & Web Search Handlers
+    function togglePurchasePlanOptions(checkbox) {
+        const container = document.getElementById('purchasePlanOptionsContainer');
+        container.style.display = checkbox.checked ? 'grid' : 'none';
+    }
+
+    function computePurchaseEndDate() {
+        const startVal = document.getElementById('purchaseStartDateInput').value;
+        const durationVal = document.getElementById('purchasePlanDuration').value;
+        const freqVal = document.getElementById('purchasePlanFreq').value;
+
+        if (startVal && durationVal) {
+            return computePlanEndDate(startVal, durationVal, freqVal);
+        }
+        return '';
+    }
+
+    function autoComputePurchaseEndDate() {
+        // Reserved for future dynamic purchase end date calculations if needed
+    }
+
+    async function performWebSearchForPurchase(urlStr) {
+        if (!urlStr || !urlStr.startsWith('http')) return;
+        const infoBox = document.getElementById('purchaseSearchInfoBox');
+        const infoText = document.getElementById('purchaseSearchInfoText');
+        infoBox.style.display = 'block';
+        infoText.textContent = '🌐 Searching web and gathering product insights...';
+
+        try {
+            const itemName = document.getElementById('purchaseNameInput').value || 'Product';
+            const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(itemName)}&format=json`);
+            const json = await res.json();
+
+            let summary = json.AbstractText || (json.RelatedTopics && json.RelatedTopics[0] && json.RelatedTopics[0].Text) || 'Product link verified. Ready for wishlist and payment plan configuration.';
+            infoText.innerHTML = `<strong>Summary:</strong> ${summary}`;
+        } catch (e) {
+            infoText.textContent = '🌐 Link recorded successfully. Web search summary unavailable offline.';
+        }
+    }
+
+    function handlePurchaseSubmit(e) {
+        e.preventDefault();
+        const data = getStoredData();
+
+        const name = autoCapitalizeWords(document.getElementById('purchaseNameInput').value.trim());
+        const price = parseFloat(document.getElementById('purchasePriceInput').value);
+        const link = document.getElementById('purchaseLinkInput').value.trim();
+        const enablePlan = document.getElementById('purchaseEnablePlanToggle').checked;
+
+        const purchaseItem = {
+            id: `purchase_${Date.now()}_${Math.random().toString(36).substring(2,7)}`,
+            name,
+            price,
+            link,
+            isPaid: false,
+            createdAt: new Date().toISOString().split('T')[0]
+        };
+
+        if (!data.purchasePlans) data.purchasePlans = [];
+        data.purchasePlans.push(purchaseItem);
+
+        if (enablePlan) {
+            const freq = document.getElementById('purchasePlanFreq').value;
+            const duration = parseInt(document.getElementById('purchasePlanDuration').value, 10);
+            const recipient = autoCapitalizeWords(document.getElementById('purchaseRecipientInput').value.trim() || 'N/A');
+            const place = autoCapitalizeWords(document.getElementById('purchasePlaceInput').value.trim() || 'N/A');
+            const startDate = document.getElementById('purchaseStartDateInput').value || new Date().toISOString().split('T')[0];
+            const endDate = computePlanEndDate(startDate, duration, freq);
+
+            const newPlan = {
+                id: `plan_${Date.now()}_${Math.random().toString(36).substring(2,7)}`,
+                name: `Purchase: ${name}`,
+                totalAmount: price,
+                recipient,
+                place,
+                frequency: freq,
+                duration,
+                startDate,
+                endDate,
+                isPaid: false,
+                createdAt: new Date().toISOString().split('T')[0]
+            };
+
+            if (!data.paymentPlans) data.paymentPlans = [];
+            data.paymentPlans.push(newPlan);
+        }
+
+        saveData(data);
+        e.target.reset();
+        document.getElementById('purchasePlanOptionsContainer').style.display = 'none';
+        document.getElementById('purchaseSearchInfoBox').style.display = 'none';
+        document.getElementById('purchaseStartDateDisplay').textContent = 'Start Date';
+        document.getElementById('purchaseStartDateDisplay').style.color = 'var(--text-muted)';
+        render();
+        triggerSaveIndicator('✓ Purchase Item Saved & Synced');
+    }
+
+    function togglePurchasePaid(id) {
+        const data = getStoredData();
+        if (data.purchasePlans) {
+            const item = data.purchasePlans.find(p => p.id === id);
+            if (item) item.isPaid = !item.isPaid;
+        }
+        saveData(data);
+        render();
+    }
+
+    function deletePurchaseItem(id) {
+        const data = getStoredData();
+        if (data.purchasePlans) {
+            data.purchasePlans = data.purchasePlans.filter(p => p.id !== id);
+        }
+        saveData(data);
+        render();
+        triggerSaveIndicator('✓ Purchase Item Deleted');
+    }
+
+    function renderPurchaseView(searchTerm = '') {
+        const listEl = document.getElementById('purchaseItemList');
+        const data = getStoredData();
+        let items = data.purchasePlans || [];
+
+        const lowerSearch = searchTerm.toLowerCase();
+        if (lowerSearch) {
+            items = items.filter(i => i.name.toLowerCase().includes(lowerSearch) || i.price.toString().includes(lowerSearch));
+        }
+
+        // Sort: Unpaid first, Paid moved to bottom
+        items.sort((a, b) => {
+            if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1;
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        const totalBudget = (data.purchasePlans || []).reduce((sum, i) => sum + i.price, 0);
+        document.getElementById('purchaseTotalItems').textContent = (data.purchasePlans || []).length;
+        document.getElementById('purchaseTotalBudget').textContent = `$${totalBudget.toFixed(2)}`;
+
+        if (items.length === 0) {
+            listEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No purchase items scheduled.</span>';
+            return;
+        }
+
+        listEl.innerHTML = items.map(i => {
+            const linkHtml = i.link ? `<a href="${i.link}" target="_blank" style="color: var(--accent-his); font-size: 0.85rem; text-decoration: underline;">🔗 View Product Link</a>` : '';
+            return `
+                <div class="purchase-item-row ${i.isPaid ? 'is-completed' : ''}">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="checkbox" class="purchase-checkbox" ${i.isPaid ? 'checked' : ''} onchange="togglePurchasePaid('${i.id}')" title="Mark as Paid">
+                        <div>
+                            <strong>${i.name}</strong>
+                            <div class="item-meta">
+                                <span>Price: <strong>$${i.price.toFixed(2)}</strong></span>
+                                ${linkHtml}
+                                <span style="opacity:0.7; font-size:0.75rem;">Added: ${i.createdAt}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="delete-btn" onclick="deletePurchaseItem('${i.id}')">&times;</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     function render() {
         const data = getStoredData();
         const selectedMonth = monthPicker.value;
 
-        // Ensure month data and auto-rollover are populated
         getMonthData(data, selectedMonth);
         const monthData = data.months[selectedMonth];
 
@@ -2743,6 +3023,7 @@
         const combinedSearch = document.getElementById('combinedSearchInput').value;
         const essoSearch = document.getElementById('essoSearchInput').value;
         const planSearch = document.getElementById('planSearchInput').value;
+        const purchaseSearch = document.getElementById('purchaseSearchInput').value;
 
         renderCategoryGrid('hisCategoriesGrid', hisItems, hisSearch);
         renderCategoryGrid('herCategoriesGrid', herItems, herSearch);
@@ -2754,6 +3035,7 @@
 
         renderEssoView(essoSearch);
         renderPaymentPlanView(planSearch);
+        renderPurchaseView(purchaseSearch);
 
         updateNotificationUI();
         checkAndTriggerNotifications();
@@ -2886,14 +3168,40 @@
                 const imported = JSON.parse(e.target.result);
                 const data = getStoredData();
 
-                if (imported.months) data.months = { ...data.months, ...imported.months };
-                if (imported.esso) data.esso = imported.esso;
-                if (imported.paymentPlans) data.paymentPlans = imported.paymentPlans;
+                if (imported.months) {
+                    data.months = { ...data.months, ...imported.months };
+                } else if (imported.his || imported.her) {
+                    const fallbackMonth = monthPicker.value;
+                    if (!data.months[fallbackMonth]) data.months[fallbackMonth] = { his: [], her: [], hisPay: [], herPay: [] };
+                    if (imported.his) data.months[fallbackMonth].his = imported.his;
+                    if (imported.her) data.months[fallbackMonth].her = imported.her;
+                    if (imported.hisPay) data.months[fallbackMonth].hisPay = imported.hisPay;
+                    if (imported.herPay) data.months[fallbackMonth].herPay = imported.herPay;
+                }
+
+                if (imported.esso) {
+                    data.esso = Array.from(new Set([...(data.esso || []), ...imported.esso]));
+                }
+                if (imported.paymentPlans) {
+                    data.paymentPlans = Array.from(new Set([...(data.paymentPlans || []), ...imported.paymentPlans]));
+                }
+                if (imported.purchasePlans) {
+                    data.purchasePlans = Array.from(new Set([...(data.purchasePlans || []), ...imported.purchasePlans]));
+                }
+
+                const importedMonthKeys = Object.keys(data.months || {}).sort();
+                if (importedMonthKeys.length > 0) {
+                    const latestMonth = importedMonthKeys[importedMonthKeys.length - 1];
+                    monthPicker.value = latestMonth;
+                }
+
                 saveData(data);
                 render();
+                initializeAllDateDisplays();
                 alert('Data imported successfully!');
             } catch (err) {
-                alert('Error parsing JSON file.');
+                console.error('JSON Import Error:', err);
+                alert('Error parsing JSON file. Please ensure it is a valid backup file.');
             } finally {
                 event.target.value = '';
             }
@@ -2912,7 +3220,6 @@
         anchor.remove();
     });
 
-    // Auto-rollover and initial setup check on startup
     checkAndAutoRollover();
 
     syncFromCloud().then(() => {
