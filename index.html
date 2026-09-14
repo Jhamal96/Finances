@@ -963,6 +963,25 @@
                     <button type="submit" class="btn-add">Log Paycheck</button>
                 </form>
                 <ul class="paycheck-log-list" id="hisPaycheckList"></ul>
+
+                <!-- 50/30/20 Rule Breakdown (His - Weekly Pay) -->
+                <div id="his503020Card" style="margin-top: 14px; background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 14px;">
+                    <h4 style="font-size: 0.85rem; color: var(--accent-his); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📊 His 50/30/20 Budget Rule (Weekly Pay)</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.85rem; text-align: center;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                            <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">50% Needs</span>
+                            <strong id="his50Needs" style="color: var(--bills);">$0.00</strong>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                            <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">30% Wants</span>
+                            <strong id="his30Wants" style="color: var(--debts);">$0.00</strong>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                            <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">20% Savings</span>
+                            <strong id="his20Savings" style="color: var(--savings);">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="upcoming-card">
@@ -1035,6 +1054,25 @@
                     <button type="submit" class="btn-add">Log Paycheck</button>
                 </form>
                 <ul class="paycheck-log-list" id="herPaycheckList"></ul>
+
+                <!-- 50/30/20 Rule Breakdown (Her - Bi-Weekly Pay) -->
+                <div id="her503020Card" style="margin-top: 14px; background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 12px; padding: 14px;">
+                    <h4 style="font-size: 0.85rem; color: var(--accent-hers); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Her 50/30/20 Budget Rule (Bi-Weekly Pay)</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.85rem; text-align: center;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                            <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">50% Needs</span>
+                            <strong id="her50Needs" style="color: var(--bills);">$0.00</strong>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                            <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">30% Wants</span>
+                            <strong id="her30Wants" style="color: var(--debts);">$0.00</strong>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                            <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">20% Savings</span>
+                            <strong id="her20Savings" style="color: var(--savings);">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="upcoming-card">
@@ -2185,7 +2223,20 @@
             listEl.appendChild(li);
         });
 
-        return paychecks.reduce((sum, p) => sum + p.amount, 0);
+        const totalIncome = paychecks.reduce((sum, p) => sum + p.amount, 0);
+
+        // Update 50/30/20 Rule UI underneath paycheck log
+        const needsEl = document.getElementById(`${owner}50Needs`);
+        const wantsEl = document.getElementById(`${owner}30Wants`);
+        const savingsEl = document.getElementById(`${owner}20Savings`);
+
+        if (needsEl && wantsEl && savingsEl) {
+            needsEl.textContent = `$${(totalIncome * 0.50).toFixed(2)}`;
+            wantsEl.textContent = `$${(totalIncome * 0.30).toFixed(2)}`;
+            savingsEl.textContent = `$${(totalIncome * 0.20).toFixed(2)}`;
+        }
+
+        return totalIncome;
     }
 
     function formatDueDateDisplay(dateStr, isPaid) {
@@ -2760,7 +2811,7 @@
         // Sort: Unpaid first (chronological order by startDate), Paid items moved to the bottom
         plans.sort((a, b) => {
             if (a.isPaid !== b.isPaid) {
-                return a.isPaid ? 1 : -1; // Unpaid (false) comes before Paid (true)
+                return a.isPaid ? 1 : -1;
             }
             const dateA = parseLocalDate(a.startDate) || new Date(0);
             const dateB = parseLocalDate(b.startDate) || new Date(0);
@@ -2829,9 +2880,7 @@
         return '';
     }
 
-    function autoComputePurchaseEndDate() {
-        // Reserved for future dynamic purchase end date calculations if needed
-    }
+    function autoComputePurchaseEndDate() {}
 
     async function performWebSearchForPurchase(urlStr) {
         if (!urlStr || !urlStr.startsWith('http')) return;
@@ -2939,7 +2988,6 @@
             items = items.filter(i => i.name.toLowerCase().includes(lowerSearch) || i.price.toString().includes(lowerSearch));
         }
 
-        // Sort: Unpaid first, Paid moved to bottom
         items.sort((a, b) => {
             if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1;
             return new Date(b.createdAt) - new Date(a.createdAt);
