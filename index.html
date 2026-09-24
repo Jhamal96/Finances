@@ -902,7 +902,6 @@
                     </svg>
                 </button>
 
-                <!-- Unified Calendar Icon Button for both Desktop & Mobile -->
                 <button class="btn-icon-hdr" id="monthCalendarBtn" onclick="openCalendarModal()" title="Select Month">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -920,7 +919,6 @@
         </div>
     </header>
 
-    <!-- Hidden shared month picker value sync reference -->
     <input type="month" id="monthPicker" style="display:none;">
 
     <div class="notification-banner" id="notifyBanner">
@@ -964,7 +962,6 @@
                 </form>
                 <ul class="paycheck-log-list" id="hisPaycheckList"></ul>
 
-                <!-- 50/30/20 Rule Breakdown (His - Weekly Pay) -->
                 <div id="his503020Card" style="margin-top: 14px; background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 14px;">
                     <h4 style="font-size: 0.85rem; color: var(--accent-his); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📊 His 50/30/20 Budget Rule (Weekly Pay)</h4>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.85rem; text-align: center;">
@@ -1055,7 +1052,6 @@
                 </form>
                 <ul class="paycheck-log-list" id="herPaycheckList"></ul>
 
-                <!-- 50/30/20 Rule Breakdown (Her - Bi-Weekly Pay) -->
                 <div id="her503020Card" style="margin-top: 14px; background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 12px; padding: 14px;">
                     <h4 style="font-size: 0.85rem; color: var(--accent-hers); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Her 50/30/20 Budget Rule (Bi-Weekly Pay)</h4>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.85rem; text-align: center;">
@@ -1197,7 +1193,6 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem;">ESSO Payment Slots</h3>
                 
-                <!-- ESSO Notification Preferences Icon Button -->
                 <button class="btn-icon-hdr" onclick="openEssoNotificationModal()" title="ESSO Notification Preferences">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -1356,7 +1351,6 @@
     </div>
 </div>
 
-<!-- Custom Styled Calendar Month Picker Modal -->
 <div class="picker-modal" id="calendarModal">
     <div class="picker-card">
         <div class="picker-nav-header">
@@ -1371,7 +1365,6 @@
     </div>
 </div>
 
-<!-- Custom Styled Full Day Date Picker Modal -->
 <div class="picker-modal" id="fullDateModal">
     <div class="picker-card" style="max-width: 340px;">
         <div class="picker-nav-header">
@@ -1386,7 +1379,6 @@
     </div>
 </div>
 
-<!-- ESSO Notification Settings & Test Modal -->
 <div class="modal" id="essoNotifyModal">
     <div class="modal-content">
         <h3>🔔 Notification Preferences & Multi-Device Test</h3>
@@ -1416,7 +1408,6 @@
     </div>
 </div>
 
-<!-- Standard Edit Modal -->
 <div class="modal" id="editModal">
     <div class="modal-content">
         <h3>Edit Item</h3>
@@ -1473,7 +1464,6 @@
     </div>
 </div>
 
-<!-- ESSO Specific Edit Modal -->
 <div class="modal" id="essoEditModal">
     <div class="modal-content">
         <h3>Edit ESSO Payment Slot</h3>
@@ -1511,7 +1501,6 @@
     </div>
 </div>
 
-<!-- Payment Plan Specific Edit Modal -->
 <div class="modal" id="paymentPlanEditModal">
     <div class="modal-content">
         <h3>Edit Payment Plan</h3>
@@ -1579,6 +1568,7 @@
 
 <script>
     let registeredServiceWorkerReg = null;
+    let isImporting = false; // Prevents background syncs from overwriting while importing
 
     if ('serviceWorker' in navigator) {
         const swCode = `
@@ -1879,14 +1869,14 @@
 
     async function testSendNotification() {
         if (!('Notification' in window)) {
-            alert('Notifications are not supported on this device/browser (Note: On iOS, make sure to add this web app to your Home Screen from Safari first).');
+            alert('Notifications are not supported on this device/browser.');
             return;
         }
 
         if (Notification.permission !== 'granted') {
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                alert('Notification permission was denied. Please allow notifications in your browser or device settings.');
+                alert('Notification permission was denied. Please allow notifications in browser settings.');
                 updateNotificationUI();
                 return;
             }
@@ -1896,7 +1886,7 @@
 
         const title = '🔔 Multi-Device Notification Test';
         const options = {
-            body: 'Success! Push notifications are successfully active on your device (Android, iOS, Web, or Desktop).',
+            body: 'Success! Push notifications are active.',
             icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png',
             badge: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png',
             tag: 'test-notification',
@@ -1908,16 +1898,13 @@
             try {
                 await registeredServiceWorkerReg.showNotification(title, options);
                 return;
-            } catch (e) {
-                console.log('SW notification fallback to regular constructor:', e);
-            }
+            } catch (e) {}
         }
 
         try {
             new Notification(title, options);
         } catch (err) {
             console.error('Notification error:', err);
-            alert('Could not trigger notification. Ensure notifications are allowed.');
         }
     }
 
@@ -1961,12 +1948,14 @@
                 .upsert({ id: 'main', payload: data, updated_at: new Date() });
 
             if (!error) triggerSaveIndicator('✓ Synced');
+            else console.error('Supabase error:', error);
         } catch (err) {
             console.error('Supabase Sync Error:', err);
         }
     }
 
     async function syncFromCloud() {
+        if (isImporting) return;
         try {
             const { data } = await supabaseClient
                 .from('household_data')
@@ -1984,30 +1973,19 @@
     }
 
     window.addEventListener('focus', () => {
-        checkAndAutoRollover();
-        syncFromCloud();
-    });
-
-    function triggerCloudUpdateNotification() {
-        if ('Notification' in window && Notification.permission === 'granted') {
-            const title = 'Household Finance Updated';
-            const options = { body: 'Data was updated remotely from another device.', icon: 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png' };
-            if (registeredServiceWorkerReg && registeredServiceWorkerReg.showNotification) {
-                registeredServiceWorkerReg.showNotification(title, options);
-            } else {
-                new Notification(title, options);
-            }
+        if (!isImporting) {
+            checkAndAutoRollover();
+            syncFromCloud();
         }
-    }
+    });
 
     supabaseClient
         .channel('public:household_data')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'household_data' }, payload => {
-            if (payload.new && payload.new.payload) {
+            if (!isImporting && payload.new && payload.new.payload) {
                 localStorage.setItem('household_finance_v12', JSON.stringify(payload.new.payload));
                 render();
                 triggerSaveIndicator('✓ Updated via Cloud');
-                triggerCloudUpdateNotification();
             }
         })
         .subscribe();
@@ -2084,9 +2062,6 @@
                     return true;
                 })
                 .map(i => ({ ...i, id: `${Date.now()}_her_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
-        } else if ((!data.months || Object.keys(data.months).length <= 1) && (rolledHis.length === 0 && rolledHer.length === 0) && (data.his || data.her)) {
-            rolledHis = (data.his || []).map(i => ({ ...i, id: `${Date.now()}_his_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
-            rolledHer = (data.her || []).map(i => ({ ...i, id: `${Date.now()}_her_${Math.random().toString(36).substring(2,7)}`, dueDate: advanceDateByRecurrence(i.dueDate, selectedMonth, i.recurrence), isPaid: false }));
         }
 
         data.months[selectedMonth] = { his: rolledHis, her: rolledHer, hisPay: hisPay, herPay: herPay };
@@ -2117,16 +2092,12 @@
 
     function requestNotificationPermission() {
         if (!('Notification' in window)) {
-            alert('Notifications are not supported on this device/browser.');
+            alert('Notifications are not supported on this device.');
             return;
         }
         Notification.requestPermission().then(permission => {
             updateNotificationUI();
-            if (permission === 'granted') {
-                testSendNotification();
-            } else {
-                alert('Notification permission was denied.');
-            }
+            if (permission === 'granted') testSendNotification();
         });
     }
 
@@ -2225,7 +2196,6 @@
 
         const totalIncome = paychecks.reduce((sum, p) => sum + p.amount, 0);
 
-        // Update 50/30/20 Rule UI underneath paycheck log
         const needsEl = document.getElementById(`${owner}50Needs`);
         const wantsEl = document.getElementById(`${owner}30Wants`);
         const savingsEl = document.getElementById(`${owner}20Savings`);
@@ -2433,7 +2403,7 @@
                 saveData(data);
                 render();
 
-                statusEl.textContent = `✅ Successfully extracted & assigned ${extractedItems.length} item(s) due on ${targetDueDate}!`;
+                statusEl.textContent = `✅ Successfully extracted ${extractedItems.length} item(s)!`;
             } else {
                 statusEl.textContent = '⚠️ Could not detect valid currency rows. Please enter manually.';
             }
@@ -2442,7 +2412,7 @@
 
         } catch (err) {
             console.error(err);
-            statusEl.textContent = '❌ Could not read image text. Please enter details manually.';
+            statusEl.textContent = '❌ Could not read image text.';
         }
     }
 
@@ -2650,7 +2620,6 @@
         }).join('');
     }
 
-    // Payment Plans Handlers with Auto End Date Computation, Where to send money, Place name, and sorting paid items to the bottom
     function computePlanEndDate(startDateStr, duration, frequency) {
         if (!startDateStr || !duration) return '';
         const d = parseLocalDate(startDateStr);
@@ -2665,7 +2634,7 @@
             d.setDate(d.getDate() + (intervals * 7));
         } else if (frequency === 'bi-weekly') {
             d.setDate(d.getDate() + (intervals * 14));
-        } else { // monthly
+        } else {
             d.setMonth(d.getMonth() + intervals);
         }
 
@@ -2808,7 +2777,6 @@
             plans = plans.filter(p => p.name.toLowerCase().includes(lowerSearch) || p.totalAmount.toString().includes(lowerSearch) || (p.recipient && p.recipient.toLowerCase().includes(lowerSearch)) || (p.place && p.place.toLowerCase().includes(lowerSearch)));
         }
 
-        // Sort: Unpaid first (chronological order by startDate), Paid items moved to the bottom
         plans.sort((a, b) => {
             if (a.isPaid !== b.isPaid) {
                 return a.isPaid ? 1 : -1;
@@ -2863,7 +2831,6 @@
         }).join('');
     }
 
-    // Purchase Plan & Web Search Handlers
     function togglePurchasePlanOptions(checkbox) {
         const container = document.getElementById('purchasePlanOptionsContainer');
         container.style.display = checkbox.checked ? 'grid' : 'none';
@@ -2887,17 +2854,17 @@
         const infoBox = document.getElementById('purchaseSearchInfoBox');
         const infoText = document.getElementById('purchaseSearchInfoText');
         infoBox.style.display = 'block';
-        infoText.textContent = '🌐 Searching web and gathering product insights...';
+        infoText.textContent = '🌐 Searching web...';
 
         try {
             const itemName = document.getElementById('purchaseNameInput').value || 'Product';
             const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(itemName)}&format=json`);
             const json = await res.json();
 
-            let summary = json.AbstractText || (json.RelatedTopics && json.RelatedTopics[0] && json.RelatedTopics[0].Text) || 'Product link verified. Ready for wishlist and payment plan configuration.';
+            let summary = json.AbstractText || (json.RelatedTopics && json.RelatedTopics[0] && json.RelatedTopics[0].Text) || 'Product link verified.';
             infoText.innerHTML = `<strong>Summary:</strong> ${summary}`;
         } catch (e) {
-            infoText.textContent = '🌐 Link recorded successfully. Web search summary unavailable offline.';
+            infoText.textContent = '🌐 Link recorded successfully.';
         }
     }
 
@@ -3003,7 +2970,7 @@
         }
 
         listEl.innerHTML = items.map(i => {
-            const linkHtml = i.link ? `<a href="${i.link}" target="_blank" style="color: var(--accent-his); font-size: 0.85rem; text-decoration: underline;">🔗 View Product Link</a>` : '';
+            const linkHtml = i.link ? `<a href="${i.link}" target="_blank" style="color: var(--accent-his); font-size: 0.85rem; text-decoration: underline;">🔗 View Link</a>` : '';
             return `
                 <div class="purchase-item-row ${i.isPaid ? 'is-completed' : ''}">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -3222,66 +3189,80 @@
         return Array.from(map.values());
     }
 
-    function handleJSONImport(event) {
+    async function handleJSONImport(event) {
         const file = event.target.files[0];
         if (!file) return;
 
+        isImporting = true; // Lock sync listeners during processing
+
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = async function(e) {
             try {
                 const imported = JSON.parse(e.target.result);
-                const data = getStoredData();
-                const currentSelectedMonth = monthPicker.value;
+                let masterData = getStoredData();
 
-                if (imported.months && typeof imported.months === 'object') {
-                    if (!data.months) data.months = {};
-                    Object.keys(imported.months).forEach(mKey => {
-                        if (!data.months[mKey]) {
-                            data.months[mKey] = imported.months[mKey];
-                        } else {
-                            const existingM = data.months[mKey];
-                            const importedM = imported.months[mKey];
-                            existingM.his = mergeById(existingM.his || [], importedM.his || []);
-                            existingM.her = mergeById(existingM.her || [], importedM.her || []);
-                            existingM.hisPay = mergeById(existingM.hisPay || [], importedM.hisPay || []);
-                            existingM.herPay = mergeById(existingM.herPay || [], importedM.herPay || []);
-                        }
-                    });
-                } else if (imported.his || imported.her) {
-                    if (!data.months[currentSelectedMonth]) data.months[currentSelectedMonth] = { his: [], her: [], hisPay: [], herPay: [] };
-                    const mObj = data.months[currentSelectedMonth];
-                    if (imported.his) mObj.his = mergeById(mObj.his, imported.his);
-                    if (imported.her) mObj.her = mergeById(mObj.her, imported.her);
-                    if (imported.hisPay) mObj.hisPay = mergeById(mObj.hisPay, imported.hisPay);
-                    if (imported.herPay) mObj.herPay = mergeById(mObj.herPay, imported.herPay);
-                }
-
-                if (imported.esso) {
-                    data.esso = mergeById(data.esso || [], imported.esso);
-                }
-                if (imported.paymentPlans) {
-                    data.paymentPlans = mergeById(data.paymentPlans || [], imported.paymentPlans);
-                }
-                if (imported.purchasePlans) {
-                    data.purchasePlans = mergeById(data.purchasePlans || [], imported.purchasePlans);
-                }
-
-                // Find valid months available in imported data or local storage
-                const availableMonthKeys = Object.keys(data.months || {}).sort();
-                if (availableMonthKeys.length > 0) {
-                    if (!data.months[currentSelectedMonth]) {
-                        monthPicker.value = availableMonthKeys[availableMonthKeys.length - 1];
+                // If importing a full state object
+                if (imported.months || imported.esso || imported.paymentPlans || imported.purchasePlans) {
+                    if (imported.months) {
+                        if (!masterData.months) masterData.months = {};
+                        Object.keys(imported.months).forEach(mKey => {
+                            if (!masterData.months[mKey]) {
+                                masterData.months[mKey] = imported.months[mKey];
+                            } else {
+                                const existM = masterData.months[mKey];
+                                const impM = imported.months[mKey];
+                                existM.his = mergeById(existM.his || [], impM.his || []);
+                                existM.her = mergeById(existM.her || [], impM.her || []);
+                                existM.hisPay = mergeById(existM.hisPay || [], impM.hisPay || []);
+                                existM.herPay = mergeById(existM.herPay || [], impM.herPay || []);
+                            }
+                        });
                     }
+                    if (imported.esso) masterData.esso = mergeById(masterData.esso || [], imported.esso);
+                    if (imported.paymentPlans) masterData.paymentPlans = mergeById(masterData.paymentPlans || [], imported.paymentPlans);
+                    if (imported.purchasePlans) masterData.purchasePlans = mergeById(masterData.purchasePlans || [], imported.purchasePlans);
+                } else {
+                    // Direct month object import
+                    const targetMonth = monthPicker.value;
+                    if (!masterData.months[targetMonth]) {
+                        masterData.months[targetMonth] = { his: [], her: [], hisPay: [], herPay: [] };
+                    }
+                    const mObj = masterData.months[targetMonth];
+                    if (imported.his) mObj.his = mergeById(mObj.his || [], imported.his);
+                    if (imported.her) mObj.her = mergeById(mObj.her || [], imported.her);
+                    if (imported.hisPay) mObj.hisPay = mergeById(mObj.hisPay || [], imported.hisPay);
+                    if (imported.herPay) mObj.herPay = mergeById(mObj.herPay || [], imported.herPay);
                 }
 
-                saveData(data);
+                // Force local storage overwrite first
+                localStorage.setItem('household_finance_v12', JSON.stringify(masterData));
+
+                // Force immediate Cloud Sync via Supabase upsert
+                const { error } = await supabaseClient
+                    .from('household_data')
+                    .upsert({ id: 'main', payload: masterData, updated_at: new Date() });
+
+                if (error) {
+                    console.error('Cloud upload failed during import:', error);
+                    alert('Import saved locally, but cloud backup failed. Check database permissions.');
+                } else {
+                    triggerSaveIndicator('✓ Import Fully Saved & Synced');
+                    alert('Data imported and permanently synced!');
+                }
+
+                // Ensure month selector points to an available month in the dataset
+                const allMonths = Object.keys(masterData.months || {}).sort();
+                if (allMonths.length > 0 && !masterData.months[monthPicker.value]) {
+                    monthPicker.value = allMonths[allMonths.length - 1];
+                }
+
                 render();
                 initializeAllDateDisplays();
-                alert('Data imported and merged successfully!');
             } catch (err) {
                 console.error('JSON Import Error:', err);
-                alert('Error parsing JSON file. Please ensure it is a valid backup file.');
+                alert('Invalid JSON file layout. Please select a valid backup.');
             } finally {
+                isImporting = false;
                 event.target.value = '';
             }
         };
