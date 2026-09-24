@@ -3206,6 +3206,17 @@
         }
     }
 
+    function mergeById(existingArr = [], importedArr = []) {
+        const map = new Map();
+        existingArr.forEach(item => {
+            if (item && item.id) map.set(item.id, item);
+        });
+        importedArr.forEach(item => {
+            if (item && item.id) map.set(item.id, item);
+        });
+        return Array.from(map.values());
+    }
+
     function handleJSONImport(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -3215,38 +3226,53 @@
             try {
                 const imported = JSON.parse(e.target.result);
                 const data = getStoredData();
+                const currentSelectedMonth = monthPicker.value;
 
                 if (imported.months) {
-                    data.months = { ...data.months, ...imported.months };
+                    if (!data.months) data.months = {};
+                    Object.keys(imported.months).forEach(mKey => {
+                        if (!data.months[mKey]) {
+                            data.months[mKey] = imported.months[mKey];
+                        } else {
+                            const existingM = data.months[mKey];
+                            const importedM = imported.months[mKey];
+                            existingM.his = mergeById(existingM.his || [], importedM.his || []);
+                            existingM.her = mergeById(existingM.her || [], importedM.her || []);
+                            existingM.hisPay = mergeById(existingM.hisPay || [], importedM.hisPay || []);
+                            existingM.herPay = mergeById(existingM.herPay || [], importedM.herPay || []);
+                        }
+                    });
                 } else if (imported.his || imported.her) {
-                    const fallbackMonth = monthPicker.value;
-                    if (!data.months[fallbackMonth]) data.months[fallbackMonth] = { his: [], her: [], hisPay: [], herPay: [] };
-                    if (imported.his) data.months[fallbackMonth].his = imported.his;
-                    if (imported.her) data.months[fallbackMonth].her = imported.her;
-                    if (imported.hisPay) data.months[fallbackMonth].hisPay = imported.hisPay;
-                    if (imported.herPay) data.months[fallbackMonth].herPay = imported.herPay;
+                    if (!data.months[currentSelectedMonth]) data.months[currentSelectedMonth] = { his: [], her: [], hisPay: [], herPay: [] };
+                    const mObj = data.months[currentSelectedMonth];
+                    if (imported.his) mObj.his = mergeById(mObj.his, imported.his);
+                    if (imported.her) mObj.her = mergeById(mObj.her, imported.her);
+                    if (imported.hisPay) mObj.hisPay = mergeById(mObj.hisPay, imported.hisPay);
+                    if (imported.herPay) mObj.herPay = mergeById(mObj.herPay, imported.herPay);
                 }
 
                 if (imported.esso) {
-                    data.esso = Array.from(new Set([...(data.esso || []), ...imported.esso]));
+                    data.esso = mergeById(data.esso || [], imported.esso);
                 }
                 if (imported.paymentPlans) {
-                    data.paymentPlans = Array.from(new Set([...(data.paymentPlans || []), ...imported.paymentPlans]));
+                    data.paymentPlans = mergeById(data.paymentPlans || [], imported.paymentPlans);
                 }
                 if (imported.purchasePlans) {
-                    data.purchasePlans = Array.from(new Set([...(data.purchasePlans || []), ...imported.purchasePlans]));
+                    data.purchasePlans = mergeById(data.purchasePlans || [], imported.purchasePlans);
                 }
 
-                const importedMonthKeys = Object.keys(data.months || {}).sort();
-                if (importedMonthKeys.length > 0) {
-                    const latestMonth = importedMonthKeys[importedMonthKeys.length - 1];
-                    monthPicker.value = latestMonth;
+                // Preserve the user's currently selected month so the view does not clear or switch away
+                if (!data.months[currentSelectedMonth]) {
+                    const importedMonthKeys = Object.keys(imported.months || {}).sort();
+                    if (importedMonthKeys.length > 0) {
+                        monthPicker.value = importedMonthKeys[importedMonthKeys.length - 1];
+                    }
                 }
 
                 saveData(data);
                 render();
                 initializeAllDateDisplays();
-                alert('Data imported successfully!');
+                alert('Data imported and merged successfully!');
             } catch (err) {
                 console.error('JSON Import Error:', err);
                 alert('Error parsing JSON file. Please ensure it is a valid backup file.');
