@@ -52,7 +52,6 @@
             --urgent: #ef4444;
             --paid: #10b981;
 
-            /* Recurrence badge color themes */
             --rec-weekly: #38bdf8;
             --rec-biweekly: #a855f7;
             --rec-monthly: #34d399;
@@ -196,6 +195,41 @@
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        .date-info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(19, 28, 46, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            padding: 12px 18px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .date-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-info-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .date-info-value {
+            font-weight: 700;
+            color: var(--text);
         }
 
         .picker-modal {
@@ -449,7 +483,7 @@
 
         .tab-nav {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 8px;
             background-color: var(--card-bg);
             padding: 6px;
@@ -472,8 +506,8 @@
             min-height: 46px;
         }
 
-        .tab-btn.active[data-page="page1"] { background-color: rgba(56, 189, 248, 0.2); color: var(--accent-his); }
-        .tab-btn.active[data-page="page2"] { background-color: rgba(236, 72, 153, 0.2); color: var(--accent-hers); }
+        .tab-btn.active[data-page="page1"], .tab-btn.active.his-active { background-color: rgba(56, 189, 248, 0.2); color: var(--accent-his); }
+        .tab-btn.active[data-page="page2"], .tab-btn.active.her-active { background-color: rgba(236, 72, 153, 0.2); color: var(--accent-hers); }
         .tab-btn.active[data-page="page3"] { background-color: rgba(168, 85, 247, 0.2); color: var(--accent-combined); }
 
         .page-content { display: none; }
@@ -508,7 +542,7 @@
             font-weight: 800;
         }
 
-        .income-card, .form-card, .upcoming-card, .esso-card, .plan-card {
+        .income-card, .form-card, .upcoming-card, .esso-card, .plan-card, .allocation-card {
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
@@ -784,7 +818,7 @@
         .btn-rollover { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; }
         .btn-print { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
 
-        .esso-item-row, .plan-item-row, .purchase-item-row {
+        .esso-item-row, .plan-item-row, .purchase-item-row, .alloc-bucket-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -796,7 +830,20 @@
             gap: 10px;
         }
 
-        .esso-item-row.is-completed, .plan-item-row.is-completed, .purchase-item-row.is-completed { opacity: 0.5; text-decoration: line-through; }
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
 
         .esso-checkbox, .esso-select-checkbox, .plan-checkbox, .purchase-checkbox {
             width: 22px;
@@ -862,6 +909,7 @@
     </div>
     <div class="drawer-nav">
         <button class="drawer-link active" id="navDashboard" onclick="switchMainPage('dashboard')">📊 Household Dashboard</button>
+        <button class="drawer-link" id="navAllocation" onclick="switchMainPage('allocation')">💰 Money Allocation</button>
         <button class="drawer-link" id="navEsso" onclick="switchMainPage('esso')">📅 ESSO Due Date</button>
         <button class="drawer-link" id="navPaymentPlan" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button>
         <button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button>
@@ -928,10 +976,22 @@
 
     <!-- MAIN PAGE 1: Household Dashboard View -->
     <div id="mainDashboardView">
+        <!-- Date & Month Indicator Bar -->
+        <div class="date-info-bar">
+            <div class="date-info-item">
+                <span class="date-info-label">📅 Selected Month:</span>
+                <span class="date-info-value" id="selectedMonthDisplay" style="color: var(--accent-his);">October 2026</span>
+            </div>
+            <div class="date-info-item">
+                <span class="date-info-label">📆 Today:</span>
+                <span class="date-info-value" id="todaysDateDisplay">Sunday, Oct 11, 2026</span>
+            </div>
+        </div>
+
         <div class="tab-nav">
-            <button class="tab-btn active" data-page="page1">His Page</button>
-            <button class="tab-btn" data-page="page2">Her Page</button>
-            <button class="tab-btn" data-page="page3">Combined</button>
+            <button class="tab-btn active" data-page="page1" onclick="switchDashboardTab('page1')">His Page</button>
+            <button class="tab-btn" data-page="page2" onclick="switchDashboardTab('page2')">Her Page</button>
+            <button class="tab-btn" data-page="page3" onclick="switchDashboardTab('page3')">Combined</button>
         </div>
 
         <div id="page1" class="page-content active">
@@ -1142,7 +1202,51 @@
         </div>
     </div>
 
-    <!-- MAIN PAGE 2: ESSO Due Date View -->
+    <!-- MAIN PAGE 2: Money Allocation View -->
+    <div id="mainAllocationView" style="display: none;">
+        <div class="tab-nav" style="margin-bottom: 20px;">
+            <button class="tab-btn active his-active" id="allocHisBtn" onclick="switchAllocPerson('his')">His Weekly Allocation</button>
+            <button class="tab-btn" id="allocHerBtn" onclick="switchAllocPerson('her')">Her Bi-Weekly Allocation</button>
+        </div>
+
+        <div class="summary-grid">
+            <div class="stat-card">
+                <h3 id="allocBaseIncomeLabel">Base Pay / Period</h3>
+                <div class="amount" id="allocBaseIncome" style="color: var(--savings);">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Allocated</h3>
+                <div class="amount" id="allocTotalAllocated" style="color: var(--accent-his);">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unallocated Remaining</h3>
+                <div class="amount" id="allocRemaining">$0.00</div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h3 id="allocFormHeaderTitle" style="color: var(--text);">Add Allocation Envelope / Category</h3>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" class="btn-secondary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="applyAllocPreset('50/30/20')">Preset: 50/30/20</button>
+                    <button type="button" class="btn-secondary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="applyAllocPreset('60/20/20')">Preset: 60/20/20</button>
+                </div>
+            </div>
+
+            <form id="allocForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleAllocSubmit(event)">
+                <input type="text" id="allocNameInput" class="auto-cap" placeholder="Envelope / Category Name" required>
+                <input type="number" id="allocAmountInput" step="0.01" min="0" placeholder="Allocated Amount ($)" required>
+                <button type="submit" class="btn-add">Add Allocation</button>
+            </form>
+        </div>
+
+        <div class="allocation-card">
+            <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 12px;">Active Envelopes & Buckets</h3>
+            <div id="allocBucketsList">No allocation buckets defined.</div>
+        </div>
+    </div>
+
+    <!-- MAIN PAGE 3: ESSO Due Date View -->
     <div id="mainEssoView" style="display: none;">
         <div class="summary-grid">
             <div class="stat-card">
@@ -1211,7 +1315,7 @@
         </div>
     </div>
 
-    <!-- MAIN PAGE 3: Payment Plans View -->
+    <!-- MAIN PAGE 4: Payment Plans View -->
     <div id="mainPaymentPlanView" style="display: none;">
         <div class="summary-grid">
             <div class="stat-card">
@@ -1272,7 +1376,7 @@
         </div>
     </div>
 
-    <!-- MAIN PAGE 4: Purchase Plan View -->
+    <!-- MAIN PAGE 5: Purchase Plan View -->
     <div id="mainPurchasePlanView" style="display: none;">
         <div class="summary-grid">
             <div class="stat-card">
@@ -1369,7 +1473,7 @@
     <div class="picker-card" style="max-width: 340px;">
         <div class="picker-nav-header">
             <button class="picker-nav-btn" onclick="changeFullDateMonth(-1)">&#10094;</button>
-            <h3 id="fullDateTitleDisplay">September 2026</h3>
+            <h3 id="fullDateTitleDisplay">October 2026</h3>
             <button class="picker-nav-btn" onclick="changeFullDateMonth(1)">&#10095;</button>
         </div>
         <div class="picker-grid days-grid" id="fullDateDaysGrid"></div>
@@ -1568,7 +1672,7 @@
 
 <script>
     let registeredServiceWorkerReg = null;
-    let isImporting = false; // Prevents background syncs from overwriting while importing
+    let isImporting = false;
 
     if ('serviceWorker' in navigator) {
         const swCode = `
@@ -1578,9 +1682,7 @@
             self.addEventListener('notificationclick', (e) => {
                 e.notification.close();
                 e.waitUntil(clients.matchAll({ type: 'window' }).then(clientList => {
-                    if (clientList.length > 0) {
-                        return clientList[0].focus();
-                    }
+                    if (clientList.length > 0) return clientList[0].focus();
                     return clients.openWindow('/');
                 }));
             });
@@ -1611,6 +1713,64 @@
 
     let editingBaseMonthlyAmount = 0;
     let editingOriginalRecurrence = 'monthly';
+
+    function getStoredData() {
+        return JSON.parse(localStorage.getItem('household_finance_v12')) || { 
+            months: {}, 
+            esso: [], 
+            paymentPlans: [], 
+            purchasePlans: [], 
+            essoReminderLead: 1, 
+            activeView: 'dashboard',
+            activeAllocPerson: 'his',
+            activeDashboardTab: 'page1',
+            allocations: { his: [], her: [] }
+        };
+    }
+
+    async function saveData(data) {
+        localStorage.setItem('household_finance_v12', JSON.stringify(data));
+        triggerSaveIndicator('✓ Syncing...');
+
+        try {
+            const { error } = await supabaseClient
+                .from('household_data')
+                .upsert({ id: 'main', payload: data, updated_at: new Date() });
+
+            if (!error) triggerSaveIndicator('✓ Synced');
+            else console.error('Supabase error:', error);
+        } catch (err) {
+            console.error('Supabase Sync Error:', err);
+        }
+    }
+
+    async function syncFromCloud() {
+        if (isImporting) return;
+        try {
+            const { data } = await supabaseClient
+                .from('household_data')
+                .select('payload')
+                .eq('id', 'main')
+                .single();
+
+            if (data && data.payload) {
+                localStorage.setItem('household_finance_v12', JSON.stringify(data.payload));
+                
+                if (data.payload.activeView) {
+                    switchMainPage(data.payload.activeView, false);
+                }
+                if (data.payload.activeAllocPerson) {
+                    switchAllocPerson(data.payload.activeAllocPerson, false);
+                }
+                if (data.payload.activeDashboardTab) {
+                    switchDashboardTab(data.payload.activeDashboardTab, false);
+                }
+                render();
+            }
+        } catch (err) {
+            console.log('Offline or cloud sync unavailable, using local cache.');
+        }
+    }
 
     function openCalendarModal() {
         const val = monthPicker.value;
@@ -1773,28 +1933,38 @@
         document.getElementById('drawerOverlay').classList.remove('active');
     }
 
-    function switchMainPage(view) {
+    function switchMainPage(view, shouldSave = true) {
         const dashboardView = document.getElementById('mainDashboardView');
+        const allocationView = document.getElementById('mainAllocationView');
         const essoView = document.getElementById('mainEssoView');
         const paymentPlanView = document.getElementById('mainPaymentPlanView');
         const purchasePlanView = document.getElementById('mainPurchasePlanView');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
+        const navAllocation = document.getElementById('navAllocation');
         const navEsso = document.getElementById('navEsso');
         const navPaymentPlan = document.getElementById('navPaymentPlan');
         const navPurchasePlan = document.getElementById('navPurchasePlan');
         const monthCalendarBtn = document.getElementById('monthCalendarBtn');
 
         dashboardView.style.display = 'none';
+        allocationView.style.display = 'none';
         essoView.style.display = 'none';
         paymentPlanView.style.display = 'none';
         purchasePlanView.style.display = 'none';
+        
         navDashboard.classList.remove('active');
+        navAllocation.classList.remove('active');
         navEsso.classList.remove('active');
         navPaymentPlan.classList.remove('active');
         navPurchasePlan.classList.remove('active');
 
-        if (view === 'esso') {
+        if (view === 'allocation') {
+            allocationView.style.display = 'block';
+            headerTitle.textContent = 'Money Allocation';
+            navAllocation.classList.add('active');
+            monthCalendarBtn.style.display = 'flex';
+        } else if (view === 'esso') {
             essoView.style.display = 'block';
             headerTitle.textContent = 'ESSO Due Date';
             navEsso.classList.add('active');
@@ -1815,8 +1985,55 @@
             navDashboard.classList.add('active');
             monthCalendarBtn.style.display = 'flex';
         }
+
         closeDrawer();
+
+        if (shouldSave) {
+            const data = getStoredData();
+            data.activeView = view;
+            saveData(data);
+        }
+
         render();
+    }
+
+    function switchDashboardTab(tabId, shouldSave = true) {
+        document.querySelectorAll('#mainDashboardView .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+
+        const targetBtn = document.querySelector(`#mainDashboardView .tab-btn[data-page="${tabId}"]`);
+        const targetPage = document.getElementById(tabId);
+
+        if (targetBtn) targetBtn.classList.add('active');
+        if (targetPage) targetPage.classList.add('active');
+
+        if (shouldSave) {
+            const data = getStoredData();
+            data.activeDashboardTab = tabId;
+            saveData(data);
+        }
+    }
+
+    function switchAllocPerson(person, shouldSave = true) {
+        const btnHis = document.getElementById('allocHisBtn');
+        const btnHer = document.getElementById('allocHerBtn');
+
+        btnHis.classList.remove('active', 'his-active');
+        btnHer.classList.remove('active', 'her-active');
+
+        if (person === 'her') {
+            btnHer.classList.add('active', 'her-active');
+        } else {
+            btnHis.classList.add('active', 'his-active');
+        }
+
+        if (shouldSave) {
+            const data = getStoredData();
+            data.activeAllocPerson = person;
+            saveData(data);
+        }
+
+        renderAllocationView();
     }
 
     function autoCapitalizeWords(str) {
@@ -1924,71 +2141,6 @@
             categorySelect.value = 'Savings';
         }
     }
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.page).classList.add('active');
-        });
-    });
-
-    function getStoredData() {
-        return JSON.parse(localStorage.getItem('household_finance_v12')) || { months: {}, esso: [], paymentPlans: [], purchasePlans: [], essoReminderLead: 1 };
-    }
-
-    async function saveData(data) {
-        localStorage.setItem('household_finance_v12', JSON.stringify(data));
-        triggerSaveIndicator('✓ Syncing...');
-
-        try {
-            const { error } = await supabaseClient
-                .from('household_data')
-                .upsert({ id: 'main', payload: data, updated_at: new Date() });
-
-            if (!error) triggerSaveIndicator('✓ Synced');
-            else console.error('Supabase error:', error);
-        } catch (err) {
-            console.error('Supabase Sync Error:', err);
-        }
-    }
-
-    async function syncFromCloud() {
-        if (isImporting) return;
-        try {
-            const { data } = await supabaseClient
-                .from('household_data')
-                .select('payload')
-                .eq('id', 'main')
-                .single();
-
-            if (data && data.payload) {
-                localStorage.setItem('household_finance_v12', JSON.stringify(data.payload));
-                render();
-            }
-        } catch (err) {
-            console.log('Offline or cloud sync unavailable, using local cache.');
-        }
-    }
-
-    window.addEventListener('focus', () => {
-        if (!isImporting) {
-            checkAndAutoRollover();
-            syncFromCloud();
-        }
-    });
-
-    supabaseClient
-        .channel('public:household_data')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'household_data' }, payload => {
-            if (!isImporting && payload.new && payload.new.payload) {
-                localStorage.setItem('household_finance_v12', JSON.stringify(payload.new.payload));
-                render();
-                triggerSaveIndicator('✓ Updated via Cloud');
-            }
-        })
-        .subscribe();
 
     function advanceDateByRecurrence(dateStr, targetYearMonth, recurrence) {
         if (!dateStr) return '';
@@ -2207,6 +2359,136 @@
         }
 
         return totalIncome;
+    }
+
+    function handleAllocSubmit(e) {
+        e.preventDefault();
+        const data = getStoredData();
+        const activePerson = data.activeAllocPerson || 'his';
+        
+        if (!data.allocations) data.allocations = { his: [], her: [] };
+        if (!data.allocations[activePerson]) data.allocations[activePerson] = [];
+
+        const name = autoCapitalizeWords(document.getElementById('allocNameInput').value.trim());
+        const amount = parseFloat(document.getElementById('allocAmountInput').value);
+
+        data.allocations[activePerson].push({
+            id: `alloc_${Date.now()}_${Math.random().toString(36).substring(2,7)}`,
+            name,
+            amount
+        });
+
+        saveData(data);
+        e.target.reset();
+        renderAllocationView();
+    }
+
+    function deleteAllocBucket(id) {
+        const data = getStoredData();
+        const activePerson = data.activeAllocPerson || 'his';
+
+        if (data.allocations && data.allocations[activePerson]) {
+            data.allocations[activePerson] = data.allocations[activePerson].filter(b => b.id !== id);
+        }
+
+        saveData(data);
+        renderAllocationView();
+    }
+
+    function applyAllocPreset(type) {
+        const data = getStoredData();
+        const activePerson = data.activeAllocPerson || 'his';
+        const monthData = getMonthData(data, monthPicker.value);
+        const paychecks = monthData[`${activePerson}Pay`] || [];
+        const paycheckSum = paychecks.reduce((sum, p) => sum + p.amount, 0);
+
+        let basePay = paycheckSum;
+        if (paychecks.length > 0) {
+            basePay = paycheckSum / paychecks.length;
+        }
+
+        if (basePay <= 0) {
+            alert('Please log at least one paycheck for ' + (activePerson === 'his' ? 'him' : 'her') + ' first to calculate preset buckets.');
+            return;
+        }
+
+        let newBuckets = [];
+        if (type === '50/30/20') {
+            newBuckets = [
+                { id: `alloc_1`, name: 'Needs & Bills (50%)', amount: basePay * 0.50 },
+                { id: `alloc_2`, name: 'Wants & Lifestyle (30%)', amount: basePay * 0.30 },
+                { id: `alloc_3`, name: 'Savings & Investments (20%)', amount: basePay * 0.20 }
+            ];
+        } else if (type === '60/20/20') {
+            newBuckets = [
+                { id: `alloc_1`, name: 'Essential Expenses (60%)', amount: basePay * 0.60 },
+                { id: `alloc_2`, name: 'Discretionary Wants (20%)', amount: basePay * 0.20 },
+                { id: `alloc_3`, name: 'Financial Goals & Debt (20%)', amount: basePay * 0.20 }
+            ];
+        }
+
+        if (!data.allocations) data.allocations = { his: [], her: [] };
+        data.allocations[activePerson] = newBuckets;
+
+        saveData(data);
+        renderAllocationView();
+        triggerSaveIndicator('✓ Preset Applied');
+    }
+
+    function renderAllocationView() {
+        const data = getStoredData();
+        const activePerson = data.activeAllocPerson || 'his';
+        const monthData = getMonthData(data, monthPicker.value);
+
+        const isHis = activePerson === 'his';
+        const paychecks = monthData[`${activePerson}Pay`] || [];
+        const paycheckSum = paychecks.reduce((sum, p) => sum + p.amount, 0);
+
+        let basePay = paycheckSum;
+        if (paychecks.length > 0) {
+            basePay = paycheckSum / paychecks.length;
+        }
+
+        const frequencyLabel = isHis ? 'Weekly Pay (Avg)' : 'Bi-Weekly Pay (Avg)';
+        const accentColor = isHis ? 'var(--accent-his)' : 'var(--accent-hers)';
+
+        document.getElementById('allocBaseIncomeLabel').textContent = `${isHis ? 'His' : 'Her'} ${frequencyLabel}`;
+        document.getElementById('allocBaseIncome').textContent = `$${basePay.toFixed(2)}`;
+        document.getElementById('allocBaseIncome').style.color = accentColor;
+        document.getElementById('allocFormHeaderTitle').textContent = `Add Allocation (${isHis ? 'His Weekly' : 'Her Bi-Weekly'})`;
+
+        const buckets = (data.allocations && data.allocations[activePerson]) ? data.allocations[activePerson] : [];
+        const totalAllocated = buckets.reduce((sum, b) => sum + b.amount, 0);
+        const unallocated = basePay - totalAllocated;
+
+        document.getElementById('allocTotalAllocated').textContent = `$${totalAllocated.toFixed(2)}`;
+        const remEl = document.getElementById('allocRemaining');
+        remEl.textContent = `$${unallocated.toFixed(2)}`;
+        remEl.style.color = unallocated >= 0 ? 'var(--savings)' : 'var(--urgent)';
+
+        const listEl = document.getElementById('allocBucketsList');
+        if (buckets.length === 0) {
+            listEl.innerHTML = `<span style="color:var(--text-muted); font-size:0.9rem;">No allocation buckets defined for ${isHis ? 'him' : 'her'}.</span>`;
+            return;
+        }
+
+        listEl.innerHTML = buckets.map(b => {
+            const pct = basePay > 0 ? Math.min(100, Math.round((b.amount / basePay) * 100)) : 0;
+            return `
+                <div class="alloc-bucket-row">
+                    <div style="flex-grow:1; padding-right:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${b.name}</strong>
+                            <strong style="color:${accentColor}">$${b.amount.toFixed(2)} (${pct}%)</strong>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${pct}%; background-color: ${accentColor};"></div>
+                        </div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteAllocBucket('${b.id}')">&times;</button>
+                </div>
+            `;
+        }).join('');
     }
 
     function formatDueDateDisplay(dateStr, isPaid) {
@@ -2778,9 +3060,7 @@
         }
 
         plans.sort((a, b) => {
-            if (a.isPaid !== b.isPaid) {
-                return a.isPaid ? 1 : -1;
-            }
+            if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1;
             const dateA = parseLocalDate(a.startDate) || new Date(0);
             const dateB = parseLocalDate(b.startDate) || new Date(0);
             return dateA - dateB;
@@ -2996,6 +3276,18 @@
         const data = getStoredData();
         const selectedMonth = monthPicker.value;
 
+        // Render Selected Month text & Today's Date
+        if (selectedMonth) {
+            const [selYear, selMonthNum] = selectedMonth.split('-').map(Number);
+            const monthDateObj = new Date(selYear, selMonthNum - 1, 1);
+            const monthNameStr = monthDateObj.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+            document.getElementById('selectedMonthDisplay').textContent = monthNameStr;
+        }
+
+        const now = new Date();
+        const todayStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('todaysDateDisplay').textContent = todayStr;
+
         getMonthData(data, selectedMonth);
         const monthData = data.months[selectedMonth];
 
@@ -3048,6 +3340,7 @@
         renderUpcoming('herUpcomingList', herItems);
         renderUpcoming('combinedUpcomingList', [...hisItems, ...herItems]);
 
+        renderAllocationView();
         renderEssoView(essoSearch);
         renderPaymentPlanView(planSearch);
         renderPurchaseView(purchaseSearch);
@@ -3193,7 +3486,7 @@
         const file = event.target.files[0];
         if (!file) return;
 
-        isImporting = true; // Lock sync listeners during processing
+        isImporting = true;
 
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -3201,8 +3494,7 @@
                 const imported = JSON.parse(e.target.result);
                 let masterData = getStoredData();
 
-                // If importing a full state object
-                if (imported.months || imported.esso || imported.paymentPlans || imported.purchasePlans) {
+                if (imported.months || imported.esso || imported.paymentPlans || imported.purchasePlans || imported.allocations) {
                     if (imported.months) {
                         if (!masterData.months) masterData.months = {};
                         Object.keys(imported.months).forEach(mKey => {
@@ -3221,23 +3513,14 @@
                     if (imported.esso) masterData.esso = mergeById(masterData.esso || [], imported.esso);
                     if (imported.paymentPlans) masterData.paymentPlans = mergeById(masterData.paymentPlans || [], imported.paymentPlans);
                     if (imported.purchasePlans) masterData.purchasePlans = mergeById(masterData.purchasePlans || [], imported.purchasePlans);
-                } else {
-                    // Direct month object import
-                    const targetMonth = monthPicker.value;
-                    if (!masterData.months[targetMonth]) {
-                        masterData.months[targetMonth] = { his: [], her: [], hisPay: [], herPay: [] };
-                    }
-                    const mObj = masterData.months[targetMonth];
-                    if (imported.his) mObj.his = mergeById(mObj.his || [], imported.his);
-                    if (imported.her) mObj.her = mergeById(mObj.her || [], imported.her);
-                    if (imported.hisPay) mObj.hisPay = mergeById(mObj.hisPay || [], imported.hisPay);
-                    if (imported.herPay) mObj.herPay = mergeById(mObj.herPay || [], imported.herPay);
+                    if (imported.allocations) masterData.allocations = imported.allocations;
+                    if (imported.activeView) masterData.activeView = imported.activeView;
+                    if (imported.activeAllocPerson) masterData.activeAllocPerson = imported.activeAllocPerson;
+                    if (imported.activeDashboardTab) masterData.activeDashboardTab = imported.activeDashboardTab;
                 }
 
-                // Force local storage overwrite first
                 localStorage.setItem('household_finance_v12', JSON.stringify(masterData));
 
-                // Force immediate Cloud Sync via Supabase upsert
                 const { error } = await supabaseClient
                     .from('household_data')
                     .upsert({ id: 'main', payload: masterData, updated_at: new Date() });
@@ -3250,11 +3533,14 @@
                     alert('Data imported and permanently synced!');
                 }
 
-                // Ensure month selector points to an available month in the dataset
                 const allMonths = Object.keys(masterData.months || {}).sort();
                 if (allMonths.length > 0 && !masterData.months[monthPicker.value]) {
                     monthPicker.value = allMonths[allMonths.length - 1];
                 }
+
+                if (masterData.activeView) switchMainPage(masterData.activeView, false);
+                if (masterData.activeAllocPerson) switchAllocPerson(masterData.activeAllocPerson, false);
+                if (masterData.activeDashboardTab) switchDashboardTab(masterData.activeDashboardTab, false);
 
                 render();
                 initializeAllDateDisplays();
@@ -3283,6 +3569,16 @@
     checkAndAutoRollover();
 
     syncFromCloud().then(() => {
+        const data = getStoredData();
+        if (data.activeView) {
+            switchMainPage(data.activeView, false);
+        }
+        if (data.activeAllocPerson) {
+            switchAllocPerson(data.activeAllocPerson, false);
+        }
+        if (data.activeDashboardTab) {
+            switchDashboardTab(data.activeDashboardTab, false);
+        }
         initializeAllDateDisplays();
         render();
     });
