@@ -428,6 +428,24 @@
         .unified-data-status {display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:rgba(19,28,46,.75);border:1px solid var(--card-border);border-radius:13px;padding:11px 14px;margin-bottom:16px;}
         .unified-data-status small {display:block;color:var(--text-muted);font-size:.75rem;margin-top:2px;}
         .unified-data-status .btn-secondary {padding:8px 12px;min-height:36px;font-size:.82rem;}
+        .finance-settings-view {max-width:1000px;margin:0 auto 26px;}
+        .finance-settings-intro {margin-bottom:20px;}
+        .finance-settings-intro h2 {font-size:1.4rem;margin-bottom:5px;}
+        .finance-settings-intro p, .settings-card-heading p {color:var(--text-muted);font-size:.91rem;line-height:1.5;}
+        .settings-card {background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:20px;margin-bottom:16px;}
+        .settings-card-heading {margin-bottom:14px;}
+        .settings-card-heading h3 {font-size:1.08rem;margin-bottom:6px;}
+        .settings-card .notification-banner {margin-bottom:12px;}
+        .settings-card .unified-data-status {margin-bottom:12px;}
+        .settings-button-row {display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+        .settings-button-row .btn-secondary {width:auto;min-height:42px;padding:9px 14px;}
+        .settings-muted-note {color:var(--text-muted);font-size:.8rem;line-height:1.55;}
+        .finance-settings-shortcut {position:relative;}
+        .sync-attention-dot {display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--urgent);box-shadow:0 0 0 3px rgba(239,68,68,.13);margin-left:7px;vertical-align:middle;}
+        .sync-attention-dot[hidden] {display:none!important;}
+        .settings-header-warning {position:absolute;right:3px;top:3px;}
+        @media (max-width:550px) {.settings-card {padding:15px;} .settings-button-row .btn-secondary {width:100%;} .settings-card .notification-banner .btn-notify, .settings-card .notification-banner .btn-secondary {width:100%;} }
+
 
         .drawer-link:hover, .drawer-link.active {
             background-color: rgba(56, 189, 248, 0.15);
@@ -892,9 +910,104 @@
             border: 1px solid rgba(56, 189, 248, 0.25);
             border-radius: 10px;
         }
+
+    /* Account access: all finance pages stay hidden until a verified Supabase session exists. */
+    body:not(.finance-authenticated) .container,
+    body:not(.finance-authenticated) #drawerOverlay,
+    body:not(.finance-authenticated) #sideDrawer,
+    body:not(.finance-authenticated) .modal,
+    body:not(.finance-authenticated) .picker-modal,
+    body:not(.finance-authenticated) #financeReminderPreview { display:none !important; }
+    body.finance-authenticated #financeAuthGate { display:none !important; }
+    #financeAuthGate { min-height:calc(100dvh - 48px);display:flex;align-items:center;justify-content:center;padding:22px 4px; }
+    .auth-card { width:100%;max-width:440px;padding:30px 25px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:22px;box-shadow:0 24px 90px rgba(0,0,0,.4); }
+    .auth-logo { display:flex;gap:12px;align-items:center;font-weight:800;font-size:1.3rem;letter-spacing:-.4px;margin-bottom:8px; }
+    .auth-subtitle { font-size:.91rem;color:var(--text-muted);line-height:1.55;margin:0 0 21px; }
+    .auth-modes {display:flex;gap:7px;padding:5px;background:#0b1220;border:1px solid var(--card-border);border-radius:13px;margin-bottom:19px;}
+    .auth-modes button {min-height:38px;padding:8px;border:none;background:transparent;cursor:pointer;font-size:.9rem;font-weight:700;}
+    .auth-modes[hidden] {display:none!important;}
+    .auth-modes button.active {background:rgba(168,85,247,.22);color:#eee2ff;border:1px solid #a855f777;}
+    .auth-panel {display:flex;flex-direction:column;gap:11px;}
+    .auth-panel[hidden], #authRecoveryControls[hidden] {display:none!important;}
+    .auth-panel label,.account-field-label {display:block;color:#cbd5e1;font-size:.82rem;font-weight:700;margin:0 0 5px;}
+    .auth-panel input, .account-form input {color-scheme:dark;width:100%;}
+    .auth-panel button.btn-add {width:100%;}
+    .auth-links {display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:7px;}
+    .auth-link {background:none;border:none;color:#7dd3fc;width:auto;min-height:30px;padding:3px;text-decoration:underline;cursor:pointer;font-size:.85rem;}
+    #financeAuthMessage,.account-message {display:none;padding:12px;border-radius:10px;font-size:.87rem;line-height:1.5;margin:0 0 12px;border:1px solid #64748b;background:#1d2b40;}
+    #financeAuthMessage.active,.account-message.active {display:block;}
+    #financeAuthMessage.error,.account-message.error {border-color:#f87171;color:#fecaca;background:#471b2c;}
+    .account-form {display:grid;gap:11px;max-width:490px;}
+    .account-form .btn-add,.account-form .btn-secondary {width:auto;}
+    .account-profile-line {display:flex;flex-wrap:wrap;gap:12px;margin-bottom:15px;}
+    .account-profile-line span {padding:8px 10px;background:#0b1220;border:1px solid var(--card-border);border-radius:9px;font-size:.88rem;overflow-wrap:anywhere;}
+    .account-divider {border:none;border-top:1px solid var(--card-border);margin:21px 0;}
+        @media(max-width:470px){.auth-card{padding:24px 17px;}.auth-logo{font-size:1.12rem;}}
+        .finance-install-header {width:auto;min-height:40px;height:42px;padding:9px 12px;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(52,211,153,.5);color:#86efac;background:rgba(52,211,153,.08);border-radius:11px;font-size:.86rem;font-weight:700;white-space:nowrap;cursor:pointer;}
+        .finance-install-header:hover {background:rgba(52,211,153,.16);}
+        .finance-install-auth {display:flex;flex-direction:column;align-items:stretch;gap:7px;margin-top:15px;padding:12px;background:rgba(56,189,248,.055);border:1px solid var(--card-border);border-radius:12px;}
+        .finance-install-auth .btn-secondary {width:100%;}
+        .finance-install-status {font-size:.85rem;line-height:1.55;color:var(--text-muted);white-space:pre-line;}
+        .finance-install-tip {font-size:.83rem;line-height:1.55;color:var(--text-muted);}
+        .finance-install-card .btn-add {width:auto;min-width:170px;}
+        .finance-install-card .settings-button-row {margin-top:12px;}
+        .finance-install-card code {font-size:.82rem;overflow-wrap:anywhere;}
+        #financeHeaderInstallBtn[hidden],#financeAuthInstallBtn[hidden] {display:none!important;}
+        @media(max-width:420px) {.finance-install-header span {display:none;}.finance-install-header {padding:10px;}}
+
+
     </style>
 </head>
 <body>
+
+<div id="financeAuthGate" aria-labelledby="financeAuthTitle">
+  <div class="auth-card">
+    <div class="auth-logo"><span aria-hidden="true">🔐</span><span id="financeAuthTitle">Household Finance</span></div>
+    <p class="auth-subtitle">Your finances, saved privately to your account. Sign in to view your dashboard from any device.</p>
+    <p id="financeAuthMessage" role="status" aria-live="polite"></p>
+    <div id="authModeTabs" class="auth-modes" aria-label="Account options">
+      <button type="button" id="authTabLogin" class="active" onclick="showAuthPanel('login')">Log In</button>
+      <button type="button" id="authTabSignup" onclick="showAuthPanel('signup')">Sign Up</button>
+    </div>
+    <form id="authLoginPanel" class="auth-panel" onsubmit="financeLogin(event)">
+      <div><label for="authIdentifier">Username or email address</label><input id="authIdentifier" name="username" autocomplete="username" placeholder="Your username or email" required></div>
+      <div><label for="authLoginPassword">Password</label><input id="authLoginPassword" type="password" autocomplete="current-password" placeholder="Your password" required></div>
+      <button type="submit" class="btn-add">Log In</button>
+      <div class="auth-links"><button type="button" class="auth-link" onclick="showAuthPanel('forgot-password')">Forgot password?</button><button type="button" class="auth-link" onclick="showAuthPanel('forgot-username')">Forgot username?</button></div>
+    </form>
+    <form id="authSignupPanel" class="auth-panel" onsubmit="financeSignup(event)" hidden>
+      <div><label for="authSignupUsername">Choose username</label><input id="authSignupUsername" autocomplete="username" minlength="3" maxlength="24" pattern="[a-zA-Z][a-zA-Z0-9_]{2,23}" title="3–24 letters, numbers or underscores; start with a letter" placeholder="e.g. finance_owner" required></div>
+      <div><label for="authSignupEmail">Email (used for recovery)</label><input id="authSignupEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+      <div><label for="authSignupPassword">Password</label><input id="authSignupPassword" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required></div>
+      <div><label for="authSignupConfirm">Confirm password</label><input id="authSignupConfirm" type="password" autocomplete="new-password" minlength="8" required></div>
+      <button type="submit" class="btn-add">Create Account</button>
+    </form>
+    <form id="authForgotPasswordPanel" class="auth-panel" onsubmit="financeForgotPassword(event)" hidden>
+      <p class="auth-subtitle">Enter your recovery email. We'll send a secure link to create a new password.</p>
+      <div><label for="authRecoveryEmail">Recovery email</label><input id="authRecoveryEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+      <button type="submit" class="btn-add">Send Password Reset Link</button>
+      <button type="button" class="auth-link" onclick="showAuthPanel('login')">Back to Log In</button>
+    </form>
+    <form id="authForgotUsernamePanel" class="auth-panel" onsubmit="financeForgotUsername(event)" hidden>
+      <p class="auth-subtitle">Enter your account email. We'll send a secure sign-in link. After signing in, you can see your username in Settings.</p>
+      <div><label for="authUsernameEmail">Account email</label><input id="authUsernameEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+      <button type="submit" class="btn-add">Email Me a Sign-In Link</button>
+      <button type="button" class="auth-link" onclick="showAuthPanel('login')">Back to Log In</button>
+    </form>
+    <form id="authNewPasswordPanel" class="auth-panel" onsubmit="financeCompleteRecovery(event)" hidden>
+      <p class="auth-subtitle">Enter a new password to finish your account recovery.</p>
+      <div><label for="authNewPassword">New password</label><input id="authNewPassword" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div><label for="authNewPasswordConfirm">Confirm new password</label><input id="authNewPasswordConfirm" type="password" autocomplete="new-password" minlength="8" required></div>
+      <button type="submit" class="btn-add">Save New Password</button>
+    </form>
+    <div class="finance-install-auth" id="financeAuthInstallSection">
+      <button type="button" class="btn-secondary" id="financeAuthInstallBtn" onclick="installFinanceApp()">⬇ Install Finance App</button>
+      <p class="finance-install-status" id="financeAuthInstallStatus" role="status" aria-live="polite">Install this secure website as an app on your device.</p>
+    </div>
+    <p class="settings-muted-note" style="margin-top:17px;">Passwords are handled by Supabase Authentication. Your existing finance data will not be automatically assigned to a new account; import your old JSON backup after signing in.</p>
+  </div>
+</div>
+
 
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="side-drawer" id="sideDrawer">
@@ -910,6 +1023,7 @@
         <div class="drawer-nav-row"><button class="drawer-link" id="navPaymentPlan" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button><button class="drawer-tab-open" onclick="openFinanceTab('paymentPlan')" title="Open Payment Plans in a new tab" aria-label="Open Payment Plans in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPayFour" onclick="switchMainPage('payFour')">🛍️ Pay in 4 Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('payFour')" title="Open Pay in 4 in a new tab" aria-label="Open Pay in 4 in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button><button class="drawer-tab-open" onclick="openFinanceTab('purchasePlan')" title="Open Purchase Plan in a new tab" aria-label="Open Purchase Plan in a new tab">↗</button></div>
+        <div class="drawer-nav-row"><button class="drawer-link" id="navSettings" onclick="switchMainPage('settings')">⚙️ Settings <span class="sync-attention-dot" id="settingsNavWarning" hidden aria-label="Cloud sync needs attention"></span></button><button class="drawer-tab-open" onclick="openFinanceTab('settings')" title="Open Settings in a new tab" aria-label="Open Settings in a new tab">↗</button></div>
     </div>
 </div>
 
@@ -940,6 +1054,14 @@
             </div>
             
             <div class="header-controls">
+                <button type="button" id="financeHeaderInstallBtn" class="finance-install-header" onclick="installFinanceApp()" title="Install Finance App" aria-label="Install Finance App">⬇ <span>Install</span></button>
+                <button class="btn-icon-hdr finance-settings-shortcut" type="button" onclick="switchMainPage('settings')" title="Settings, Notifications & Backups" aria-label="Open Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l-1.86 1.86A1.7 1.7 0 0 0 16 18.4l-.7.4a1.7 1.7 0 0 0-.8 1.5V21h-5v-.7a1.7 1.7 0 0 0-.8-1.5l-.7-.4a1.7 1.7 0 0 0-1.88.34l-1.86-1.86A1.7 1.7 0 0 0 4.6 15l-.4-.7a1.7 1.7 0 0 0-1.5-.8H2v-3h.7a1.7 1.7 0 0 0 1.5-.8l.4-.7a1.7 1.7 0 0 0-.34-1.88l1.86-1.86A1.7 1.7 0 0 0 8 5.6l.7-.4a1.7 1.7 0 0 0 .8-1.5V3h5v.7a1.7 1.7 0 0 0 .8 1.5l.7.4a1.7 1.7 0 0 0 1.88-.34l1.86 1.86A1.7 1.7 0 0 0 19.4 9l.4.7a1.7 1.7 0 0 0 1.5.8h.7v3h-.7a1.7 1.7 0 0 0-1.5.8z"></path>
+                    </svg>
+                    <span class="sync-attention-dot settings-header-warning" id="settingsHeaderWarning" hidden></span>
+                </button>
                 <button class="btn-icon-hdr" id="refreshBtn" onclick="handleManualRefresh()" title="Sync & Refresh Dashboard">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
@@ -966,22 +1088,103 @@
 
     <input type="month" id="monthPicker" style="display:none;">
 
+    <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
+    <section id="mainSettingsView" class="finance-settings-view" style="display:none;" aria-labelledby="settingsPageTitle">
+        
+        <div class="settings-card" id="financeAccountSettings">
+            <div class="settings-card-heading">
+                <h3>🔐 Account &amp; Security</h3>
+                <p>Manage your login, username, and password. Financial records are stored separately for each account.</p>
+            </div>
+            <div class="account-profile-line"><span id="financeAccountUsername">Username: loading…</span><span id="financeAccountEmail">Email: loading…</span></div>
+            <p id="financeAccountMessage" class="account-message" role="status" aria-live="polite"></p>
+            <form class="account-form" onsubmit="financeChangeUsername(event)">
+                <div><label class="account-field-label" for="financeNewUsername">Change username</label><input id="financeNewUsername" autocomplete="off" minlength="3" maxlength="24" pattern="[a-zA-Z][a-zA-Z0-9_]{2,23}" title="3–24 letters, numbers or underscores; start with a letter" placeholder="New username" required></div>
+                <button type="submit" class="btn-add">Save Username</button>
+            </form>
+            <hr class="account-divider">
+            <div class="account-form">
+                <div><strong>Reset your password by email</strong><p class="settings-muted-note">Receive a secure reset link at your registered email address.</p></div>
+                <button type="button" class="btn-secondary" onclick="financeSendPasswordResetFromSettings()">Email Password Reset Link</button>
+            </div>
+            <hr class="account-divider">
+            <form class="account-form" onsubmit="financeChangePassword(event)">
+                <div><label class="account-field-label" for="financeSettingsNewPassword">Change password while signed in</label><input id="financeSettingsNewPassword" type="password" autocomplete="new-password" minlength="8" placeholder="New password" required></div>
+                <div><label class="account-field-label" for="financeSettingsConfirmPassword">Confirm password</label><input id="financeSettingsConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div>
+                <button type="submit" class="btn-secondary">Update Password</button>
+            </form>
+            <hr class="account-divider">
+            <div class="settings-button-row"><button type="button" class="btn-secondary" onclick="financeSignOut()">↪ Log Out</button></div>
+        </div>
+
+        <div class="finance-settings-intro">
+            <h2 id="settingsPageTitle">⚙️ Finance Settings</h2>
+            <p>Manage your installed app, alerts, cloud-sync health, and account backups.</p>
+        </div>
+        <div class="settings-card finance-install-card" id="financeInstallSettings">
+            <div class="settings-card-heading">
+                <h3>⬇ Install Finance App</h3>
+                <p>Install this dashboard on your computer or phone so it opens like an app. Chrome controls whether its address-bar Install button appears.</p>
+            </div>
+            <p class="finance-install-status" id="financeInstallStatus" role="status" aria-live="polite">Checking installation options…</p>
+            <div class="settings-button-row">
+                <button type="button" class="btn-add" id="financeInstallAction" onclick="installFinanceApp()">⬇ Install Finance App</button>
+                <button type="button" class="btn-secondary" onclick="checkFinanceInstallReadiness()">Check Install Setup</button>
+            </div>
+            <div id="financeInstallDiagnostics" class="finance-install-tip" role="status" aria-live="polite" hidden></div>
+            <p class="settings-muted-note">Already installed? You can open the app from your desktop, Dock, or Home Screen. Installing does not automatically back up your financial records; account sync and JSON backups remain separate.</p>
+        </div>
+        <div class="settings-card">
+            <div class="settings-card-heading">
+                <h3>🔔 Notifications &amp; Test Alerts</h3>
+                <p>Allow alerts, verify service-worker setup, and test an alert on this device.</p>
+            </div>
     <div class="notification-banner" id="notifyBanner">
         <span id="notifyStatus">🔔 Enable reminders for bills, ESSO, and Pay in 4 when you open the app.</span>
         <button class="btn-notify" id="enableNotifyBtn" onclick="requestNotificationPermission()">Enable Notifications</button>
         <button type="button" class="btn-secondary" style="min-height:40px;padding:8px 12px;" onclick="diagnoseFinanceNotifications()">Check Alert Setup</button>
         <div id="notificationDiagnostics" role="status" aria-live="polite" style="display:none;width:100%;font-size:0.86rem;line-height:1.5;padding:12px;border:1px solid var(--card-border);border-radius:10px;background:rgba(255,255,255,.03);"></div>
     </div>
+            <div class="settings-button-row">
+                <button type="button" class="btn-secondary" onclick="openEssoNotificationModal()">Reminder Preferences</button>
+                <button type="button" class="btn-secondary" onclick="previewFinanceReminder()">Preview In-App Reminder</button>
+            </div>
+            <p class="settings-muted-note">Bills, ESSO and Pay in 4 are checked when the web app opens or returns to the foreground. Alerts delivered while it's closed require a separate Web Push sender.</p>
+        </div>
+        <div class="settings-card">
+            <div class="settings-card-heading">
+                <h3>☁️ Cloud Sync &amp; Data Safety <span class="sync-attention-dot" id="settingsSectionWarning" hidden></span></h3>
+                <p id="settingsSyncSummary" role="status" aria-live="polite">Cloud status is checked when you open the app. Your device keeps a local copy of saved records.</p>
+            </div>
     <div class="notification-banner hidden" id="syncWarning" style="border-color:rgba(244,63,94,.5); background:rgba(244,63,94,.1);" role="alert">
         <span id="syncWarningText">Cloud sync requires attention. Your current records are preserved locally.</span>
         <button class="btn-secondary" style="padding:8px 12px" onclick="document.getElementById('exportBtn').click()">Download Safety Backup</button>
         <button class="btn-secondary" id="useCloudCopyBtn" style="display:none;padding:8px 12px" onclick="acceptCloudCopy()">Use Cloud Version...</button>
     </div>
 
+            <div class="settings-button-row">
+                <button type="button" class="btn-secondary" onclick="handleManualRefresh()">↻ Refresh From Cloud</button>
+                <button type="button" class="btn-secondary" onclick="exportUnifiedBackup()">📦 Download Safety Backup</button>
+            </div>
+            <p class="settings-muted-note">If you see “Cloud copy appears empty,” download a backup before attempting to replace your local data. A missing cloud copy does not mean your device records were deleted.</p>
+        </div>
+        <div class="settings-card">
+            <div class="settings-card-heading">
+                <h3>🗂 All-in-One Finance Backup</h3>
+                <p>One JSON file includes every month and all of your finance sections.</p>
+            </div>
     <div class="unified-data-status">
-      <div><strong>🗂 One shared finance database</strong><small id="masterDataSummary">Dashboard · Allocation · ESSO · Plans · Pay in 4 · Purchases — all saved together</small></div>
+      <div><strong>🗂 One secure account finance database</strong><small id="masterDataSummary">Dashboard · Allocation · ESSO · Plans · Pay in 4 · Purchases — all saved together</small></div>
       <button type="button" class="btn-secondary" onclick="exportUnifiedBackup()">📦 Save All Pages (1 JSON)</button>
     </div>
+
+            <div class="settings-button-row">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('importFileInput').click()">Import JSON Backup</button>
+            </div>
+            <div class="settings-button-row"><button type="button" class="btn-secondary" id="financeLegacyImportBtn" onclick="financeImportOldDeviceData()" hidden>Import Old Device Data (This Browser)</button></div>
+            <p class="settings-muted-note">Your downloaded backup is a snapshot; it won't update automatically. Keep the file private and outside your public GitHub repository.</p>
+        </div>
+    </section>
 
     <!-- MAIN PAGE 1: Household Dashboard View -->
     <div id="mainDashboardView">
@@ -1729,6 +1932,96 @@
     <button type="button" style="margin-top:10px;width:auto;min-height:34px;font-size:.8rem;padding:5px 10px;" onclick="this.parentNode.style.display='none'">Dismiss</button>
 </div>
 <script>
+    // Install UX works before login and from Settings. Browser toolbar promotions
+    // are controlled by the browser; do NOT suppress its default install UI.
+    let financeDeferredInstallPrompt = null;
+    let financeAppWasInstalled = false;
+    function financeIsStandalone() {
+        try { return financeAppWasInstalled || window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true; }
+        catch (_) { return financeAppWasInstalled; }
+    }
+    function financeInstallInstructions() {
+        const ua = navigator.userAgent || '';
+        const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (ios) return 'On iPhone/iPad: open this site in Safari, tap Share, choose Add to Home Screen, then Add. The browser cannot show an automatic install prompt on iOS.';
+        if (/Android/i.test(ua)) return 'On Android: open this site in Chrome, tap the ⋮ menu, then Install app or Add to Home screen.';
+        if (/Safari/i.test(ua) && !/Chrome|Chromium|Edg|OPR/i.test(ua)) return 'On Mac Safari: choose File → Add to Dock. Or use Chrome/Edge and look for the Install option in the address bar or browser menu.';
+        return 'In desktop Chrome or Edge, look for Install in the address bar or choose the browser menu → Install page as app. If absent, visit the page normally and try again after Chrome recognizes it as installable.';
+    }
+    function financeInstallStatus(message) {
+        for (const id of ['financeInstallStatus','financeAuthInstallStatus']) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = message;
+        }
+    }
+    function updateFinanceInstallUi() {
+        const installed = financeIsStandalone();
+        const header = document.getElementById('financeHeaderInstallBtn');
+        const authButton = document.getElementById('financeAuthInstallBtn');
+        const settingsButton = document.getElementById('financeInstallAction');
+        if (header) header.hidden = installed;
+        if (authButton) { authButton.hidden = installed; }
+        if (settingsButton) { settingsButton.disabled = installed; settingsButton.textContent = installed ? '✓ App Already Installed' : '⬇ Install Finance App'; }
+        if (installed) financeInstallStatus('Installed and running as an app on this device.');
+        else if (financeDeferredInstallPrompt) financeInstallStatus('Ready to install. Tap Install Finance App to open your browser’s install prompt.');
+        else financeInstallStatus(financeInstallInstructions());
+    }
+    window.addEventListener('beforeinstallprompt', event => {
+        // Preserve Chrome’s own install indicator; the custom button is an alternative.
+        financeDeferredInstallPrompt = event;
+        updateFinanceInstallUi();
+    });
+    window.addEventListener('appinstalled', () => {
+        financeDeferredInstallPrompt = null;
+        financeAppWasInstalled = true;
+        updateFinanceInstallUi();
+    });
+    window.addEventListener('pageshow', () => updateFinanceInstallUi());
+    async function installFinanceApp() {
+        if (financeIsStandalone()) { updateFinanceInstallUi(); return; }
+        if (financeDeferredInstallPrompt) {
+            const promptEvent = financeDeferredInstallPrompt;
+            financeDeferredInstallPrompt = null;
+            try {
+                // Called directly by a click. Browsers require user activation.
+                const choice = await promptEvent.prompt();
+                if (choice?.outcome === 'accepted') financeInstallStatus('Install accepted. Follow your browser’s instructions to finish.');
+                else financeInstallStatus('Installation canceled. You can try the browser Install button later.');
+            } catch (err) {
+                financeInstallStatus('Your browser could not open an installation prompt. ' + financeInstallInstructions());
+            }
+            updateFinanceInstallUi();
+            return;
+        }
+        financeInstallStatus(financeInstallInstructions());
+        const diagnostics = document.getElementById('financeInstallDiagnostics');
+        if (diagnostics) { diagnostics.hidden = false; diagnostics.textContent = financeInstallInstructions(); }
+    }
+    async function checkFinanceInstallReadiness() {
+        const box = document.getElementById('financeInstallDiagnostics');
+        if (!box) return;
+        box.hidden = false;
+        box.textContent = 'Checking PWA files…';
+        if (!window.isSecureContext || location.protocol === 'file:') {
+            box.textContent = 'Install requires an HTTPS website. A downloaded local HTML file does not meet this requirement.';
+            return;
+        }
+        try {
+            const manifestResponse = await fetch('./manifest.webmanifest', {cache:'no-store'});
+            if (!manifestResponse.ok) throw new Error('manifest.webmanifest returned HTTP '+manifestResponse.status);
+            const manifest = await manifestResponse.json();
+            if (!manifest.name && !manifest.short_name) throw new Error('Manifest is missing the app name');
+            if (!manifest.start_url || !manifest.display || !Array.isArray(manifest.icons)) throw new Error('Manifest is missing required PWA details');
+            const iconResults = await Promise.all(['./icon-192.png','./icon-512.png'].map(path => fetch(path,{cache:'no-store'})));
+            iconResults.forEach((response,i) => { if (!response.ok) throw new Error((i===0?'icon-192.png':'icon-512.png')+' returned HTTP '+response.status); });
+            const sw = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration('./') : null;
+            const messages = ['HTTPS: OK', 'Manifest: OK', 'Icons: OK', 'Service worker: '+(sw?.active?'active':'not active')];
+            if (!sw?.active) messages.push('Refresh the page, then check the service-worker.js URL.');
+            messages.push(financeIsStandalone()?'App is already installed.':'Chrome still decides when to offer its address-bar Install button.');
+            box.textContent = messages.join(' · ');
+        } catch (err) { box.textContent = 'Install setup needs attention: '+(err?.message||String(err)); }
+    }
+    updateFinanceInstallUi();
     let registeredServiceWorkerReg = null;
     let isImporting = false;
     // Use a real script on the same HTTPS origin; never claim a local HTML file can send OS alerts.
@@ -1774,8 +2067,14 @@
     let editingBaseMonthlyAmount = 0;
     let editingOriginalRecurrence = 'monthly';
 
-    const FINANCE_STORAGE_KEY = 'household_finance_v12';
-    const FINANCE_CONFIRMED_KEY = 'finance_last_confirmed_cloud_v1';
+    // Both local records and their cloud confirmation are keyed to the signed-in account.
+    // Legacy device data is NOT auto-imported into a newly created account.
+    let FINANCE_STORAGE_KEY = 'household_finance_LOCKED';
+    let FINANCE_CONFIRMED_KEY = 'finance_confirmed_LOCKED';
+    let financeAuthUser = null;
+    let financeAuthProfile = null;
+    let financeAuthEpoch = 0;
+    let financeAuthBusy = false;
     let lastCloudSnapshot = undefined; // undefined: not read, null: cloud row missing
     let cloudSyncReady = false;
     let locallyUnsynced = false;
@@ -1790,7 +2089,7 @@
     const FINANCE_TAB_DASHBOARD_KEY = 'finance_tab_dashboard_v1';
     const FINANCE_TAB_ALLOC_KEY = 'finance_tab_alloc_v1';
     const FINANCE_TAB_MONTH_KEY = 'finance_tab_month_v1';
-    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan'];
+    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','settings'];
     const financeSourceId = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : String(Math.random());
     const financeBaseSnapshots = new WeakMap();
     const financeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('household_finance_master_v12') : null;
@@ -1890,25 +2189,29 @@
         });
     }
     async function writeFinanceMirror(raw) {
+        if (!financeAuthUser) return;
         try {
             const db=await openFinanceMirror(); if(!db)return;
             await new Promise((resolve,reject)=>{
                 const tx=db.transaction(financeIdbStore,'readwrite');
-                tx.objectStore(financeIdbStore).put({id:'master',raw,savedAt:Date.now()});
+                tx.objectStore(financeIdbStore).put({id:'master:'+financeAuthUser.id,raw,savedAt:Date.now()});
                 tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
             });
             db.close();
         } catch(err) {console.warn('Extra local recovery copy could not be written:',err);}
     }
     async function recoverFinanceMirror() {
+        if (!financeAuthUser) return false;
+        const recoveryUserId=financeAuthUser.id;
         try {
             if (hasFinancialRecords(getStoredData())) return false;
             const db=await openFinanceMirror();if(!db)return false;
             const backup=await new Promise((resolve,reject)=>{
                 const tx=db.transaction(financeIdbStore,'readonly');
-                const req=tx.objectStore(financeIdbStore).get('master');
+                const req=tx.objectStore(financeIdbStore).get('master:'+recoveryUserId);
                 req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
             });db.close();
+            if (!financeAuthUser || financeAuthUser.id!==recoveryUserId) return false;
             const restored=backup?.raw?JSON.parse(backup.raw):null;
             if(!hasFinancialRecords(restored))return false;
             const current=localStorage.getItem(FINANCE_STORAGE_KEY);
@@ -1921,7 +2224,7 @@
         }catch(err){console.warn('Local recovery mirror unavailable:',err);return false;}
     }
     function notifyFinanceTabs() {
-        try {financeChannel?.postMessage({kind:'master-updated',origin:financeSourceId});}catch(err){}
+        try {financeChannel?.postMessage({kind:'master-updated',origin:financeSourceId,account:financeAuthUser?.id});}catch(err){}
     }
     function scheduleFinanceRender() {
         clearTimeout(financeRenderTimer);
@@ -1942,10 +2245,11 @@
         }
     });
     if(financeChannel)financeChannel.onmessage=msg=>{
-        if(msg.data?.kind==='master-updated' && msg.data.origin!==financeSourceId) scheduleFinanceRender();
+        if(financeAuthUser && msg.data?.kind==='master-updated' && msg.data.account===financeAuthUser.id && msg.data.origin!==financeSourceId) scheduleFinanceRender();
     };
 
     function getStoredData() {
+        if (!financeAuthUser) return {months:{},esso:[],paymentPlans:[],payFourPlans:[],purchasePlans:[],allocations:{his:[],her:[]}};
         try {
             const saved = localStorage.getItem(FINANCE_STORAGE_KEY);
             if (saved) return rememberSnapshot(JSON.parse(saved),saved);
@@ -1968,11 +2272,28 @@
         document.getElementById('syncWarningText').textContent = msg;
         document.getElementById('useCloudCopyBtn').style.display = canUseCloud ? '' : 'none';
         banner.classList.remove('hidden');
+        setSettingsSyncAttention(true, msg);
         triggerSaveIndicator('⚠ Saved locally only');
+    }
+    function setSettingsSyncAttention(hasWarning, message='') {
+        ['settingsNavWarning','settingsHeaderWarning','settingsSectionWarning'].forEach(id => {
+            const el=document.getElementById(id);
+            if(el)el.hidden=!hasWarning;
+        });
+        const summary=document.getElementById('settingsSyncSummary');
+        if(summary){
+            summary.textContent=hasWarning
+                ? 'Attention needed: '+message
+                : 'No cloud-sync warning is currently reported. Use Refresh From Cloud to check your connection.';
+            summary.style.color=hasWarning?'#fda4af':'var(--text-muted)';
+        }
+        const header=document.querySelector('.finance-settings-shortcut');
+        if(header)header.setAttribute('aria-label',hasWarning?'Open Settings — cloud sync needs attention':'Open Settings');
     }
     function clearSyncWarning() {
         document.getElementById('syncWarning').classList.add('hidden');
         document.getElementById('useCloudCopyBtn').style.display = 'none';
+        setSettingsSyncAttention(false);
     }
     async function acceptCloudCopy() {
         const ok = confirm('Use the latest cloud copy on this device? Your local version might differ. A JSON safety backup will download first. Do not proceed unless you want the cloud version.');
@@ -1987,13 +2308,15 @@
         if (!raw) return;
         try {
             // At most three previous locally stored snapshots, retrievable in browser developer tools.
-            const key = 'finance_recovery_' + new Date().toISOString().replace(/[:.]/g,'-');
+            const key = 'finance_recovery_'+(financeAuthUser?.id || 'locked')+'_' + new Date().toISOString().replace(/[:.]/g,'-');
             localStorage.setItem(key, raw);
-            const keys = Object.keys(localStorage).filter(k => k.startsWith('finance_recovery_')).sort();
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('finance_recovery_'+(financeAuthUser?.id || 'locked')+'_')).sort();
             keys.slice(0, Math.max(0,keys.length-3)).forEach(k => localStorage.removeItem(k));
         } catch (err) { console.warn('Recovery copy could not be stored:', err); }
     }
     async function saveData(data) {
+        if (!financeAuthUser) return false;
+        const writingUserId = financeAuthUser.id;
         // Immediately commit one combined dataset. This survives a tab refresh.
         const previousSnapshot = financeBaseSnapshots.get(data);
         const currentRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
@@ -2013,10 +2336,10 @@
         // Prevent multiple browser tabs from uploading an outdated whole-file snapshot.
         const uploadOne = async()=>{
             if(initialCloudLoad)await initialCloudLoad;
-            if(localStorage.getItem(FINANCE_STORAGE_KEY)!==raw)return false;
+            if(!financeAuthUser || financeAuthUser.id!==writingUserId || localStorage.getItem(FINANCE_STORAGE_KEY)!==raw)return false;
             let row;
             try{
-                const response=await supabaseClient.from('household_data').select('payload').eq('id','main').maybeSingle();
+                const response=await supabaseClient.from('household_user_data').select('payload').eq('user_id',writingUserId).maybeSingle();
                 if(response.error)throw response.error;
                 row=response.data;
             }catch(err){
@@ -2024,7 +2347,7 @@
                 warnSync('Cloud unavailable; everything is still saved on this device. Download a JSON backup for another device.');
                 return false;
             }
-            if(localStorage.getItem(FINANCE_STORAGE_KEY)!==raw)return false;
+            if(!financeAuthUser || financeAuthUser.id!==writingUserId || localStorage.getItem(FINANCE_STORAGE_KEY)!==raw)return false;
             const remote=row?.payload || null;
             const remoteRaw=remote?JSON.stringify(remote):null;
             const confirmed=localStorage.getItem(FINANCE_CONFIRMED_KEY);
@@ -2040,8 +2363,9 @@
                 return false;
             }
             try{
-                const {error}=await supabaseClient.from('household_data').upsert({id:'main',payload:data,updated_at:new Date().toISOString()});
+                const {error}=await supabaseClient.from('household_user_data').upsert({user_id:writingUserId,payload:data,updated_at:new Date().toISOString()},{onConflict:'user_id'});
                 if(error)throw error;
+                if(!financeAuthUser || financeAuthUser.id!==writingUserId)return true;
                 lastCloudSnapshot=raw;
                 localStorage.setItem(FINANCE_CONFIRMED_KEY,raw);
                 if(localStorage.getItem(FINANCE_STORAGE_KEY)===raw){
@@ -2057,7 +2381,7 @@
             }
         };
         const uploadWithLock=()=>navigator.locks?.request
-          ? navigator.locks.request('household_finance_main_cloud_write', {mode:'exclusive'},uploadOne)
+          ? navigator.locks.request('household_finance_user_cloud_write_'+writingUserId, {mode:'exclusive'},uploadOne)
           : uploadOne();
         const queued=saveQueue.catch(()=>{}).then(uploadWithLock);
         saveQueue=queued;
@@ -2065,11 +2389,13 @@
     }
 
     async function syncFromCloud(forceCloudCopy = false) {
-        if (isImporting) return false;
+        if (!financeAuthUser || isImporting) return false;
+        const readingUserId = financeAuthUser.id;
         try {
-            const { data: row, error } = await supabaseClient.from('household_data')
-                .select('payload').eq('id','main').maybeSingle();
+            const { data: row, error } = await supabaseClient.from('household_user_data')
+                .select('payload').eq('user_id',readingUserId).maybeSingle();
             if (error) throw error;
+            if (!financeAuthUser || financeAuthUser.id !== readingUserId) return false;
             const remote = row?.payload || null;
             const remoteRaw = remote ? JSON.stringify(remote) : null;
             const originalRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
@@ -2306,7 +2632,9 @@
         const paymentPlanView = document.getElementById('mainPaymentPlanView');
         const purchasePlanView = document.getElementById('mainPurchasePlanView');
         const payFourView = document.getElementById('mainPayFourView');
+        const settingsView = document.getElementById('mainSettingsView');
         const navPayFour = document.getElementById('navPayFour');
+        const navSettings = document.getElementById('navSettings');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navAllocation = document.getElementById('navAllocation');
@@ -2321,6 +2649,7 @@
         paymentPlanView.style.display = 'none';
         purchasePlanView.style.display = 'none';
         payFourView.style.display = 'none';
+        settingsView.style.display = 'none';
         
         navDashboard.classList.remove('active');
         navAllocation.classList.remove('active');
@@ -2328,6 +2657,7 @@
         navPaymentPlan.classList.remove('active');
         navPurchasePlan.classList.remove('active');
         navPayFour.classList.remove('active');
+        navSettings.classList.remove('active');
 
         if (view === 'allocation') {
             allocationView.style.display = 'block';
@@ -2348,6 +2678,11 @@
             payFourView.style.display = 'block';
             headerTitle.textContent = 'Pay in 4 Tracker';
             navPayFour.classList.add('active');
+            monthCalendarBtn.style.display = 'none';
+        } else if (view === 'settings') {
+            settingsView.style.display = 'block';
+            headerTitle.textContent = 'Settings';
+            navSettings.classList.add('active');
             monthCalendarBtn.style.display = 'none';
         } else if (view === 'purchasePlan') {
             purchasePlanView.style.display = 'block';
@@ -2726,7 +3061,7 @@
         }
     }
 
-    const financeAlertCacheKey = 'finance_reminder_delivery_v2';
+    let financeAlertCacheKey = 'finance_reminder_delivery_v2_locked';
     let notificationRunInProgress = false;
     function dateDiffInCalendarDays(dueYmd, todayYmd) {
         const due = Date.parse(dueYmd + 'T12:00:00Z');
@@ -3769,7 +4104,7 @@
     }
 
 
-    // Independent Pay-in-4 installment ledger, persisted in the existing household_data payload.
+    // Independent Pay-in-4 installment ledger, persisted in the user-owned household_user_data payload.
     function p4Esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function p4Money(cents) { return '$' + (cents / 100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
     function p4Cents(amount) { return Math.round(Number(amount) * 100); }
@@ -4093,6 +4428,7 @@
     }
 
     async function handleJSONImport(event) {
+        if (!financeAuthUser) return;
         const file = event.target.files[0];
         if (!file) return;
 
@@ -4159,6 +4495,7 @@
     }
 
     function exportUnifiedBackup() {
+        if (!financeAuthUser) return;
         // This is the complete master record, not a backup of just the visible tab.
         const allPages=getStoredData();
         const blob=new Blob([JSON.stringify(allPages,null,2)],{type:'application/json'});
@@ -4172,17 +4509,240 @@
     document.getElementById('exportBtn').addEventListener('click',exportUnifiedBackup);
 
 
-    // Bootstrap: recover saved device records, check cloud, restore independent tab view.
-    // Month rollover remains enabled and non-destructive.
-    void (async()=>{
+
+    // ---------------- ACCOUNT ACCESS (SUPABASE AUTH) ----------------
+    const FINANCE_LOGIN_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const FINANCE_USERNAME_REGEX = /^[a-z][a-z0-9_]{2,23}$/;
+    let financeRecoveryFlow = false;
+    function authMessage(message='',type='info') {
+        const el=document.getElementById('financeAuthMessage');
+        el.textContent=message;
+        el.className=message?'active'+(type==='error'?' error':''):'';
+    }
+    function accountMessage(message='',type='info') {
+        const el=document.getElementById('financeAccountMessage');
+        el.textContent=message;
+        el.className='account-message'+(message?' active':'')+(type==='error'?' error':'');
+    }
+    function showAuthPanel(which,keepMessage=false) {
+        if(!keepMessage)authMessage();
+        const names={'login':'authLoginPanel','signup':'authSignupPanel','forgot-password':'authForgotPasswordPanel','forgot-username':'authForgotUsernamePanel','new-password':'authNewPasswordPanel'};
+        Object.entries(names).forEach(([name,id])=>document.getElementById(id).hidden=(name!==which));
+        document.getElementById('authModeTabs').hidden=(which==='new-password');
+        document.getElementById('authTabLogin').classList.toggle('active',which==='login');
+        document.getElementById('authTabSignup').classList.toggle('active',which==='signup');
+    }
+    const financeAuthRedirect = () => location.origin+location.pathname;
+    function setFinanceAuthAccount(user) {
+        financeAuthUser=user;
+        FINANCE_STORAGE_KEY='household_finance_v12_u_'+user.id;
+        FINANCE_CONFIRMED_KEY='finance_last_confirmed_cloud_v1_u_'+user.id;
+        financeAlertCacheKey='finance_reminder_delivery_v2_'+user.id;
+        lastCloudSnapshot=undefined;
+        locallyUnsynced=false;
+        cloudSyncReady=false;
+        lastRolloverCheckedMonth=initialMonthStr;
+        saveQueue=Promise.resolve();
+        initialCloudLoad=null;
+        financeAuthEpoch++;
+    }
+    async function financeLoadProfile() {
+        if(!financeAuthUser)return;
+        const uid=financeAuthUser.id;
+        const {data,error}=await supabaseClient.from('finance_profiles').select('username').eq('user_id',uid).single();
+        if(!financeAuthUser||financeAuthUser.id!==uid)return;
+        if(error) {accountMessage('Could not load username: '+error.message,'error');return;}
+        financeAuthProfile=data;
+        document.getElementById('financeAccountUsername').textContent='Username: @'+data.username;
+        document.getElementById('financeAccountEmail').textContent='Email: '+(financeAuthUser.email||'Not provided');
+    }
+    async function financeEnterAccount(user) {
+        if(financeAuthUser?.id===user.id && document.body.classList.contains('finance-authenticated'))return;
+        setFinanceAuthAccount(user);
+        const epoch=financeAuthEpoch;
+        document.body.classList.add('finance-authenticated');
+        authMessage();
+        await financeLoadProfile();
+        if(epoch!==financeAuthEpoch)return;
         await recoverFinanceMirror();
+        if(epoch!==financeAuthEpoch)return;
         initialCloudLoad=syncFromCloud();
         const synced=await initialCloudLoad;
+        if(epoch!==financeAuthEpoch)return;
         restoreFinanceTabView();
         initializeAllDateDisplays();
         render();
         if(synced)await checkAndAutoRollover(initialMonthStr,false);
-    })();
+        if(epoch!==financeAuthEpoch)return;
+        const legacy=localStorage.getItem('household_finance_v12');
+        let validLegacy=false;
+        try{validLegacy=Boolean(legacy && hasFinancialRecords(JSON.parse(legacy)));}catch(err){}
+        if(validLegacy && !hasFinancialRecords(getStoredData())) {
+            warnSync('Old device records detected. They are safely kept under the legacy browser data key. Download a backup from the OLD app or use the optional Import Old Device Data button in Settings. Never upload old data into the wrong account.');
+            document.getElementById('financeLegacyImportBtn').hidden=false;
+        }
+    }
+    function financeExitAccount() {
+        financeAuthEpoch++;
+        document.body.classList.remove('finance-authenticated');
+        financeAuthUser=null;financeAuthProfile=null;
+        FINANCE_STORAGE_KEY='household_finance_LOCKED';
+        FINANCE_CONFIRMED_KEY='finance_confirmed_LOCKED';
+        financeAlertCacheKey='finance_reminder_delivery_v2_locked';
+        lastCloudSnapshot=undefined;cloudSyncReady=false;locallyUnsynced=false;
+        showAuthPanel('login');
+        // Browser data is retained for the same user to recover; never display it to the next user.
+    }
+    async function initializeFinanceAuth() {
+        if(!supabaseClient.auth) {
+            authMessage('Supabase Authentication did not load. Reconnect to the internet and refresh this page.','error');
+            return;
+        }
+        supabaseClient.auth.onAuthStateChange((event,session)=>{
+            // Avoid awaiting calls back into Supabase inside its auth state change callback.
+            queueMicrotask(()=>{
+                if(event==='PASSWORD_RECOVERY') {
+                    financeRecoveryFlow=true;
+                    document.body.classList.remove('finance-authenticated');
+                    showAuthPanel('new-password');
+                    authMessage('Recovery link verified. Set a new password to continue.');
+                } else if(event==='SIGNED_OUT') {
+                    financeExitAccount();
+                } else if(event==='SIGNED_IN' && session?.user && !financeRecoveryFlow && !location.search.includes('auth=recovery')) {
+                    void financeEnterAccount(session.user);
+                }
+            });
+        });
+        const {data,error}=await supabaseClient.auth.getUser();
+        if(error && !(/session missing|auth session missing/i.test(error.message||''))) console.warn('Auth session check:',error.message);
+        // Supabase may finish parsing a recovery redirect after getUser returns.
+        if(location.search.includes('auth=recovery') && data?.user){
+            financeRecoveryFlow=true;showAuthPanel('new-password');
+            authMessage('Set your new password to finish recovery.');
+        }else if(data?.user && !financeRecoveryFlow){
+            await financeEnterAccount(data.user);
+        }
+        // A new account must be created before syncing. No anonymous access.
+    }
+    async function financeLogin(event){
+        event.preventDefault();
+        const id=document.getElementById('authIdentifier').value.trim().toLowerCase();
+        const password=document.getElementById('authLoginPassword').value;
+        if(!id || !password)return;
+        authMessage('Signing in securely…');
+        const submit=event.target.querySelector('[type="submit"]');submit.disabled=true;
+        try{
+            let result;
+            if(FINANCE_LOGIN_EMAIL_REGEX.test(id)) {
+                result=await supabaseClient.auth.signInWithPassword({email:id,password});
+            }else{
+                if(!FINANCE_USERNAME_REGEX.test(id))throw new Error('Enter a valid username or email.');
+                const response=await supabaseClient.functions.invoke('finance-username-login',{body:{username:id,password}});
+                if(response.error)throw new Error('Username sign-in failed. Check your credentials, and confirm the username-login Edge Function was deployed.');
+                if(!response.data?.access_token||!response.data?.refresh_token)throw new Error('Username sign-in could not complete.');
+                result=await supabaseClient.auth.setSession({access_token:response.data.access_token,refresh_token:response.data.refresh_token});
+            }
+            if(result.error)throw result.error;
+            document.getElementById('authLoginPassword').value='';
+            if(result.data?.user)await financeEnterAccount(result.data.user);
+        }catch(err){authMessage(err.message||'Sign-in failed.','error');}
+        finally{submit.disabled=false;}
+    }
+    async function financeSignup(event){
+        event.preventDefault();
+        const username=document.getElementById('authSignupUsername').value.trim().toLowerCase();
+        const email=document.getElementById('authSignupEmail').value.trim().toLowerCase();
+        const password=document.getElementById('authSignupPassword').value;
+        if(!FINANCE_USERNAME_REGEX.test(username))return authMessage('Username must be 3–24 characters, start with a letter and contain only letters, numbers, or underscores.','error');
+        if(password!==document.getElementById('authSignupConfirm').value)return authMessage('Passwords do not match.','error');
+        if(password.length<8)return authMessage('Password must be at least 8 characters.','error');
+        const submit=event.target.querySelector('[type="submit"]');submit.disabled=true;
+        authMessage('Creating your account…');
+        try{
+            const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{username},emailRedirectTo:financeAuthRedirect()}});
+            if(error)throw error;
+            event.target.reset();
+            if(data.session?.user){await financeEnterAccount(data.session.user);}
+            else{showAuthPanel('login',true);authMessage('Check your email to confirm your account, then sign in with your username or email. If the username is already taken, try a different one.');}
+        }catch(err){authMessage('Could not create account: '+(err.message||'Unknown error')+'. Try another username if this one is taken.','error');}
+        finally{submit.disabled=false;}
+    }
+    async function financeForgotPassword(event){
+        event.preventDefault();
+        const email=document.getElementById('authRecoveryEmail').value.trim().toLowerCase();
+        try{
+            const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:financeAuthRedirect()+'?auth=recovery'});
+            if(error)throw error;
+            authMessage('If that address belongs to an account, a reset link is on its way. Check your inbox and spam folder.');
+        }catch(err){authMessage('Could not request password reset: '+err.message,'error');}
+    }
+    async function financeForgotUsername(event){
+        event.preventDefault();
+        const email=document.getElementById('authUsernameEmail').value.trim().toLowerCase();
+        try{
+            const {error}=await supabaseClient.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:financeAuthRedirect()+'?auth=username'}});
+            if(error)throw error;
+            authMessage('If that email has an account, we have sent a secure sign-in link. After opening it, your username is visible in Settings.');
+        }catch(err){authMessage('Could not send a sign-in link: '+err.message,'error');}
+    }
+    async function financeCompleteRecovery(event){
+        event.preventDefault();
+        const password=document.getElementById('authNewPassword').value;
+        if(password!==document.getElementById('authNewPasswordConfirm').value)return authMessage('Passwords do not match.','error');
+        try{
+            const {data,error}=await supabaseClient.auth.updateUser({password});
+            if(error)throw error;
+            financeRecoveryFlow=false;
+            history.replaceState(null,'',location.pathname);
+            event.target.reset();
+            authMessage('Password changed. You are signed in.');
+            if(data.user)await financeEnterAccount(data.user);
+        }catch(err){authMessage('Password reset failed: '+err.message,'error');}
+    }
+    async function financeChangeUsername(event){
+        event.preventDefault();if(!financeAuthUser)return;
+        const username=document.getElementById('financeNewUsername').value.trim().toLowerCase();
+        if(!FINANCE_USERNAME_REGEX.test(username))return accountMessage('Username must be 3–24 letters, numbers, or underscores, starting with a letter.','error');
+        const {error}=await supabaseClient.from('finance_profiles').update({username}).eq('user_id',financeAuthUser.id);
+        if(error){accountMessage('Username not changed. It might already be taken: '+error.message,'error');return;}
+        event.target.reset();
+        accountMessage('Your username has been updated.');
+        await financeLoadProfile();
+    }
+    async function financeSendPasswordResetFromSettings(){
+        if(!financeAuthUser?.email)return;
+        const {error}=await supabaseClient.auth.resetPasswordForEmail(financeAuthUser.email,{redirectTo:financeAuthRedirect()+'?auth=recovery'});
+        accountMessage(error?'Could not send reset link: '+error.message:'Password reset link requested. Check your email.',error?'error':'info');
+    }
+    async function financeChangePassword(event){
+        event.preventDefault();if(!financeAuthUser)return;
+        const password=document.getElementById('financeSettingsNewPassword').value;
+        if(password!==document.getElementById('financeSettingsConfirmPassword').value)return accountMessage('Passwords do not match.','error');
+        const {error}=await supabaseClient.auth.updateUser({password});
+        if(error){accountMessage('Password update failed: '+error.message,'error');return;}
+        event.target.reset();accountMessage('Password updated successfully.');
+    }
+    async function financeSignOut(){
+        if(!confirm('Log out of this finance account? Your account data will remain saved.'))return;
+        await supabaseClient.auth.signOut();financeExitAccount();
+    }
+    async function financeImportOldDeviceData(){
+        if(!financeAuthUser)return;
+        const raw=localStorage.getItem('household_finance_v12');
+        if(!raw){accountMessage('No old-format device data was found here. Use Import JSON Backup instead.','error');return;}
+        let legacy;
+        try{legacy=JSON.parse(raw);}catch(err){accountMessage('Old device records were not readable. Use your downloaded JSON backup.','error');return;}
+        if(!hasFinancialRecords(legacy)){accountMessage('No old finance entries were found.');return;}
+        if(hasFinancialRecords(getStoredData())){accountMessage('This account already has data. To avoid overwriting it, use Import JSON Backup to MERGE the old records.','error');return;}
+        if(!confirm('Import older device records into the currently signed-in account ('+(financeAuthProfile?.username||financeAuthUser.email)+')? Only do this if you own those records. The original legacy data will remain untouched.'))return;
+        const synced=await saveData(legacy);
+        render();
+        accountMessage(synced?'Old device records imported and synced to your account.':'Old data saved on this device, but cloud sync needs attention. Download a backup before using another device.',synced?'info':'error');
+    }
+
+    // Bootstrap waits for verified user authentication. No finance cloud reads/writes
+    // or automatic rollover run while signed out.
+    void initializeFinanceAuth();
 
 </script>
 
