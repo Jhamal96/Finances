@@ -1,0 +1,9 @@
+# Deployment target: https://finances.jhamal16.workers.dev/
+# Deploy only while logged into the account with workers.dev subdomain jhamal16.
+name = "finances"
+compatibility_date = "2026-10-18"
+workers_dev = true
+
+[assets]
+directory = "./public"
+not_found_handling = "404-page"
