@@ -1078,6 +1078,13 @@
     .finance-cloud-result button{width:auto;min-height:36px;padding:7px 12px;font-size:.81rem}
     .finance-cloud-result-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
     .finance-cloud-detail{margin:5px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem;color:var(--text-muted)}
+
+    .finance-shared-heading{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0}
+    .finance-shared-heading h1{margin:0}
+    .finance-shared-heading-tag{display:inline-flex;align-items:center;padding:5px 9px;white-space:nowrap;
+      font-size:.73rem;font-weight:700;color:#a7f3d0;border:1px solid rgba(52,211,153,.43);
+      background:rgba(16,185,129,.10);border-radius:9px}
+    @media(max-width:550px){.finance-shared-heading-tag{font-size:.65rem}}
     </style>
 </head>
 <body>
@@ -1212,7 +1219,7 @@
         </div>
 
         <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-            <h1 id="mainPageHeaderTitle">Household Dashboard</h1>
+            <div class="finance-shared-heading"><h1 id="mainPageHeaderTitle">Household Dashboard</h1><span class="finance-shared-heading-tag" title="All registered, verified Finance emails share and edit the same finances">🌐 Shared Household</span></div>
             <span class="save-indicator" id="saveIndicator">✓ Synced</span>
         </div>
     </header>
@@ -1350,7 +1357,7 @@
                 <button type="button" class="btn-secondary" onclick="financeUploadThisDevice()">☁ Upload This Device</button>
                 <button type="button" class="btn-secondary" onclick="exportUnifiedBackup()">📦 Download Safety Backup</button>
             </div>
-            <p class="settings-muted-note">Refreshing only reads data for the email account currently signed in. If another account owns the records, use its login or ask the owner to share a profile. <strong>Restore Cloud to Device</strong> downloads a backup of this device before replacing its copy. If you have unsynced work, keep that backup.</p>
+            <p class="settings-muted-note">Every verified Finance email account reads the same shared household data. <strong>Restore Cloud to Device</strong> downloads a backup of this device before replacing its copy. If you have unsynced work, keep the backup. Only trusted household members should register.</p>
         </div>
         <div class="settings-card">
             <div class="settings-card-heading">
@@ -2534,7 +2541,7 @@
         const selected=profiles[selectedKey]||financeSharedProfiles.has(selectedKey)?selectedKey:'default';
         const ids=Object.keys(profiles);
         const choices=[
-            ...Object.entries(profiles).map(([id,p])=>({key:id,label:'Mine · '+p.name})),
+            ...Object.entries(profiles).map(([id,p])=>({key:id,label:'Household · '+p.name})),
             ...Array.from(financeSharedProfiles.values()).map(p=>({key:p.key,
                 label:'Shared · '+p.owner+' / '+p.profile.name+' ('+(p.permission==='edit'?'Edit':'View')+')'}))
         ];
@@ -2857,7 +2864,7 @@
                         void writeFinanceMirror(savedRaw);notifyFinanceTabs();
                         locallyUnsynced=false;
                         clearSyncWarning();
-                        triggerSaveIndicator('✓ Account synced across devices');
+                        triggerSaveIndicator('✓ Shared household synced');
                         if(raw!==savedRaw)render();
                     }
                     return true;
@@ -2918,7 +2925,7 @@
                 if (!forceCloudCopy && confirmedRaw !== normalizedLocalRaw) {
                     if (!confirmedRaw) {
                         lastCloudSnapshot = cloudRaw;
-                        warnSync('This device and the cloud both contain records, but no common saved version exists. Download a backup and review both copies before replacing either.',true);
+                        warnSync('This device and shared household both have unconfirmed changes. Download device and household backups before reconciling them.',true);
                         return false;
                     }
                     try { next = mergeFinanceEdits(JSON.parse(confirmedRaw),local,cloud); }
