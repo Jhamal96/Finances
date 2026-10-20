@@ -995,6 +995,8 @@
         .finance-profile-action{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}
         .finance-profile-action input{flex:1;min-width:180px;max-width:370px;padding:11px;border-radius:10px;border:1px solid var(--card-border);background:var(--card-bg);color:var(--text)}
         .finance-profile-action button{width:auto;min-height:42px}
+    .finance-shared-banner{padding:10px 12px;margin-bottom:15px;border:1px solid var(--card-border);background:rgba(56,189,248,.08);border-radius:11px;font-size:.86rem;line-height:1.55}
+    .finance-shared-banner[hidden]{display:none!important}
     </style>
 </head>
 <body>
@@ -1161,6 +1163,11 @@
         <p id="financeProfileMessage" role="status" aria-live="polite" class="finance-profile-help"></p>
       </div>
       <div id="financeProfilesList" class="finance-profile-list"></div>
+      <div class="finance-profile-card"><h3>🔗 Shared With Me</h3>
+        <p class="finance-profile-help">Open another account's profile in your four trackers. Only profiles shared with you appear here.</p>
+        <div id="financeSharedProfileList" class="finance-profile-list"></div>
+        <button type="button" class="btn-secondary" onclick="financeLoadProfileAccess()">↻ Refresh Shared Profiles</button>
+      </div>
       <p class="finance-profile-help">Profiles stay private to your signed-in account and sync through Supabase. Existing tracker records are preserved in Default. Changing profiles never deletes records.</p>
     </section>
     <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
@@ -1194,26 +1201,20 @@
 
         
         <div class="settings-card" id="financeSharingSettings">
-            <div class="settings-card-heading"><h3>🔒 Account Sharing Permissions</h3>
-                <p>Private by default. Give another account read-only access to a selected section across all your named profiles by username. You can revoke access at any time.</p></div>
-            <div class="income-form-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
-              <input id="financeShareUsername" type="text" placeholder="Other account username" autocomplete="off" maxlength="24">
-              <select id="financeShareSection">
-                <option value="allocations">Money Allocation</option>
-                <option value="paymentPlans">Payment Plans</option>
-                <option value="payFourPlans">Pay in 4</option>
-                <option value="purchasePlans">Purchase Plan</option>
-              </select>
-              <button type="button" class="btn-add" onclick="financeGrantSection()">Grant Read-Only View</button>
-            </div>
-            <p class="settings-muted-note" id="financeShareStatus" role="status" aria-live="polite">Nobody can view your account's financial records unless you grant access.</p>
-            <div class="settings-button-row"><button type="button" class="btn-secondary" onclick="financeLoadShares()">Refresh Sharing</button></div>
-            <h4 style="margin:12px 0 8px">Who can view my sections</h4>
-            <div id="financeOutgoingShares" class="settings-muted-note">No access granted.</div>
-            <h4 style="margin:18px 0 8px">Sections shared with me (view only)</h4>
-            <div id="financeIncomingShares" class="settings-muted-note">No shared sections.</div>
-        </div>
-<div class="finance-settings-intro">
+  <div class="settings-card-heading"><h3>🔒 Profile Sharing</h3>
+    <p>Private by default. Invite an existing finance account by <strong>email or username</strong>, choose exactly one profile, and allow viewing or editing. You can revoke permission at any time.</p></div>
+  <div class="income-form-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+    <input type="text" id="financeShareRecipient" maxlength="320" placeholder="Email or username" autocomplete="off" aria-label="Recipient email or username">
+    <select id="financeShareProfile" aria-label="Profile to share"><option value="default">Default</option></select>
+    <select id="financeShareLevel" aria-label="Access level"><option value="view">View Only</option><option value="edit">Can Edit</option></select>
+    <button type="button" class="btn-add" onclick="financeGrantProfileAccess()">Share Profile</button>
+  </div>
+  <p class="settings-muted-note" id="financeShareStatus" role="status" aria-live="polite">Only you can see your private finance profiles until you share one.</p>
+  <div class="settings-button-row"><button type="button" class="btn-secondary" onclick="financeLoadProfileAccess()">↻ Refresh Sharing</button></div>
+  <h4>Access I've Given</h4><div id="financeOutgoingShares" class="settings-muted-note">No access granted.</div>
+  <h4 style="margin-top:16px">Profiles Shared With Me</h4><div id="financeIncomingShares" class="settings-muted-note">No shared profiles.</div>
+</div>
+        <div class="finance-settings-intro">
             <h2 id="settingsPageTitle">⚙️ Finance Settings</h2>
             <p>Manage your installed app, alerts, cloud-sync health, and account backups.</p>
         </div>
@@ -1515,6 +1516,7 @@
     <!-- MAIN PAGE 2: Money Allocation View -->
     <div id="mainAllocationView" style="display: none;">
       <div class="finance-profile-switcher"><label for="mainAllocationViewProfileSelect">👤 Profile</label><select id="mainAllocationViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
+<div data-finance-shared-banner hidden role="status" class="finance-shared-banner"></div>
         <div class="tab-nav" style="margin-bottom: 20px;">
             <button class="tab-btn active his-active" id="allocHisBtn" onclick="switchAllocPerson('his')">His Weekly Allocation</button>
             <button class="tab-btn" id="allocHerBtn" onclick="switchAllocPerson('her')">Her Bi-Weekly Allocation</button>
@@ -1629,6 +1631,7 @@
     <!-- MAIN PAGE 4: Payment Plans View -->
     <div id="mainPaymentPlanView" style="display: none;">
       <div class="finance-profile-switcher"><label for="mainPaymentPlanViewProfileSelect">👤 Profile</label><select id="mainPaymentPlanViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
+<div data-finance-shared-banner hidden role="status" class="finance-shared-banner"></div>
         <div class="summary-grid">
             <div class="stat-card">
                 <h3>Active Plans Total Debt</h3>
@@ -1691,6 +1694,7 @@
     <!-- PAY IN FOUR TRACKER -->
     <section id="mainPayFourView" style="display:none;">
       <div class="finance-profile-switcher"><label for="mainPayFourViewProfileSelect">👤 Profile</label><select id="mainPayFourViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
+<div data-finance-shared-banner hidden role="status" class="finance-shared-banner"></div>
       <div class="summary-grid">
         <div class="stat-card"><h3>Total Purchased</h3><div class="amount" id="p4Total" style="color:var(--accent-combined)">$0.00</div></div>
         <div class="stat-card"><h3>Amount Paid</h3><div class="amount" id="p4Paid" style="color:var(--paid)">$0.00</div></div>
@@ -1722,6 +1726,7 @@
     <!-- MAIN PAGE 5: Purchase Plan View -->
     <div id="mainPurchasePlanView" style="display: none;">
       <div class="finance-profile-switcher"><label for="mainPurchasePlanViewProfileSelect">👤 Profile</label><select id="mainPurchasePlanViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
+<div data-finance-shared-banner hidden role="status" class="finance-shared-banner"></div>
         <div class="summary-grid">
             <div class="stat-card">
                 <h3>Wishlist Items</h3>
@@ -2401,7 +2406,7 @@
         if(!financeAuthUser)return;
         const raw=localStorage.getItem(FINANCE_STORAGE_KEY);
         const data=financeNormalizeProfiles(raw?JSON.parse(raw):{});
-        if(!data.financeProfiles[id])return;
+        if(!data.financeProfiles[id] && !financeSharedProfiles.has(id))return;
         localStorage.setItem(financeProfileKey(),id);
         render();
     }
@@ -4859,7 +4864,7 @@
         authMessage();
         await financeLoadProfile();
         if(epoch!==financeAuthEpoch)return;
-        void financeLoadShares();
+        void financeLoadProfileAccess();
         await recoverFinanceMirror();
         if(epoch!==financeAuthEpoch)return;
         initialCloudLoad=syncFromCloud();
@@ -4882,6 +4887,7 @@
         financeAuthEpoch++;
         document.body.classList.remove('finance-authenticated');
         financeAuthUser=null;financeAuthProfile=null;
+        financeSharedProfiles.clear();financeOutgoingPermissions=[];financeSharedSaveQueues.clear();
         FINANCE_STORAGE_KEY='household_finance_LOCKED';
         FINANCE_CONFIRMED_KEY='finance_confirmed_LOCKED';
         financeAlertCacheKey='finance_reminder_delivery_v2_locked';
@@ -5018,65 +5024,162 @@
         if(error){accountMessage('Password update failed: '+error.message,'error');return;}
         event.target.reset();accountMessage('Password updated successfully.');
     }
-    const financeSectionLabels={allocations:'Money Allocation',paymentPlans:'Payment Plans',payFourPlans:'Pay in 4',purchasePlans:'Purchase Plan'};
-    const financeShareStatus=(text)=>{const el=document.getElementById('financeShareStatus');if(el)el.textContent=text;};
-    function financeSafeText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-    async function financeGrantSection() {
-        const username=document.getElementById('financeShareUsername').value.trim().toLowerCase();
-        const section=document.getElementById('financeShareSection').value;
-        if (!username) return financeShareStatus('Enter another account username first.');
-        const {error}=await supabaseClient.rpc('finance_grant_section',{p_username:username,p_section:section});
-        financeShareStatus(error?'Could not grant access: '+error.message:'Read-only access granted to @'+username+'.');
-        if(!error)await financeLoadShares();
+
+    // All shared-profile reads and edits use owner-/recipient-scoped server authorization.
+    const financeSharedProfiles=new Map();
+    const financeSharedSaveQueues=new Map();
+    let financeOutgoingPermissions=[];
+    let financeSharingBusy=false;
+    const financeSharedKey=(ownerId,profileId)=>'shared|'+ownerId+'|'+profileId;
+    function financeSelectedShared(){
+        const chosen=localStorage.getItem(financeProfileKey())||'';
+        return chosen.startsWith('shared|')?financeSharedProfiles.get(chosen)||null:null;
     }
-    async function financeRevokeSection(viewerId,section){
-        if(!confirm('Revoke this account\'s access to '+(financeSectionLabels[section]||section)+'?'))return;
-        const {error}=await supabaseClient.rpc('finance_revoke_section',{p_viewer_id:viewerId,p_section:section});
-        financeShareStatus(error?'Could not revoke access: '+error.message:'Access revoked.');
-        if(!error)await financeLoadShares();
+    function financeTrackerVisible(){
+        return ['mainAllocationView','mainPaymentPlanView','mainPayFourView','mainPurchasePlanView']
+            .some(id=>document.getElementById(id)?.style.display==='block');
     }
-    async function financeLoadShares(){
-        if(!financeAuthUser)return;
-        const uid=financeAuthUser.id;
-        const [outgoing,incoming]=await Promise.all([
-            supabaseClient.rpc('finance_list_shared_by_me'),
-            supabaseClient.rpc('finance_list_shared_with_me')
-        ]);
-        if(financeAuthUser?.id!==uid)return;
-        const out=document.getElementById('financeOutgoingShares');
-        const inc=document.getElementById('financeIncomingShares');
-        if(outgoing.error){out.textContent='Could not load permissions: '+outgoing.error.message;}
-        else {
-            out.replaceChildren();
-            if(!outgoing.data?.length)out.textContent='No access granted.';
-            (outgoing.data||[]).forEach(share=>{
-                const line=document.createElement('div');
-                line.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px';
-                const span=document.createElement('span');
-                span.textContent='@'+share.viewer_username+' — '+(financeSectionLabels[share.section]||share.section);
-                const btn=document.createElement('button');
-                btn.className='btn-secondary';btn.type='button';btn.textContent='Revoke';
-                btn.style.cssText='width:auto;min-height:34px';
-                btn.onclick=()=>financeRevokeSection(share.viewer_id,share.section);
-                line.append(span,btn);out.append(line);
-            });
+    const financeShareStatus=(message)=>{
+        const el=document.getElementById('financeShareStatus');if(el)el.textContent=message;
+    };
+    async function financeGrantProfileAccess(){
+        const recipient=document.getElementById('financeShareRecipient').value.trim();
+        const profileId=document.getElementById('financeShareProfile').value;
+        const permission=document.getElementById('financeShareLevel').value;
+        if(!recipient)return financeShareStatus('Enter a registered email address or username.');
+        const {error}=await supabaseClient.rpc('finance_grant_profile',{
+            p_recipient:recipient,p_profile:profileId,p_permission:permission});
+        financeShareStatus(error?'Sharing failed: '+error.message:'Profile shared with '+recipient+' ('+permission+').');
+        if(!error)await financeLoadProfileAccess();
+    }
+    async function financeRevokeProfileAccess(viewerId,profileId){
+        if(!confirm('Revoke this account\'s access to the selected profile?'))return;
+        const {error}=await supabaseClient.rpc('finance_remove_profile_access',{
+            p_viewer:viewerId,p_profile:profileId
+        });
+        financeShareStatus(error?'Revoke failed: '+error.message:'Profile access revoked.');
+        if(!error)await financeLoadProfileAccess();
+    }
+    function financeRenderAccessLists(){
+        const out=document.getElementById('financeOutgoingShares'),inc=document.getElementById('financeIncomingShares');
+        out.replaceChildren();inc.replaceChildren();
+        if(!financeOutgoingPermissions.length)out.textContent='No access granted.';
+        for(const row of financeOutgoingPermissions){
+            const box=document.createElement('div');box.style.cssText='display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin:10px 0';
+            const name=document.createElement('span');
+            name.textContent=row.recipient+' · '+row.profile_name+' · '+(row.permission==='edit'?'Can Edit':'View Only');
+            const remove=document.createElement('button');remove.type='button';remove.className='btn-secondary';remove.style.width='auto';
+            remove.textContent='Revoke';remove.onclick=()=>financeRevokeProfileAccess(row.viewer_id,row.profile_id);
+            box.append(name,remove);out.append(box);
         }
-        if(incoming.error){inc.textContent='Could not load shared sections: '+incoming.error.message;}
-        else{
-            inc.replaceChildren();
-            if(!incoming.data?.length)inc.textContent='No shared sections.';
-            (incoming.data||[]).forEach(share=>{
-                const details=document.createElement('details');
-                details.style.cssText='border:1px solid var(--card-border);padding:12px;margin-bottom:8px;border-radius:10px';
-                const heading=document.createElement('summary');
-                heading.textContent='@'+share.owner_username+' — '+(financeSectionLabels[share.section]||share.section);
-                const pre=document.createElement('pre');
-                pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;margin-top:10px';
-                pre.textContent=JSON.stringify(share.payload,null,2);
-                details.append(heading,pre);inc.append(details);
-            });
+        if(!financeSharedProfiles.size)inc.textContent='No profiles shared with you.';
+        for(const entry of financeSharedProfiles.values()){
+            const box=document.createElement('div');box.style.cssText='display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin:10px 0';
+            const name=document.createElement('span');
+            name.textContent=entry.owner+' · '+entry.profile.name+' · '+(entry.permission==='edit'?'Can Edit':'View Only');
+            const open=document.createElement('button');open.type='button';open.className='btn-secondary';open.style.width='auto';
+            open.textContent='Open';open.onclick=()=>{financeSelectProfile(entry.key);switchMainPage('allocation');};
+            box.append(name,open);inc.append(box);
         }
     }
+    async function financeLoadProfileAccess(){
+        if(!financeAuthUser||financeSharingBusy)return;
+        const accountId=financeAuthUser.id;financeSharingBusy=true;
+        try{
+            const {data,error}=await supabaseClient.rpc('finance_profile_access');
+            if(error)throw error;
+            if(financeAuthUser?.id!==accountId)return;
+            financeOutgoingPermissions=Array.isArray(data?.outgoing)?data.outgoing:[];
+            const present=new Set();
+            for(const item of (Array.isArray(data?.incoming)?data.incoming:[])){
+                if(!item.profile||!item.owner_id||!item.profile_id)continue;
+                const key=financeSharedKey(item.owner_id,item.profile_id);
+                present.add(key);
+                const previous=financeSharedProfiles.get(key);
+                if(previous?.dirty){previous.permission=item.permission;continue;}
+                financeSharedProfiles.set(key,{
+                    key,ownerId:item.owner_id,owner:item.owner,profileId:item.profile_id,
+                    permission:item.permission,profile:financeClone(item.profile),
+                    serverProfile:financeClone(item.profile),dirty:false
+                });
+            }
+            for(const key of financeSharedProfiles.keys())if(!present.has(key))financeSharedProfiles.delete(key);
+            if((localStorage.getItem(financeProfileKey())||'').startsWith('shared|')&&!financeSelectedShared()){
+                localStorage.setItem(financeProfileKey(),'default');
+                financeShareStatus('Access to the selected shared profile was removed.');
+            }
+            financeRenderAccessLists();
+            render();
+        }catch(err){financeShareStatus('Could not load sharing: '+(err?.message||String(err)));}
+        finally{financeSharingBusy=false;}
+    }
+    const financeSharedProfileFields=['allocations','paymentPlans','payFourPlans','purchasePlans'];
+    function financeSharedProfileDraft(data,entry){
+        const draft={name:entry.profile.name};
+        for(const field of financeSharedProfileFields)draft[field]=financeClone(data[field]);
+        return draft;
+    }
+    function financeBackupSharedDraft(draft,entry){
+        try{
+            const blob=new Blob([JSON.stringify({owner:entry.owner,profile:entry.profileId,records:draft},null,2)],{type:'application/json'});
+            const url=URL.createObjectURL(blob),a=document.createElement('a');
+            a.href=url;a.download='finance_unsynced_shared_profile_'+Date.now()+'.json';
+            document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
+        }catch(err){console.warn('Shared profile backup not available',err);}
+    }
+    async function financeSaveSharedProfile(data,entry){
+        if(entry.permission!=='edit'){warnSync('This profile is view-only. Ask the owner for edit access.');return false;}
+        const mine=financeAuthUser?.id,prior=financeClone(entry.profile);
+        const draft=financeSharedProfileDraft(data,entry);
+        entry.profile=draft;entry.dirty=true;
+        const earlier=financeSharedSaveQueues.get(entry.key)||Promise.resolve();
+        const job=earlier.catch(()=>{}).then(async()=>{
+            if(financeAuthUser?.id!==mine||!financeSharedProfiles.has(entry.key))return false;
+            const expected=financeClone(entry.serverProfile);
+            const proposal=mergeFinanceEdits(prior,draft,expected);
+            const {data:result,error}=await supabaseClient.rpc('finance_save_shared_profile',{
+                p_owner:entry.ownerId,p_profile:entry.profileId,p_expected:expected,p_new:proposal
+            });
+            if(error||!result?.ok){
+                financeBackupSharedDraft(draft,entry);
+                warnSync(result?.conflict
+                    ? 'Someone else updated this profile. Your unsynced edits were downloaded as a backup. Refresh and reapply them.'
+                    : 'Shared save failed: '+(error?.message||'Permission changed')+'. Your edits were downloaded as a backup.');
+                return false;
+            }
+            entry.serverProfile=financeClone(result.profile);
+            if(JSON.stringify(entry.profile)===JSON.stringify(draft)){
+                entry.profile=financeClone(result.profile);entry.dirty=false;
+            }
+            triggerSaveIndicator('✓ Shared profile synced');
+            return true;
+        });
+        financeSharedSaveQueues.set(entry.key,job);
+        void job.finally(()=>{if(financeSharedSaveQueues.get(entry.key)===job)financeSharedSaveQueues.delete(entry.key);});
+        return job;
+    }
+    function financeApplySharingPermissions(){
+        const selected=financeTrackerVisible()?financeSelectedShared():null;
+        const viewOnly=selected&&selected.permission!=='edit';
+        for(const id of ['mainAllocationView','mainPaymentPlanView','mainPayFourView','mainPurchasePlanView']){
+            const section=document.getElementById(id),banner=section?.querySelector('[data-finance-shared-banner]');
+            if(banner){
+                banner.hidden=!selected;
+                if(selected)banner.textContent='🔗 Shared by '+selected.owner+' · '+selected.profile.name+
+                ' · '+(viewOnly?'View Only — editing disabled':'Can Edit — saves to the owner\'s account');
+            }
+            if(!section)continue;
+            for(const c of section.querySelectorAll('input,textarea,select,button')){
+                if(c.closest('.finance-profile-switcher')||c.type==='search')continue;
+                if(viewOnly){
+                    if(!c.disabled){c.disabled=true;c.dataset.sharedLocked='1';}
+                }else if(c.dataset.sharedLocked==='1'){
+                    c.disabled=false;delete c.dataset.sharedLocked;
+                }
+            }
+        }
+    }
+
     async function financeSignOut(){
         if(!confirm('Log out of this finance account? Your account data will remain saved.'))return;
         await supabaseClient.auth.signOut();financeExitAccount();
