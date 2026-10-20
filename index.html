@@ -1085,6 +1085,56 @@
       font-size:.73rem;font-weight:700;color:#a7f3d0;border:1px solid rgba(52,211,153,.43);
       background:rgba(16,185,129,.10);border-radius:9px}
     @media(max-width:550px){.finance-shared-heading-tag{font-size:.65rem}}
+
+    /* Accessible, scrollable home-page feature guide. Uses its own overlay so
+       pre-existing bill/notification modals remain completely unchanged. */
+    .finance-guide-overlay[hidden]{display:none!important}
+    .finance-guide-overlay{position:fixed;inset:0;z-index:6000;display:flex;align-items:center;justify-content:center;
+      padding:18px;background:rgba(3,9,23,.80);backdrop-filter:blur(8px)}
+    .finance-guide-panel{display:flex;flex-direction:column;overflow:hidden;width:min(100%,760px);max-height:min(88vh,900px);
+      background:var(--card-bg,#142137);color:var(--text-main,#f8fafc);
+      border:1px solid rgba(125,211,252,.33);border-radius:20px;
+      box-shadow:0 25px 70px rgba(0,0,0,.55)}
+    .finance-guide-top{padding:23px 24px 15px;border-bottom:1px solid var(--card-border,rgba(148,163,184,.2));
+      background:linear-gradient(125deg,rgba(14,165,233,.15),rgba(99,102,241,.09))}
+    .finance-guide-kicker{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.11em;
+      text-transform:uppercase;color:#7dd3fc;margin-bottom:9px}
+    .finance-guide-top h2{font-size:1.44rem;line-height:1.28;margin:0 0 9px}
+    .finance-guide-top p{margin:0;color:var(--text-muted,#b5c0d3);font-size:.92rem;line-height:1.6}
+    .finance-guide-scroll{overflow-y:auto;overscroll-behavior:contain;padding:19px 24px;min-height:0}
+    .finance-guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .finance-guide-item{display:flex;gap:12px;align-items:flex-start;padding:13px;
+      border:1px solid var(--card-border,rgba(148,163,184,.2));border-radius:13px;
+      background:rgba(148,163,184,.055)}
+    .finance-guide-emoji{flex:none;font-size:1.32rem;line-height:1.3}
+    .finance-guide-item h3{font-size:.93rem;line-height:1.3;font-weight:800;margin:0 0 5px}
+    .finance-guide-item p{font-size:.82rem;line-height:1.55;margin:0;color:var(--text-muted,#b5c0d3)}
+    .finance-guide-privacy{margin-top:14px;padding:11px 12px;border-radius:11px;
+      border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);
+      font-size:.81rem;line-height:1.55}
+    .finance-guide-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+      padding:16px 24px;border-top:1px solid var(--card-border,rgba(148,163,184,.2))}
+    .finance-guide-check{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.86rem;line-height:1.35}
+    .finance-guide-check input{width:20px;height:20px;flex:none;accent-color:#38bdf8;cursor:pointer}
+    .finance-guide-done{background:linear-gradient(120deg,#0284c7,#4f46e5);color:#fff;
+      border:1px solid rgba(125,211,252,.5);border-radius:11px;min-height:44px;padding:11px 25px;
+      font-weight:800;cursor:pointer;min-width:135px}
+    .finance-guide-done:hover{filter:brightness(1.13)}
+    .finance-guide-done:focus-visible,.finance-guide-check input:focus-visible{
+      outline:3px solid #7dd3fc;outline-offset:3px}
+    @media(max-width:600px){
+      .finance-guide-overlay{padding:10px;align-items:center}
+      .finance-guide-panel{max-height:94dvh;border-radius:15px}
+      .finance-guide-top{padding:17px 16px 13px}
+      .finance-guide-top h2{font-size:1.2rem}
+      .finance-guide-scroll{padding:13px 15px}
+      .finance-guide-grid{grid-template-columns:1fr;gap:9px}
+      .finance-guide-item{padding:11px}
+      .finance-guide-footer{padding:13px 16px}
+      .finance-guide-done{flex:1}
+    }
+    @media(prefers-reduced-motion:reduce){.finance-guide-overlay{scroll-behavior:auto}}
+
     </style>
 </head>
 <body>
@@ -1232,6 +1282,72 @@
       </div>
     </div>
 
+
+<!-- First-login/home walkthrough. Popup state is per signed-in account and device. -->
+<div class="finance-guide-overlay" id="financeFeatureGuide" role="dialog" aria-modal="true"
+     aria-labelledby="financeGuideTitle" aria-describedby="financeGuideIntro" hidden>
+  <div class="finance-guide-panel">
+    <div class="finance-guide-top">
+      <span class="finance-guide-kicker">Welcome · Feature Guide</span>
+      <h2 id="financeGuideTitle">✨ What's New in Household Finance?</h2>
+      <p id="financeGuideIntro">Here's what each page does and where to find it. All registered, verified Finance email accounts now use the same shared household records.</p>
+    </div>
+    <div class="finance-guide-scroll">
+      <div class="finance-guide-grid">
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🏠</span><div>
+          <h3>Household Dashboard</h3>
+          <p>See monthly income, expenses, and household totals for His, Hers, or Combined. Review and roll over your monthly budget.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">👤</span><div>
+          <h3>Finance Profiles · Menu → Profiles</h3>
+          <p>Create, rename, and switch profiles such as Personal or Business. Each profile has its own four trackers, and everyone in the household can use them.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💰</span><div>
+          <h3>Money Allocation</h3>
+          <p>Organize how money is assigned to goals and expenses. Choose a profile and switch between His and Hers allocations.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💳</span><div>
+          <h3>Payment Plans</h3>
+          <p>Keep track of purchases paid over time, including the amount owed, installment schedule, and progress.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🛍️</span><div>
+          <h3>Pay in 4 Tracker</h3>
+          <p>Record four-installment purchases, upcoming due dates, and what has already been paid.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🛒</span><div>
+          <h3>Purchase Plan & Wishlist</h3>
+          <p>Plan purchases before spending, organize desired items, and track what you still want to buy.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📅</span><div>
+          <h3>ESSO Due Dates</h3>
+          <p>Monitor ESSO payment deadlines and review the reminders available while the app is open.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">☁️</span><div>
+          <h3>Shared Household Cloud</h3>
+          <p>All verified registered emails view and edit one household dataset. Use Refresh From Cloud and the backup tools in Settings to keep devices in sync safely.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">⚙️</span><div>
+          <h3>Settings · Account & Security</h3>
+          <p>View your login profile, change your username or password, log out, configure reminders, and download or restore finance backups.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📲</span><div>
+          <h3>Install & Notifications</h3>
+          <p>Install the dashboard as a web app and set up supported notifications. Alerts while the app is fully closed require a separate push sender.</p>
+        </div></article>
+      </div>
+      <p class="finance-guide-privacy"><strong>Household privacy:</strong> Any person who can register and confirm a Finance account can see and edit these shared records. Give account access only to people you trust.</p>
+    </div>
+    <div class="finance-guide-footer">
+      <label class="finance-guide-check" for="financeGuideNeverAgain">
+        <input id="financeGuideNeverAgain" type="checkbox">
+        Don't show this again on this device
+      </label>
+      <button class="finance-guide-done" type="button" id="financeGuideConfirmBtn"
+              onclick="financeConfirmFeatureGuide()">OK, Got It</button>
+    </div>
+  </div>
+</div>
+
     <input type="month" id="monthPicker" style="display:none;">
 
 
@@ -1268,11 +1384,23 @@
     </section>
     <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
     <section id="mainSettingsView" class="finance-settings-view" style="display:none;" aria-labelledby="settingsPageTitle">
+
+        <div class="settings-card" id="financeFeatureGuideSettings">
+          <div class="settings-card-heading">
+            <h3>✨ Feature Guide &amp; What's New</h3>
+            <p>Review what Profiles, Money Allocation, Payment Plans, Pay in 4, Purchase Plan, cloud sync, and other features are used for.</p>
+          </div>
+          <div class="settings-button-row">
+            <button type="button" class="btn-secondary" onclick="financeOpenFeatureGuide()">📖 View Feature Guide</button>
+          </div>
+          <p class="settings-muted-note">You can choose “Don't show this again” inside the guide. Reopening it from here lets you change that choice.</p>
+        </div>
+
         
         <div class="settings-card" id="financeAccountSettings">
             <div class="settings-card-heading">
                 <h3>🔐 Account &amp; Security</h3>
-                <p>Manage your login, username, and password. Financial records are stored separately for each account.</p>
+                <p>Manage your login, username, and password. Each login has its own username and password; verified Finance accounts share the household financial records.</p>
             </div>
             <div class="account-profile-line"><span id="financeAccountUsername">Username: loading…</span><span id="financeAccountEmail">Email: loading…</span></div>
             <p id="financeAccountMessage" class="account-message" role="status" aria-live="polite"></p>
@@ -3183,6 +3311,66 @@
         document.getElementById('drawerOverlay').classList.remove('active');
     }
 
+
+    // Feature guide: show once per signed-in session on Home, unless the user
+    // checked "Don't show again" for this login on this browser/device.
+    let financeGuideShownThisLogin=false;
+    let financeGuidePreviousFocus=null;
+    const financeGuidePreferenceKey=()=>financeAuthUser
+        ?'finance_feature_guide_hide_v1_u_'+financeAuthUser.id:null;
+    function financeOpenFeatureGuide(){
+        if(!financeAuthUser||!document.body.classList.contains('finance-authenticated'))return;
+        const modal=document.getElementById('financeFeatureGuide');
+        if(!modal||!modal.hidden)return;
+        const key=financeGuidePreferenceKey();
+        financeGuidePreviousFocus=document.activeElement;
+        document.getElementById('financeGuideNeverAgain').checked=Boolean(
+            key&&localStorage.getItem(key)==='1');
+        financeGuideShownThisLogin=true;
+        modal.hidden=false;
+        document.getElementById('financeGuideConfirmBtn').focus();
+    }
+    function financeMaybeShowFeatureGuide(){
+        if(financeGuideShownThisLogin||!financeAuthUser)return;
+        if(!document.body.classList.contains('finance-authenticated'))return;
+        const dashboard=document.getElementById('mainDashboardView');
+        if(!dashboard||dashboard.style.display!=='block')return;
+        const key=financeGuidePreferenceKey();
+        if(key&&localStorage.getItem(key)==='1')return;
+        financeOpenFeatureGuide();
+    }
+    function financeConfirmFeatureGuide(){
+        const modal=document.getElementById('financeFeatureGuide');
+        if(!modal||modal.hidden)return;
+        const key=financeGuidePreferenceKey();
+        if(key){
+            try{
+                if(document.getElementById('financeGuideNeverAgain').checked)localStorage.setItem(key,'1');
+                else localStorage.removeItem(key);
+            }catch(err){console.warn('Feature guide preference could not be saved',err);}
+        }
+        modal.hidden=true;
+        const prev=financeGuidePreviousFocus;
+        financeGuidePreviousFocus=null;
+        if(prev?.isConnected&&typeof prev.focus==='function')prev.focus();
+        else document.getElementById('refreshBtn')?.focus();
+    }
+    document.addEventListener('keydown',event=>{
+        const modal=document.getElementById('financeFeatureGuide');
+        if(!modal||modal.hidden)return;
+        if(event.key==='Escape'){
+            event.preventDefault();
+            financeConfirmFeatureGuide();
+            return;
+        }
+        if(event.key!=='Tab')return;
+        const controls=Array.from(modal.querySelectorAll('input:not([disabled]),button:not([disabled])'));
+        if(!controls.length)return;
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    });
+
     function switchMainPage(view, shouldSave = true) {
         const dashboardView = document.getElementById('mainDashboardView');
         const allocationView = document.getElementById('mainAllocationView');
@@ -3276,6 +3464,7 @@
         }
 
         render();
+        if(view==='dashboard')financeMaybeShowFeatureGuide();
     }
 
     function switchDashboardTab(tabId, shouldSave = true) {
@@ -5200,6 +5389,7 @@
     async function financeEnterAccount(user) {
         if(financeAuthUser?.id===user.id && document.body.classList.contains('finance-authenticated'))return;
         setFinanceAuthAccount(user);
+        financeGuideShownThisLogin=false;
         const epoch=financeAuthEpoch;
         document.body.classList.add('finance-authenticated');
         authMessage();
@@ -5224,6 +5414,10 @@
         }
     }
     function financeExitAccount() {
+        const guide=document.getElementById('financeFeatureGuide');
+        if(guide)guide.hidden=true;
+        financeGuidePreviousFocus=null;
+        financeGuideShownThisLogin=false;
         financeAuthEpoch++;
         document.body.classList.remove('finance-authenticated');
         financeAuthUser=null;financeAuthProfile=null;
