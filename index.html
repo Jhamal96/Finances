@@ -2664,7 +2664,7 @@
         document.getElementById('financeCloudResultHeadline').textContent=title;
         document.getElementById('financeCloudResultDetail').textContent=detail;
         const action=document.getElementById('financeShowSavedBtn');
-        if(action)action.hidden=!financeMostRecentCloudInfo?.summary?.firstUseful;
+        if(action)action.hidden=!(financeMostRecentCloudInfo?.summary?.firstUseful || financeMostRecentCloudInfo?.summary?.monthKeys?.length);
     }
     function financeShowSavedCloudRecords(){
         const info=financeMostRecentCloudInfo;
@@ -2673,7 +2673,11 @@
         if(summary.firstUseful){
             const raw=localStorage.getItem(FINANCE_STORAGE_KEY);
             const data=raw?JSON.parse(raw):null;
-            if(!data || !financeNormalizeProfiles(data).financeProfiles[summary.firstUseful.id]){
+            const savedProfile=data?financeNormalizeProfiles(data).financeProfiles[summary.firstUseful.id]:null;
+            const localProfileCount=savedProfile?
+                financeDescribeCloud({financeProfiles:{[summary.firstUseful.id]:savedProfile}})
+                    .profiles[0]?.total||0:0;
+            if(!savedProfile || localProfileCount<summary.firstUseful.total){
                 financeSyncNotice('Cloud records are available',
                     'Choose Restore Cloud to Device in Settings after saving your local backup, so this profile becomes available.','warning');
                 switchMainPage('settings');return;
