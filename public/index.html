@@ -2521,6 +2521,18 @@
         if(external)for(const field of financeProfileFields)initial[field]=financeClone(external.profile[field]);
         return rememberSnapshot(initial,null);
     }
+    // For dashboard-wide operations while a shared tracker is on screen.
+    // Never use the external profile projection as the source of an own-account save.
+    function getPrivateAccountData(){
+        const raw=localStorage.getItem(FINANCE_STORAGE_KEY);
+        if(raw){
+            try{return rememberSnapshot(financeShowProfile(JSON.parse(raw)),raw);}
+            catch(err){console.error('Cannot read private finance records',err);}
+        }
+        const blank=financeShowProfile({months:{},esso:[],allocations:{his:[],her:[]},
+            paymentPlans:[],payFourPlans:[],purchasePlans:[]});
+        return rememberSnapshot(blank,null);
+    }
     function hasFinancialRecords(d) {
         if (!d || typeof d !== 'object') return false;
         if (['esso','paymentPlans','payFourPlans','purchasePlans'].some(k => Array.isArray(d[k]) && d[k].length)) return true;
@@ -2589,10 +2601,10 @@
         if(!raw)return raw;
         try{return financeStableStringify(JSON.parse(raw));}catch{return raw;}
     }
-    async function saveData(data) {
+    async function saveData(data, forceOwnAccount = false) {
         if(!financeAuthUser)return false;
         const userId=financeAuthUser.id;
-        const shared=financeTrackerVisible()?financeSelectedShared():null;
+        const shared=!forceOwnAccount && financeTrackerVisible()?financeSelectedShared():null;
         if(shared)return financeSaveSharedProfile(data,shared);
         const originalBase=financeBaseSnapshots.get(data);
         data=financeSaveProfile(data);
@@ -3138,11 +3150,11 @@
 
     function saveEssoNotificationPreferences() {
         const leadVal = parseInt(document.getElementById('essoGlobalReminderDays').value, 10);
-        const data = getStoredData();
+        const data = getPrivateAccountData();
         data.essoReminderLead = leadVal;
         data.payFourReminderLead = parseInt(document.getElementById('p4GlobalReminderDays').value, 10);
 
-        saveData(data);
+        saveData(data,true);
         closeEssoNotificationModal();
         triggerSaveIndicator('✓ ESSO Alerts Saved');
         checkAndTriggerNotifications();
@@ -3353,9 +3365,9 @@
         if (!cloudSyncReady || locallyUnsynced || lastCloudSnapshot === undefined) return false;
         const runRollover = async () => {
             // Re-read under the cross-tab lock, so only the first tab creates installments.
-            const data = getStoredData();
+            const data = getPrivateAccountData();
             if (!buildRolloverMonth(data, targetMonth)) return false;
-            const write = saveData(data);
+            const write = saveData(data,true);
             if (showRolledMonth) monthPicker.value = targetMonth;
             render();
             const synced = await write;
