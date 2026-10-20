@@ -2430,7 +2430,7 @@
         financeProfileNotice('Profile created. Default keeps all your previous tracker records.');
     }
     function financeRenameProfile(e){
-        e.preventDefault();if(!financeAuthUser)return;
+        e.preventDefault();if(!financeAuthUser||financeSelectedShared())return;
         const name=document.getElementById('financeRenameProfileName').value.trim();
         if(!name||name.length>50)return;
         const d=getStoredData(),id=financeActiveProfile(d);
@@ -2442,36 +2442,75 @@
     }
     function renderFinanceProfiles(d){
         if(!financeAuthUser)return;
-        const profiles=financeNormalizeProfiles(d).financeProfiles,selected=financeActiveProfile(d);
-        document.querySelectorAll('select[data-finance-profile]').forEach(select=>{
-            const ids=Object.keys(profiles);
-            if(select.options.length!==ids.length||Array.from(select.options).some(o=>o.text!==profiles[o.value]?.name)){
-                select.replaceChildren();
-                for(const [id,p] of Object.entries(profiles))select.add(new Option(p.name,id));
+        const profiles=financeNormalizeProfiles(d).financeProfiles;
+        const selectedKey=localStorage.getItem(financeProfileKey())||'default';
+        const selected=profiles[selectedKey]||financeSharedProfiles.has(selectedKey)?selectedKey:'default';
+        const ids=Object.keys(profiles);
+        const choices=[
+            ...Object.entries(profiles).map(([id,p])=>({key:id,label:'Mine · '+p.name})),
+            ...Array.from(financeSharedProfiles.values()).map(p=>({key:p.key,
+                label:'Shared · '+p.owner+' / '+p.profile.name+' ('+(p.permission==='edit'?'Edit':'View')+')'}))
+        ];
+        document.querySelectorAll('select[data-finance-profile]').forEach(el=>{
+            if(el.options.length!==choices.length||
+               Array.from(el.options).some((o,i)=>o.value!==choices[i].key||o.text!==choices[i].label)){
+                el.replaceChildren();
+                for(const choice of choices)el.add(new Option(choice.label,choice.key));
             }
-            select.value=selected;
+            el.value=selected;
         });
-        const list=document.getElementById('financeProfilesList');if(!list)return;
-        list.replaceChildren();
+        const select=document.getElementById('financeShareProfile');
+        if(select&&(select.options.length!==ids.length||
+          Array.from(select.options).some((o,i)=>o.value!==ids[i]||o.text!==profiles[ids[i]].name))){
+            select.replaceChildren();
+            ids.forEach(id=>select.add(new Option(profiles[id].name,id)));
+        }
+        const ownList=document.getElementById('financeProfilesList');
+        ownList.replaceChildren();
         for(const [id,p] of Object.entries(profiles)){
-            const box=document.createElement('div');box.className='finance-profile-item'+(selected===id?' active':'');
-            const heading=document.createElement('h3');heading.textContent=p.name+(selected===id?' ✓':'');
-            const info=document.createElement('p');info.className='finance-profile-help';
-            info.textContent=((p.allocations?.his?.length||0)+(p.allocations?.her?.length||0))+' allocations · '+(p.paymentPlans?.length||0)+' payment plans · '+(p.payFourPlans?.length||0)+' Pay in 4 · '+(p.purchasePlans?.length||0)+' purchases';
+            const card=document.createElement('div');
+            card.className='finance-profile-item'+(selected===id?' active':'');
+            const name=document.createElement('h3');name.textContent=p.name+(selected===id?' ✓':'');
+            const counts=document.createElement('p');counts.className='finance-profile-help';
+            counts.textContent=((p.allocations?.his?.length||0)+(p.allocations?.her?.length||0))+' allocations · '+
+              (p.paymentPlans?.length||0)+' payment plans · '+(p.payFourPlans?.length||0)+
+              ' Pay in 4 · '+(p.purchasePlans?.length||0)+' purchases';
             const button=document.createElement('button');button.type='button';button.className='btn-secondary';
-            button.textContent=id===selected?'Selected':'Select Profile';button.disabled=id===selected;
+            button.textContent=selected===id?'Selected':'Select Profile';button.disabled=selected===id;
             button.onclick=()=>financeSelectProfile(id);
-            box.append(heading,info,button);list.append(box);
+            card.append(name,counts,button);ownList.append(card);
+        }
+        const shares=document.getElementById('financeSharedProfileList');
+        shares.replaceChildren();
+        if(!financeSharedProfiles.size)shares.textContent='No profiles shared with you.';
+        for(const entry of financeSharedProfiles.values()){
+            const card=document.createElement('div');
+            card.className='finance-profile-item'+(entry.key===selected?' active':'');
+            const name=document.createElement('h3');name.textContent=entry.profile.name;
+            const note=document.createElement('p');note.className='finance-profile-help';
+            note.textContent='From '+entry.owner+' · '+(entry.permission==='edit'?'Can Edit':'View Only');
+            const btn=document.createElement('button');btn.type='button';btn.className='btn-secondary';
+            btn.textContent=entry.key===selected?'Selected':'Open Profile';btn.disabled=entry.key===selected;
+            btn.onclick=()=>{financeSelectProfile(entry.key);switchMainPage('allocation');};
+            card.append(name,note,btn);shares.append(card);
         }
         const rename=document.getElementById('financeRenameProfileName');
-        if(rename&&document.activeElement!==rename)rename.value=profiles[selected]?.name||'';
+        if(rename && document.activeElement!==rename)rename.value=profiles[selected]?.name||'';
+        const renameForm=rename?.closest('form');
+        if(renameForm)for(const c of renameForm.querySelectorAll('input,button'))c.disabled=!!financeSelectedShared();
+        queueMicrotask(financeApplySharingPermissions);
     }
 
     function getStoredData(){
         if(!financeAuthUser)return {months:{},esso:[],allocations:{his:[],her:[]},paymentPlans:[],payFourPlans:[],purchasePlans:[]};
         try{
             const saved=localStorage.getItem(FINANCE_STORAGE_KEY);
-            if(saved)return rememberSnapshot(financeShowProfile(JSON.parse(saved)),saved);
+            if(saved){
+                const own=financeShowProfile(JSON.parse(saved));
+                const shared=financeTrackerVisible()?financeSelectedShared():null;
+                if(shared)for(const field of financeProfileFields)own[field]=financeClone(shared.profile[field]);
+                return rememberSnapshot(own,saved);
+            }
         }catch(err){console.error('Local finance record unavailable:',err);}
         return rememberSnapshot(financeShowProfile({
             months:{},esso:[],paymentPlans:[],payFourPlans:[],purchasePlans:[],
@@ -2536,6 +2575,8 @@
     async function saveData(data) {
         if (!financeAuthUser) return false;
         const writingUserId = financeAuthUser.id;
+        const share=financeTrackerVisible()?financeSelectedShared():null;
+        if(share)return financeSaveSharedProfile(data,share);
         // Immediately commit one combined dataset. This survives a tab refresh.
         const previousSnapshot = financeBaseSnapshots.get(data);
         data=financeSaveProfile(data);
@@ -3026,7 +3067,7 @@
         if(Date.now()-financeLastRemoteCheck<12000)return;
         financeAutoRefreshInFlight=true;
         financeLastRemoteCheck=Date.now();
-        try { await syncFromCloud(); }
+        try { await Promise.allSettled([syncFromCloud(),financeLoadProfileAccess()]); }
         finally { financeAutoRefreshInFlight=false; }
     }
     document.addEventListener('visibilitychange',()=>{
@@ -3041,6 +3082,7 @@
         btn?.classList.add('spinning');
         try {
             const ok = await syncFromCloud();
+            await financeLoadProfileAccess();
             if (ok) triggerSaveIndicator('✓ Cloud refreshed for this account');
         } catch (err) {
             console.error('Refresh error:', err);
