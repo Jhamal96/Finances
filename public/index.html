@@ -981,6 +981,20 @@
             .finance-header-logout { width: 38px; min-width: 38px; min-height: 38px; height: 38px; }
         }
 
+
+        .finance-profile-switcher{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 18px;padding:12px;border:1px solid var(--card-border);border-radius:14px;background:var(--card-bg)}
+        .finance-profile-switcher label{font-size:.85rem;font-weight:700;color:var(--text-muted)}
+        .finance-profile-switcher select{flex:1;min-width:155px;max-width:340px;min-height:40px;padding:8px;border-radius:10px;border:1px solid var(--card-border);background:var(--card-bg);color:var(--text)}
+        .finance-profile-switcher .btn-secondary{width:auto;min-height:40px}
+        .finance-profile-page{max-width:970px;margin:0 auto}.finance-profile-card{padding:18px;border:1px solid var(--card-border);border-radius:14px;background:var(--card-bg);margin:12px 0}
+        .finance-profile-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px;margin:16px 0}
+        .finance-profile-item{border:1px solid var(--card-border);border-radius:12px;padding:15px;background:rgba(148,163,184,.04)}
+        .finance-profile-item.active{border-color:var(--accent-his)}
+        .finance-profile-item button{margin-top:12px;width:auto}
+        .finance-profile-help{font-size:.83rem;color:var(--text-muted);line-height:1.55;margin:7px 0 12px}
+        .finance-profile-action{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}
+        .finance-profile-action input{flex:1;min-width:180px;max-width:370px;padding:11px;border-radius:10px;border:1px solid var(--card-border);background:var(--card-bg);color:var(--text)}
+        .finance-profile-action button{width:auto;min-height:42px}
     </style>
 </head>
 <body>
@@ -1048,6 +1062,7 @@
         <div class="drawer-nav-row"><button class="drawer-link" id="navPaymentPlan" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button><button class="drawer-tab-open" onclick="openFinanceTab('paymentPlan')" title="Open Payment Plans in a new tab" aria-label="Open Payment Plans in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPayFour" onclick="switchMainPage('payFour')">🛍️ Pay in 4 Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('payFour')" title="Open Pay in 4 in a new tab" aria-label="Open Pay in 4 in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button><button class="drawer-tab-open" onclick="openFinanceTab('purchasePlan')" title="Open Purchase Plan in a new tab" aria-label="Open Purchase Plan in a new tab">↗</button></div>
+        <div class="drawer-nav-row"><button class="drawer-link" id="navProfiles" onclick="switchMainPage('profiles')">👤 Profiles</button><button class="drawer-tab-open" onclick="openFinanceTab('profiles')" title="Open Profiles in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navSettings" onclick="switchMainPage('settings')">⚙️ Settings <span class="sync-attention-dot" id="settingsNavWarning" hidden aria-label="Cloud sync needs attention"></span></button><button class="drawer-tab-open" onclick="openFinanceTab('settings')" title="Open Settings in a new tab" aria-label="Open Settings in a new tab">↗</button></div>
     </div>
 </div>
@@ -1121,6 +1136,27 @@
 
     <input type="month" id="monthPicker" style="display:none;">
 
+
+    <section id="mainProfilesView" class="finance-profile-page" style="display:none" aria-labelledby="financeProfilesTitle">
+      <div class="finance-profile-card">
+        <h2 id="financeProfilesTitle">👤 Finance Profiles</h2>
+        <p class="finance-profile-help">Each profile has separate Money Allocation, Payment Plans, Pay in 4, and Purchase Plan records. The Dashboard and ESSO remain account-wide.</p>
+        <div class="finance-profile-switcher"><label for="financeManagerProfileSelect">Selected profile</label><select id="financeManagerProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select></div>
+        <h3>Create profile</h3>
+        <form class="finance-profile-action" onsubmit="financeCreateProfile(event)">
+          <input id="financeNewProfileName" type="text" required maxlength="50" autocomplete="off" placeholder="Personal, Partner, Family, Side Business">
+          <button class="btn-add" type="submit">+ Create Profile</button>
+        </form>
+        <h3>Rename selected profile</h3>
+        <form class="finance-profile-action" onsubmit="financeRenameProfile(event)">
+          <input id="financeRenameProfileName" type="text" maxlength="50" required autocomplete="off" placeholder="New name">
+          <button class="btn-secondary" type="submit">Save Name</button>
+        </form>
+        <p id="financeProfileMessage" role="status" aria-live="polite" class="finance-profile-help"></p>
+      </div>
+      <div id="financeProfilesList" class="finance-profile-list"></div>
+      <p class="finance-profile-help">Profiles stay private to your signed-in account and sync through Supabase. Existing tracker records are preserved in Default. Changing profiles never deletes records.</p>
+    </section>
     <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
     <section id="mainSettingsView" class="finance-settings-view" style="display:none;" aria-labelledby="settingsPageTitle">
         
@@ -1472,6 +1508,7 @@
 
     <!-- MAIN PAGE 2: Money Allocation View -->
     <div id="mainAllocationView" style="display: none;">
+      <div class="finance-profile-switcher"><label for="mainAllocationViewProfileSelect">👤 Profile</label><select id="mainAllocationViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
         <div class="tab-nav" style="margin-bottom: 20px;">
             <button class="tab-btn active his-active" id="allocHisBtn" onclick="switchAllocPerson('his')">His Weekly Allocation</button>
             <button class="tab-btn" id="allocHerBtn" onclick="switchAllocPerson('her')">Her Bi-Weekly Allocation</button>
@@ -1585,6 +1622,7 @@
 
     <!-- MAIN PAGE 4: Payment Plans View -->
     <div id="mainPaymentPlanView" style="display: none;">
+      <div class="finance-profile-switcher"><label for="mainPaymentPlanViewProfileSelect">👤 Profile</label><select id="mainPaymentPlanViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
         <div class="summary-grid">
             <div class="stat-card">
                 <h3>Active Plans Total Debt</h3>
@@ -1646,6 +1684,7 @@
 
     <!-- PAY IN FOUR TRACKER -->
     <section id="mainPayFourView" style="display:none;">
+      <div class="finance-profile-switcher"><label for="mainPayFourViewProfileSelect">👤 Profile</label><select id="mainPayFourViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
       <div class="summary-grid">
         <div class="stat-card"><h3>Total Purchased</h3><div class="amount" id="p4Total" style="color:var(--accent-combined)">$0.00</div></div>
         <div class="stat-card"><h3>Amount Paid</h3><div class="amount" id="p4Paid" style="color:var(--paid)">$0.00</div></div>
@@ -1676,6 +1715,7 @@
 
     <!-- MAIN PAGE 5: Purchase Plan View -->
     <div id="mainPurchasePlanView" style="display: none;">
+      <div class="finance-profile-switcher"><label for="mainPurchasePlanViewProfileSelect">👤 Profile</label><select id="mainPurchasePlanViewProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select><button type="button" class="btn-secondary" onclick="switchMainPage('profiles')">Manage Profiles</button></div>
         <div class="summary-grid">
             <div class="stat-card">
                 <h3>Wishlist Items</h3>
@@ -2144,7 +2184,7 @@
     const FINANCE_TAB_DASHBOARD_KEY = 'finance_tab_dashboard_v1';
     const FINANCE_TAB_ALLOC_KEY = 'finance_tab_alloc_v1';
     const FINANCE_TAB_MONTH_KEY = 'finance_tab_month_v1';
-    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','settings'];
+    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','profiles','settings'];
     const financeSourceId = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : String(Math.random());
     const financeBaseSnapshots = new WeakMap();
     const financeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('household_finance_master_v12') : null;
@@ -2293,6 +2333,7 @@
             void writeFinanceMirror(event.newValue);
             scheduleFinanceRender();
         }
+        if(event.key===financeProfileKey() && financeAuthUser)scheduleFinanceRender();
         if(event.key===FINANCE_CONFIRMED_KEY){
             lastCloudSnapshot=event.newValue;
             locallyUnsynced=!!(localStorage.getItem(FINANCE_STORAGE_KEY)!==event.newValue);
@@ -2303,22 +2344,134 @@
         if(financeAuthUser && msg.data?.kind==='master-updated' && msg.data.account===financeAuthUser.id && msg.data.origin!==financeSourceId) scheduleFinanceRender();
     };
 
-    function getStoredData() {
-        if (!financeAuthUser) return {months:{},esso:[],paymentPlans:[],payFourPlans:[],purchasePlans:[],allocations:{his:[],her:[]}};
-        try {
-            const saved = localStorage.getItem(FINANCE_STORAGE_KEY);
-            if (saved) return rememberSnapshot(JSON.parse(saved),saved);
-        } catch (err) { console.error('Local data unavailable:', err); }
-        return rememberSnapshot({
-            months: {}, esso: [], paymentPlans: [], payFourPlans: [], purchasePlans: [],
-            essoReminderLead: 1, payFourReminderLead: 1,
-            activeView: 'dashboard', activeAllocPerson: 'his', activeDashboardTab: 'page1',
-            allocations: { his: [], her: [] }
-        },null);
+
+    // Profiles are subdivisions of an account, NOT different logins.
+    const financeProfileFields=['allocations','paymentPlans','payFourPlans','purchasePlans'];
+    const financeProfileKey=()=> 'finance_selected_profile_v1_'+(financeAuthUser?.id||'locked');
+    function financeBlankProfile(name='Default'){
+        return {name,createdAt:new Date().toISOString(),allocations:{his:[],her:[]},paymentPlans:[],payFourPlans:[],purchasePlans:[]};
+    }
+    function financeClone(value){return JSON.parse(JSON.stringify(value));}
+    function financeNormalizeProfiles(data){
+        if(!data||typeof data!=='object')data={};
+        if(!data.financeProfiles || Array.isArray(data.financeProfiles) || typeof data.financeProfiles!=='object'){
+            const defaultProfile=financeBlankProfile();
+            for(const field of financeProfileFields)if(data[field] && typeof data[field]==='object')defaultProfile[field]=financeClone(data[field]);
+            data.financeProfiles={default:defaultProfile};
+        }
+        if(!data.financeProfiles.default){
+            const defaultProfile=financeBlankProfile();
+            for(const field of financeProfileFields)if(data[field] && typeof data[field]==='object')defaultProfile[field]=financeClone(data[field]);
+            data.financeProfiles.default=defaultProfile;
+        }
+        for(const [id,profile] of Object.entries(data.financeProfiles)){
+            if(!profile || typeof profile!=='object'){delete data.financeProfiles[id];continue;}
+            if(!profile.name || typeof profile.name!=='string')profile.name=id==='default'?'Default':'Profile';
+            if(!profile.allocations || typeof profile.allocations!=='object')profile.allocations={his:[],her:[]};
+            for(const side of ['his','her'])if(!Array.isArray(profile.allocations[side]))profile.allocations[side]=[];
+            for(const field of financeProfileFields.slice(1))if(!Array.isArray(profile[field]))profile[field]=[];
+        }
+        return data;
+    }
+    function financeActiveProfile(data){
+        const chosen=localStorage.getItem(financeProfileKey())||'default';
+        return data.financeProfiles[chosen]?chosen:'default';
+    }
+    function financeShowProfile(data){
+        financeNormalizeProfiles(data);
+        const active=data.financeProfiles[financeActiveProfile(data)];
+        for(const field of financeProfileFields)data[field]=financeClone(active[field]);
+        return data;
+    }
+    function financeSaveProfile(data){
+        financeNormalizeProfiles(data);
+        const active=data.financeProfiles[financeActiveProfile(data)];
+        for(const field of financeProfileFields)active[field]=financeClone(data[field]);
+        // Legacy top-level fields always mirror Default, not another subprofile.
+        for(const field of financeProfileFields)data[field]=financeClone(data.financeProfiles.default[field]);
+        return data;
+    }
+    function financeSelectProfile(id){
+        if(!financeAuthUser)return;
+        const raw=localStorage.getItem(FINANCE_STORAGE_KEY);
+        const data=financeNormalizeProfiles(raw?JSON.parse(raw):{});
+        if(!data.financeProfiles[id])return;
+        localStorage.setItem(financeProfileKey(),id);
+        render();
+    }
+    function financeProfileNotice(msg){
+        const el=document.getElementById('financeProfileMessage');
+        if(el)el.textContent=msg;
+    }
+    function financeCreateProfile(e){
+        e.preventDefault();if(!financeAuthUser)return;
+        const name=document.getElementById('financeNewProfileName').value.trim();
+        if(!name||name.length>50)return;
+        const d=getStoredData();
+        if(Object.values(d.financeProfiles).some(p=>p.name.toLowerCase()===name.toLowerCase())){
+            financeProfileNotice('That profile name is already being used.');return;
+        }
+        const id='profile_'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'_'+Math.random().toString(36).slice(2));
+        d.financeProfiles[id]=financeBlankProfile(name);
+        void saveData(d);
+        document.getElementById('financeNewProfileName').value='';
+        financeSelectProfile(id);
+        financeProfileNotice('Profile created. Default keeps all your previous tracker records.');
+    }
+    function financeRenameProfile(e){
+        e.preventDefault();if(!financeAuthUser)return;
+        const name=document.getElementById('financeRenameProfileName').value.trim();
+        if(!name||name.length>50)return;
+        const d=getStoredData(),id=financeActiveProfile(d);
+        if(Object.entries(d.financeProfiles).some(([key,p])=>key!==id&&p.name.toLowerCase()===name.toLowerCase())){
+            financeProfileNotice('Another profile already has that name.');return;
+        }
+        d.financeProfiles[id].name=name;
+        void saveData(d);render();financeProfileNotice('Profile name saved.');
+    }
+    function renderFinanceProfiles(d){
+        if(!financeAuthUser)return;
+        const profiles=financeNormalizeProfiles(d).financeProfiles,selected=financeActiveProfile(d);
+        document.querySelectorAll('select[data-finance-profile]').forEach(select=>{
+            const ids=Object.keys(profiles);
+            if(select.options.length!==ids.length||Array.from(select.options).some(o=>o.text!==profiles[o.value]?.name)){
+                select.replaceChildren();
+                for(const [id,p] of Object.entries(profiles))select.add(new Option(p.name,id));
+            }
+            select.value=selected;
+        });
+        const list=document.getElementById('financeProfilesList');if(!list)return;
+        list.replaceChildren();
+        for(const [id,p] of Object.entries(profiles)){
+            const box=document.createElement('div');box.className='finance-profile-item'+(selected===id?' active':'');
+            const heading=document.createElement('h3');heading.textContent=p.name+(selected===id?' ✓':'');
+            const info=document.createElement('p');info.className='finance-profile-help';
+            info.textContent=((p.allocations?.his?.length||0)+(p.allocations?.her?.length||0))+' allocations · '+(p.paymentPlans?.length||0)+' payment plans · '+(p.payFourPlans?.length||0)+' Pay in 4 · '+(p.purchasePlans?.length||0)+' purchases';
+            const button=document.createElement('button');button.type='button';button.className='btn-secondary';
+            button.textContent=id===selected?'Selected':'Select Profile';button.disabled=id===selected;
+            button.onclick=()=>financeSelectProfile(id);
+            box.append(heading,info,button);list.append(box);
+        }
+        const rename=document.getElementById('financeRenameProfileName');
+        if(rename&&document.activeElement!==rename)rename.value=profiles[selected]?.name||'';
+    }
+
+    function getStoredData(){
+        if(!financeAuthUser)return {months:{},esso:[],allocations:{his:[],her:[]},paymentPlans:[],payFourPlans:[],purchasePlans:[]};
+        try{
+            const saved=localStorage.getItem(FINANCE_STORAGE_KEY);
+            if(saved)return rememberSnapshot(financeShowProfile(JSON.parse(saved)),saved);
+        }catch(err){console.error('Local finance record unavailable:',err);}
+        return rememberSnapshot(financeShowProfile({
+            months:{},esso:[],paymentPlans:[],payFourPlans:[],purchasePlans:[],
+            allocations:{his:[],her:[]},essoReminderLead:1,payFourReminderLead:1,
+            activeView:'dashboard',activeAllocPerson:'his',activeDashboardTab:'page1'
+        }),null);
     }
     function hasFinancialRecords(d) {
         if (!d || typeof d !== 'object') return false;
         if (['esso','paymentPlans','payFourPlans','purchasePlans'].some(k => Array.isArray(d[k]) && d[k].length)) return true;
+        if(d.financeProfiles && Object.values(d.financeProfiles).some(p=>p&&((p.allocations?.his?.length||0)+(p.allocations?.her?.length||0)+(p.paymentPlans?.length||0)+(p.payFourPlans?.length||0)+(p.purchasePlans?.length||0)>0)))return true;
         if (d.allocations && ['his','her'].some(k => (d.allocations[k] || []).length)) return true;
         return Object.values(d.months || {}).some(m => m && ['his','her','hisPay','herPay'].some(k => (m[k] || []).length));
     }
@@ -2374,6 +2527,7 @@
         const writingUserId = financeAuthUser.id;
         // Immediately commit one combined dataset. This survives a tab refresh.
         const previousSnapshot = financeBaseSnapshots.get(data);
+        data=financeSaveProfile(data);
         const currentRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
         if(previousSnapshot!==undefined && previousSnapshot!==currentRaw){
             const prior=previousSnapshot?JSON.parse(previousSnapshot):{};
@@ -2455,7 +2609,7 @@
             const cloud = row?.payload || null;
             const cloudRaw = cloud ? JSON.stringify(cloud) : null;
             const localRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
-            const local = getStoredData();
+            const local = financeSaveProfile(getStoredData());
             const confirmedRaw = localStorage.getItem(FINANCE_CONFIRMED_KEY);
             if (!cloud) {
                 lastCloudSnapshot = null;
@@ -2509,7 +2663,7 @@
     // Explicit upload for safe first-device migration or a merged version.
     async function financeUploadThisDevice() {
         if (!financeAuthUser) return;
-        const uid=financeAuthUser.id, local=getStoredData();
+        const uid=financeAuthUser.id, local=financeSaveProfile(getStoredData());
         if (!hasFinancialRecords(local)) { warnSync('No saved finance records are available on this device to upload.'); return; }
         const {data,error}=await supabaseClient.from('household_user_data').select('payload').eq('user_id',uid).maybeSingle();
         if (error) {warnSync('Could not verify the cloud before uploading: '+error.message);return;}
@@ -2713,8 +2867,10 @@
         const purchasePlanView = document.getElementById('mainPurchasePlanView');
         const payFourView = document.getElementById('mainPayFourView');
         const settingsView = document.getElementById('mainSettingsView');
+        const profilesView = document.getElementById('mainProfilesView');
         const navPayFour = document.getElementById('navPayFour');
         const navSettings = document.getElementById('navSettings');
+        const navProfiles = document.getElementById('navProfiles');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navAllocation = document.getElementById('navAllocation');
@@ -2730,6 +2886,7 @@
         purchasePlanView.style.display = 'none';
         payFourView.style.display = 'none';
         settingsView.style.display = 'none';
+        profilesView.style.display = 'none';
         
         navDashboard.classList.remove('active');
         navAllocation.classList.remove('active');
@@ -2738,6 +2895,7 @@
         navPurchasePlan.classList.remove('active');
         navPayFour.classList.remove('active');
         navSettings.classList.remove('active');
+        navProfiles.classList.remove('active');
 
         if (view === 'allocation') {
             allocationView.style.display = 'block';
@@ -2758,6 +2916,11 @@
             payFourView.style.display = 'block';
             headerTitle.textContent = 'Pay in 4 Tracker';
             navPayFour.classList.add('active');
+            monthCalendarBtn.style.display = 'none';
+        } else if (view === 'profiles') {
+            profilesView.style.display = 'block';
+            headerTitle.textContent = 'Profiles';
+            navProfiles.classList.add('active');
             monthCalendarBtn.style.display = 'none';
         } else if (view === 'settings') {
             settingsView.style.display = 'block';
@@ -4318,6 +4481,7 @@
 
     function render() {
         const data = getStoredData();
+        renderFinanceProfiles(data);
         const selectedMonth = monthPicker.value;
         const monthEntries=Object.values(data.months||{}).reduce((n,m)=>n+['his','her','hisPay','herPay'].reduce((a,k)=>a+(Array.isArray(m?.[k])?m[k].length:0),0),0);
         const otherEntries=['esso','paymentPlans','payFourPlans','purchasePlans'].reduce((n,k)=>n+(Array.isArray(data[k])?data[k].length:0),0);
@@ -4544,6 +4708,19 @@
                 const imported = JSON.parse(e.target.result);
                 let masterData = getStoredData();
 
+                if(imported.financeProfiles && typeof imported.financeProfiles==='object' && !Array.isArray(imported.financeProfiles)){
+                    for(const [id,profile] of Object.entries(imported.financeProfiles)){
+                        if(!profile || typeof profile!=='object')continue;
+                        if(!masterData.financeProfiles[id])masterData.financeProfiles[id]=financeClone(profile);
+                        else {
+                            const old=masterData.financeProfiles[id];
+                            old.name=String(profile.name||old.name).slice(0,50);
+                            if(profile.allocations)old.allocations=financeClone(profile.allocations);
+                            for(const key of financeProfileFields.slice(1))
+                                if(Array.isArray(profile[key]))old[key]=mergeById(old[key]||[],profile[key]);
+                        }
+                    }
+                }
                 if (imported.months || imported.esso || imported.paymentPlans || imported.payFourPlans || imported.purchasePlans || imported.allocations) {
                     if (imported.months) {
                         if (!masterData.months) masterData.months = {};
@@ -4561,10 +4738,10 @@
                         });
                     }
                     if (imported.esso) masterData.esso = mergeById(masterData.esso || [], imported.esso);
-                    if (imported.paymentPlans) masterData.paymentPlans = mergeById(masterData.paymentPlans || [], imported.paymentPlans);
-                    if (imported.payFourPlans) masterData.payFourPlans = mergeById(masterData.payFourPlans || [], imported.payFourPlans);
-                    if (imported.purchasePlans) masterData.purchasePlans = mergeById(masterData.purchasePlans || [], imported.purchasePlans);
-                    if (imported.allocations) masterData.allocations = imported.allocations;
+                    if (imported.paymentPlans && !imported.financeProfiles) masterData.paymentPlans = mergeById(masterData.paymentPlans || [], imported.paymentPlans);
+                    if (imported.payFourPlans && !imported.financeProfiles) masterData.payFourPlans = mergeById(masterData.payFourPlans || [], imported.payFourPlans);
+                    if (imported.purchasePlans && !imported.financeProfiles) masterData.purchasePlans = mergeById(masterData.purchasePlans || [], imported.purchasePlans);
+                    if (imported.allocations && !imported.financeProfiles) masterData.allocations = imported.allocations;
                     if (Number.isInteger(imported.essoReminderLead)) masterData.essoReminderLead = imported.essoReminderLead;
                     if (Number.isInteger(imported.payFourReminderLead)) masterData.payFourReminderLead = imported.payFourReminderLead;
                     if (imported.activeView) masterData.activeView = imported.activeView;
@@ -4601,7 +4778,7 @@
     function exportUnifiedBackup() {
         if (!financeAuthUser) return;
         // This is the complete master record, not a backup of just the visible tab.
-        const allPages=getStoredData();
+        const allPages=financeSaveProfile(getStoredData());
         const blob=new Blob([JSON.stringify(allPages,null,2)],{type:'application/json'});
         const href=URL.createObjectURL(blob);
         const link=document.createElement('a');
