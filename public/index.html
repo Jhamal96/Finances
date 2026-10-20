@@ -1150,7 +1150,28 @@
             <div class="settings-button-row"><button type="button" class="btn-secondary" onclick="financeSignOut()">↪ Log Out</button></div>
         </div>
 
-        <div class="finance-settings-intro">
+        
+        <div class="settings-card" id="financeSharingSettings">
+            <div class="settings-card-heading"><h3>🔒 Account Sharing Permissions</h3>
+                <p>Private by default. Give another account read-only access to a selected section by username. You can revoke access at any time.</p></div>
+            <div class="income-form-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+              <input id="financeShareUsername" type="text" placeholder="Other account username" autocomplete="off" maxlength="24">
+              <select id="financeShareSection">
+                <option value="allocations">Money Allocation</option>
+                <option value="paymentPlans">Payment Plans</option>
+                <option value="payFourPlans">Pay in 4</option>
+                <option value="purchasePlans">Purchase Plan</option>
+              </select>
+              <button type="button" class="btn-add" onclick="financeGrantSection()">Grant Read-Only View</button>
+            </div>
+            <p class="settings-muted-note" id="financeShareStatus" role="status" aria-live="polite">Nobody can view your account's financial records unless you grant access.</p>
+            <div class="settings-button-row"><button type="button" class="btn-secondary" onclick="financeLoadShares()">Refresh Sharing</button></div>
+            <h4 style="margin:12px 0 8px">Who can view my sections</h4>
+            <div id="financeOutgoingShares" class="settings-muted-note">No access granted.</div>
+            <h4 style="margin:18px 0 8px">Sections shared with me (view only)</h4>
+            <div id="financeIncomingShares" class="settings-muted-note">No shared sections.</div>
+        </div>
+<div class="finance-settings-intro">
             <h2 id="settingsPageTitle">⚙️ Finance Settings</h2>
             <p>Manage your installed app, alerts, cloud-sync health, and account backups.</p>
         </div>
@@ -1197,6 +1218,7 @@
 
             <div class="settings-button-row">
                 <button type="button" class="btn-secondary" onclick="handleManualRefresh()">↻ Refresh From Cloud</button>
+                <button type="button" class="btn-secondary" onclick="financeUploadThisDevice()">☁ Upload This Device</button>
                 <button type="button" class="btn-secondary" onclick="exportUnifiedBackup()">📦 Download Safety Backup</button>
             </div>
             <p class="settings-muted-note">If you see “Cloud copy appears empty,” download a backup before attempting to replace your local data. A missing cloud copy does not mean your device records were deleted.</p>
@@ -2421,76 +2443,101 @@
         return queued;
     }
 
+    // Pull without ever erasing unique local edits. A confirmed base permits a three-way merge.
     async function syncFromCloud(forceCloudCopy = false) {
         if (!financeAuthUser || isImporting) return false;
-        const readingUserId = financeAuthUser.id;
+        const uid = financeAuthUser.id;
         try {
-            const { data: row, error } = await supabaseClient.from('household_user_data')
-                .select('payload').eq('user_id',readingUserId).maybeSingle();
+            const {data: row, error} = await supabaseClient.from('household_user_data')
+                .select('payload').eq('user_id',uid).maybeSingle();
             if (error) throw error;
-            if (!financeAuthUser || financeAuthUser.id !== readingUserId) return false;
-            const remote = row?.payload || null;
-            const remoteRaw = remote ? JSON.stringify(remote) : null;
-            const originalRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
+            if (financeAuthUser?.id !== uid) return false;
+            const cloud = row?.payload || null;
+            const cloudRaw = cloud ? JSON.stringify(cloud) : null;
+            const localRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
             const local = getStoredData();
-            const lastConfirmed = localStorage.getItem(FINANCE_CONFIRMED_KEY);
-            if (!forceCloudCopy && originalRaw && lastConfirmed !== originalRaw && hasFinancialRecords(local)) {
-                lastCloudSnapshot = remoteRaw;
-                warnSync('This browser has records that have not been confirmed in the cloud. Your saved data was preserved; download one JSON backup.', true);
-                return false;
-            }
-            if (locallyUnsynced && !forceCloudCopy) {
-                warnSync('Local edits have not synced. Cloud refresh was stopped to protect your changes; download a backup first.', true);
-                return false;
-            }
-            if (remote && !hasFinancialRecords(remote) && hasFinancialRecords(local)) {
-                lastCloudSnapshot = remoteRaw;
-                warnSync('Cloud copy appears empty. Existing device records were preserved rather than erased.');
-                return false;
-            }
-            if (remote) {
-                // A different tab may have saved while this cloud request was in flight.
-                if (!forceCloudCopy && localStorage.getItem(FINANCE_STORAGE_KEY) !== originalRaw) {
-                    warnSync('A different tab saved while refreshing. Its records were kept; refresh again when edits finish.');
+            const confirmedRaw = localStorage.getItem(FINANCE_CONFIRMED_KEY);
+            if (!cloud) {
+                lastCloudSnapshot = null;
+                if (hasFinancialRecords(local)) {
+                    warnSync('This account has no cloud copy yet. Your device records are safe. Select Upload This Device in Settings to publish them.');
                     return false;
                 }
-                // Only replace nonempty local data silently if it exactly matches the last confirmed cloud save.
-                const confirmed = localStorage.getItem(FINANCE_CONFIRMED_KEY);
-                if (!forceCloudCopy && originalRaw && originalRaw !== remoteRaw && hasFinancialRecords(local) && confirmed !== originalRaw) {
-                    lastCloudSnapshot = undefined; // prevent any writes from the conflicting local copy
-                    warnSync('Cloud and this device have different records; neither copy was deleted or overwritten. Download your local backup, then choose which version to use.', true);
-                    return false;
-                }
-                if (originalRaw && originalRaw !== remoteRaw && hasFinancialRecords(local)) keepLocalRecoveryCopy(originalRaw);
-                localStorage.setItem(FINANCE_STORAGE_KEY, remoteRaw);
-                localStorage.setItem(FINANCE_CONFIRMED_KEY, remoteRaw);
-                void writeFinanceMirror(remoteRaw);
-                notifyFinanceTabs();
-                locallyUnsynced = false;
-                lastCloudSnapshot = remoteRaw;
                 clearSyncWarning();
-                // Do not alter this tab's page when another tab or device syncs.
-                // Selecting the last populated month is display-only and does not save or delete anything.
-                const monthHasData = m => m && ['his','her','hisPay','herPay'].some(k => (m[k] || []).length);
-                if (!monthHasData(remote.months?.[monthPicker.value])) {
-                    const populated = Object.keys(remote.months || {}).filter(k => monthHasData(remote.months[k])).sort();
-                    if (populated.length) monthPicker.value = populated[populated.length - 1];
-                }
-                render();
                 return true;
             }
-            lastCloudSnapshot = null;
-            if (hasFinancialRecords(local)) {
-                warnSync('There is no cloud data to download. Your device records were preserved. Export a backup before using another device.');
+            // Other tab edits take priority over a fetch started with an older local snapshot.
+            if (localStorage.getItem(FINANCE_STORAGE_KEY) !== localRaw) {
+                warnSync('Another tab changed these records during refresh. Try again.');
+                return false;
+            }
+            let next = cloud;
+            if (localRaw && localRaw !== cloudRaw && hasFinancialRecords(local)) {
+                if (!forceCloudCopy && confirmedRaw !== localRaw) {
+                    if (!confirmedRaw) {
+                        lastCloudSnapshot = cloudRaw;
+                        warnSync('This device and the cloud both contain records, but no common saved version exists. Download a backup and review both copies before replacing either.',true);
+                        return false;
+                    }
+                    try { next = mergeFinanceEdits(JSON.parse(confirmedRaw),local,cloud); }
+                    catch (mergeError) {
+                        warnSync('Could not merge cloud and local records. Neither version was deleted.',true);
+                        return false;
+                    }
+                }
+                keepLocalRecoveryCopy(localRaw);
+            }
+            const nextRaw=JSON.stringify(next);
+            localStorage.setItem(FINANCE_STORAGE_KEY,nextRaw);
+            // Confirmed baseline must refer to the actual cloud document, not an unuploaded merge.
+            localStorage.setItem(FINANCE_CONFIRMED_KEY,cloudRaw);
+            lastCloudSnapshot=cloudRaw;
+            locallyUnsynced=nextRaw!==cloudRaw;
+            void writeFinanceMirror(nextRaw);
+            notifyFinanceTabs();
+            render();
+            if (locallyUnsynced) {
+                warnSync('Account records merged from this device and cloud. Select Upload This Device to save the combined version for your other devices.');
             } else clearSyncWarning();
             return true;
-        } catch (err) {
-            console.error('Cloud refresh error:', err);
-            warnSync('Cloud read failed. Showing saved device data; nothing was deleted or uploaded.');
+        } catch(err) {
+            console.error('Account cloud refresh failed',err);
+            warnSync('Cloud read failed: '+(err?.message || 'Check your connection')+'. Your records remain on this device.');
             return false;
-        } finally {
-            cloudSyncReady = true;
+        } finally { cloudSyncReady=true; }
+    }
+    // Explicit upload for safe first-device migration or a merged version.
+    async function financeUploadThisDevice() {
+        if (!financeAuthUser) return;
+        const uid=financeAuthUser.id, local=getStoredData();
+        if (!hasFinancialRecords(local)) { warnSync('No saved finance records are available on this device to upload.'); return; }
+        const {data,error}=await supabaseClient.from('household_user_data').select('payload').eq('user_id',uid).maybeSingle();
+        if (error) {warnSync('Could not verify the cloud before uploading: '+error.message);return;}
+        const remote=data?.payload||null;
+        const raw=JSON.stringify(local), remoteRaw=remote?JSON.stringify(remote):null;
+        const confirmedRaw=localStorage.getItem(FINANCE_CONFIRMED_KEY);
+        let toSave=local;
+        if (remoteRaw && remoteRaw!==raw) {
+            if (!confirmedRaw) {
+                warnSync('Upload paused: this account already has different cloud data. Download both versions first to avoid overwriting records.',true);
+                return;
+            }
+            try {toSave=mergeFinanceEdits(JSON.parse(confirmedRaw),local,remote);}
+            catch {warnSync('Unable to reconcile your account records. Nothing was overwritten.');return;}
         }
+        if (!confirm('Upload your finance records to your private account so other devices can see them?'))return;
+        keepLocalRecoveryCopy(raw);
+        const savedRaw=JSON.stringify(toSave);
+        const {error:writeError}=await supabaseClient.from('household_user_data')
+            .upsert({user_id:uid,payload:toSave,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+        if (writeError){warnSync('Cloud upload failed: '+writeError.message);return;}
+        if (financeAuthUser?.id!==uid)return;
+        localStorage.setItem(FINANCE_STORAGE_KEY,savedRaw);
+        localStorage.setItem(FINANCE_CONFIRMED_KEY,savedRaw);
+        lastCloudSnapshot=savedRaw;
+        locallyUnsynced=false;
+        clearSyncWarning();notifyFinanceTabs();render();
+        triggerSaveIndicator('✓ Account saved across devices');
     }
 
     function openCalendarModal() {
@@ -2791,17 +2838,16 @@
 
     async function handleManualRefresh() {
         const btn = document.getElementById('refreshBtn');
-        btn.classList.add('spinning');
+        if (!financeAuthUser || isImporting) { warnSync('Sign in and finish any imports before refreshing.'); return; }
+        btn?.classList.add('spinning');
         try {
             const ok = await syncFromCloud();
-            if (ok) {
-                const rolled = await checkAndAutoRollover();
-                if (!rolled) triggerSaveIndicator('✓ Data Refreshed');
-            }
+            if (ok) triggerSaveIndicator('✓ Cloud refreshed for this account');
         } catch (err) {
             console.error('Refresh error:', err);
+            warnSync('Cloud refresh failed: '+(err.message || 'Connection unavailable'));
         } finally {
-            setTimeout(() => { btn.classList.remove('spinning'); }, 600);
+            btn?.classList.remove('spinning');
         }
     }
 
@@ -4597,6 +4643,7 @@
         authMessage();
         await financeLoadProfile();
         if(epoch!==financeAuthEpoch)return;
+        void financeLoadShares();
         await recoverFinanceMirror();
         if(epoch!==financeAuthEpoch)return;
         initialCloudLoad=syncFromCloud();
@@ -4754,6 +4801,65 @@
         const {error}=await supabaseClient.auth.updateUser({password});
         if(error){accountMessage('Password update failed: '+error.message,'error');return;}
         event.target.reset();accountMessage('Password updated successfully.');
+    }
+    const financeSectionLabels={allocations:'Money Allocation',paymentPlans:'Payment Plans',payFourPlans:'Pay in 4',purchasePlans:'Purchase Plan'};
+    const financeShareStatus=(text)=>{const el=document.getElementById('financeShareStatus');if(el)el.textContent=text;};
+    function financeSafeText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    async function financeGrantSection() {
+        const username=document.getElementById('financeShareUsername').value.trim().toLowerCase();
+        const section=document.getElementById('financeShareSection').value;
+        if (!username) return financeShareStatus('Enter another account username first.');
+        const {error}=await supabaseClient.rpc('finance_grant_section',{p_username:username,p_section:section});
+        financeShareStatus(error?'Could not grant access: '+error.message:'Read-only access granted to @'+username+'.');
+        if(!error)await financeLoadShares();
+    }
+    async function financeRevokeSection(viewerId,section){
+        if(!confirm('Revoke this account\'s access to '+(financeSectionLabels[section]||section)+'?'))return;
+        const {error}=await supabaseClient.rpc('finance_revoke_section',{p_viewer_id:viewerId,p_section:section});
+        financeShareStatus(error?'Could not revoke access: '+error.message:'Access revoked.');
+        if(!error)await financeLoadShares();
+    }
+    async function financeLoadShares(){
+        if(!financeAuthUser)return;
+        const uid=financeAuthUser.id;
+        const [outgoing,incoming]=await Promise.all([
+            supabaseClient.rpc('finance_list_shared_by_me'),
+            supabaseClient.rpc('finance_list_shared_with_me')
+        ]);
+        if(financeAuthUser?.id!==uid)return;
+        const out=document.getElementById('financeOutgoingShares');
+        const inc=document.getElementById('financeIncomingShares');
+        if(outgoing.error){out.textContent='Could not load permissions: '+outgoing.error.message;}
+        else {
+            out.replaceChildren();
+            if(!outgoing.data?.length)out.textContent='No access granted.';
+            (outgoing.data||[]).forEach(share=>{
+                const line=document.createElement('div');
+                line.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px';
+                const span=document.createElement('span');
+                span.textContent='@'+share.viewer_username+' — '+(financeSectionLabels[share.section]||share.section);
+                const btn=document.createElement('button');
+                btn.className='btn-secondary';btn.type='button';btn.textContent='Revoke';
+                btn.style.cssText='width:auto;min-height:34px';
+                btn.onclick=()=>financeRevokeSection(share.viewer_id,share.section);
+                line.append(span,btn);out.append(line);
+            });
+        }
+        if(incoming.error){inc.textContent='Could not load shared sections: '+incoming.error.message;}
+        else{
+            inc.replaceChildren();
+            if(!incoming.data?.length)inc.textContent='No shared sections.';
+            (incoming.data||[]).forEach(share=>{
+                const details=document.createElement('details');
+                details.style.cssText='border:1px solid var(--card-border);padding:12px;margin-bottom:8px;border-radius:10px';
+                const heading=document.createElement('summary');
+                heading.textContent='@'+share.owner_username+' — '+(financeSectionLabels[share.section]||share.section);
+                const pre=document.createElement('pre');
+                pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;margin-top:10px';
+                pre.textContent=JSON.stringify(share.payload,null,2);
+                details.append(heading,pre);inc.append(details);
+            });
+        }
     }
     async function financeSignOut(){
         if(!confirm('Log out of this finance account? Your account data will remain saved.'))return;
