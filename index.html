@@ -997,6 +997,74 @@
         .finance-profile-action button{width:auto;min-height:42px}
     .finance-shared-banner{padding:10px 12px;margin-bottom:15px;border:1px solid var(--card-border);background:rgba(56,189,248,.08);border-radius:11px;font-size:.86rem;line-height:1.55}
     .finance-shared-banner[hidden]{display:none!important}
+
+        /* Highlight states for mouse, touch, keyboard and selected navigation.
+           Visual feedback only: existing finance handlers and cloud sync are unchanged. */
+        :root { --finance-highlight: #38bdf8; }
+        button:not(:disabled):not(.finance-header-logout) {
+            transition-property: background-color,border-color,color,box-shadow,filter,transform;
+            transition-duration: .18s;
+            transition-timing-function: ease-out;
+            -webkit-tap-highlight-color: rgba(56,189,248,.22);
+        }
+        @media (hover: hover) and (pointer: fine) {
+            button:not(:disabled):not(.finance-header-logout):hover {
+                box-shadow: 0 0 0 1px rgba(56,189,248,.5), 0 3px 16px rgba(56,189,248,.22);
+                filter: brightness(1.13);
+                transform: translateY(-1px);
+            }
+        }
+        button:not(:disabled):active {
+            filter: brightness(1.22);
+            transform: translateY(1px) scale(.985);
+        }
+        button:focus-visible {
+            outline: 3px solid var(--finance-highlight);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 5px rgba(56,189,248,.22);
+        }
+        /* Keep the active page visibly selected, even after the menu reopens. */
+        .drawer-link.active,.drawer-link[aria-current="page"] {
+            background: linear-gradient(95deg,rgba(56,189,248,.24),rgba(99,102,241,.15));
+            border-color: var(--finance-highlight);
+            color: #e0f2fe;
+            box-shadow: inset 4px 0 0 var(--finance-highlight),0 0 0 1px rgba(56,189,248,.24),0 4px 16px rgba(56,189,248,.12);
+            font-weight: 800;
+        }
+        /* Preserve the existing His/Hers/Combined colors, strengthen the active state. */
+        .tab-btn.active,.tab-btn[aria-pressed="true"] {
+            box-shadow: inset 0 -3px 0 currentColor,0 0 0 1px currentColor,0 5px 18px rgba(56,189,248,.12);
+            filter: brightness(1.14);
+        }
+        .finance-profile-item.active {
+            background: linear-gradient(140deg,rgba(56,189,248,.13),rgba(99,102,241,.06));
+            border-color: var(--finance-highlight);
+            box-shadow: 0 0 0 1px rgba(56,189,248,.26),0 8px 20px rgba(56,189,248,.10);
+        }
+        .finance-profile-item.active button:disabled {
+            opacity: 1;
+            color: #a7f3d0;
+            background: rgba(16,185,129,.12);
+            border-color: rgba(52,211,153,.50);
+        }
+        .finance-profile-switcher select:focus-visible,
+        select[data-finance-profile]:focus-visible {
+            outline: 3px solid var(--finance-highlight);
+            outline-offset: 2px;
+        }
+        @keyframes finance-button-click-glow {
+            0% {box-shadow: 0 0 0 0 rgba(56,189,248,.55);filter:brightness(1.24);}
+            65% {box-shadow: 0 0 0 5px rgba(56,189,248,.25);filter:brightness(1.13);}
+            100% {box-shadow: 0 0 0 9px rgba(56,189,248,0);filter:brightness(1);}
+        }
+        button.finance-button-flash:not(:disabled) {
+            animation: finance-button-click-glow .5s ease-out;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            button:not(:disabled){transition:none!important;transform:none!important;}
+            button.finance-button-flash:not(:disabled){animation:none;box-shadow:0 0 0 2px var(--finance-highlight);}
+        }
+
     </style>
 </head>
 <body>
@@ -3036,6 +3104,11 @@
             monthCalendarBtn.style.display = 'flex';
         }
 
+        // Announce the active page to assistive technologies and keep it highlighted.
+        document.querySelectorAll('.drawer-link').forEach(button => {
+            if(button.classList.contains('active'))button.setAttribute('aria-current','page');
+            else button.removeAttribute('aria-current');
+        });
         closeDrawer();
 
         if (shouldSave) {
@@ -3047,13 +3120,19 @@
     }
 
     function switchDashboardTab(tabId, shouldSave = true) {
-        document.querySelectorAll('#mainDashboardView .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#mainDashboardView .tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed','false');
+        });
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
 
         const targetBtn = document.querySelector(`#mainDashboardView .tab-btn[data-page="${tabId}"]`);
         const targetPage = document.getElementById(tabId);
 
-        if (targetBtn) targetBtn.classList.add('active');
+        if (targetBtn) {
+            targetBtn.classList.add('active');
+            targetBtn.setAttribute('aria-pressed','true');
+        }
         if (targetPage) targetPage.classList.add('active');
 
         if (shouldSave) {
@@ -3068,6 +3147,8 @@
 
         btnHis.classList.remove('active', 'his-active');
         btnHer.classList.remove('active', 'her-active');
+        btnHis.setAttribute('aria-pressed',person!=='her'?'true':'false');
+        btnHer.setAttribute('aria-pressed',person==='her'?'true':'false');
 
         if (person === 'her') {
             btnHer.classList.add('active', 'her-active');
@@ -5288,6 +5369,24 @@
         render();
         accountMessage(synced?'Old device records imported and synced to your account.':'Old data saved on this device, but cloud sync needs attention. Download a backup before using another device.',synced?'info':'error');
     }
+
+    // Universal brief click highlight, including dynamically rendered action buttons.
+    // Selection highlights use the existing active class instead of sticking to a
+    // transiently clicked action (like Delete, Save, Refresh, or Log Out).
+    document.addEventListener('click',event => {
+        const button=event.target.closest?.('button');
+        if(!button || button.disabled || !button.isConnected)return;
+        button.classList.remove('finance-button-flash');
+        if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+            void button.offsetWidth;
+            button.classList.add('finance-button-flash');
+        }
+    });
+    document.addEventListener('animationend',event=>{
+        if(event.animationName==='finance-button-click-glow'){
+            event.target.classList.remove('finance-button-flash');
+        }
+    });
 
     // Bootstrap waits for verified user authentication. No finance cloud reads/writes
     // or automatic rollover run while signed out.
