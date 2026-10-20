@@ -2875,15 +2875,17 @@
     }
 
     // Pull without ever erasing unique local edits. A confirmed base permits a three-way merge.
-    async function syncFromCloud(forceCloudCopy = false) {
+    async function syncFromCloud(forceCloudCopy = false, manual = false) {
         if (!financeAuthUser || isImporting) return false;
         const uid = financeAuthUser.id;
         try {
             const {data: row, error} = await supabaseClient.from('household_user_data')
-                .select('payload').eq('user_id',uid).maybeSingle();
+                .select('payload,updated_at').eq('user_id',uid).maybeSingle();
             if (error) throw error;
             if (financeAuthUser?.id !== uid) return false;
             const cloud = row?.payload || null;
+            const summary=financeDescribeCloud(cloud);
+            financeMostRecentCloudInfo={accountId:uid,updatedAt:row?.updated_at||null,summary};
             const cloudRaw = cloud ? financeStableStringify(cloud) : null;
             const localRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
             const normalizedLocalRaw=financeStableRaw(localRaw);
@@ -2891,12 +2893,15 @@
             const confirmedRaw = financeStableRaw(localStorage.getItem(FINANCE_CONFIRMED_KEY));
             if (!cloud) {
                 lastCloudSnapshot = null;
-                if (hasFinancialRecords(local)) {
-                    warnSync('This account has no cloud copy yet. Your device records are safe. Select Upload This Device in Settings to publish them.');
-                    return false;
-                }
-                clearSyncWarning();
-                return true;
+                warnSync('No cloud records found for the signed-in account ('+(financeAuthUser?.email||'email unavailable')+'). '+
+                    (hasFinancialRecords(local)?'Your device records are safe. Choose Upload This Device in Settings.':
+                     'If you saved data with another email, sign in using that original account or ask it to share a profile.'));
+                return false;
+            }
+            if (!forceCloudCopy && !hasFinancialRecords(cloud) && hasFinancialRecords(local)) {
+                lastCloudSnapshot=cloudRaw;
+                warnSync('Cloud data for this account is empty but this device has finance records. Cloud refresh did not replace them. Back up this device, then choose Upload This Device.');
+                return false;
             }
             // Other tab edits take priority over a fetch started with an older local snapshot.
             if (localStorage.getItem(FINANCE_STORAGE_KEY) !== localRaw) {
@@ -2927,10 +2932,29 @@
             locallyUnsynced=nextRaw!==cloudRaw;
             void writeFinanceMirror(nextRaw);
             notifyFinanceTabs();
+            // If another device last saved an earlier month, show it when the
+            // current month is completely empty (display-only; no cloud write).
+            const monthHasRows=m=>m && ['his','her','hisPay','herPay'].some(k=>
+                Array.isArray(m[k]) && m[k].length);
+            if(summary.monthKeys.length && !monthHasRows(next.months?.[monthPicker.value]) &&
+               !new URLSearchParams(location.search).has('month')){
+                monthPicker.value=summary.monthKeys[summary.monthKeys.length-1];
+            }
             render();
             if (locallyUnsynced) {
                 warnSync('Account records merged from this device and cloud. Select Upload This Device to save the combined version for your other devices.');
-            } else clearSyncWarning();
+            } else {
+                clearSyncWarning();
+                if(manual || forceCloudCopy){
+                    const profileText=summary.profiles.map(p=>p.name+' ('+p.total+')').join(', ')||'none';
+                    const when=row?.updated_at?new Date(row.updated_at).toLocaleString():'not available';
+                    financeSyncNotice('Cloud records loaded for this account',
+                        'Email: '+(financeAuthUser?.email||'unknown')+
+                        ' · Profiles: '+profileText+
+                        ' · Populated months: '+summary.monthKeys.length+
+                        ' · Last cloud save: '+when+'.','success');
+                }
+            }
             return true;
         } catch(err) {
             console.error('Account cloud refresh failed',err);
@@ -2976,6 +3000,9 @@
         locallyUnsynced=false;
         clearSyncWarning();notifyFinanceTabs();render();
         triggerSaveIndicator('✓ Account saved across devices');
+        financeSyncNotice('Device records uploaded',
+            'The saved document now belongs to '+(financeAuthUser?.email||'this account')+
+            '. You can refresh it on another device logged in with the same email.','success');
     }
 
     function openCalendarModal() {
@@ -3322,18 +3349,30 @@
     setInterval(()=>void financeAutoRefreshAccount(),60000);
 
     async function handleManualRefresh() {
-        const btn = document.getElementById('refreshBtn');
-        if (!financeAuthUser || isImporting) { warnSync('Sign in and finish any imports before refreshing.'); return; }
+        const btn=document.getElementById('refreshBtn');
+        if(!financeAuthUser || isImporting){
+            financeSyncNotice('Cloud refresh unavailable',
+                'Sign in to the intended account and finish any imports first.','warning');return;
+        }
+        if(financeManualRefreshBusy)return;
+        financeManualRefreshBusy=true;
         btn?.classList.add('spinning');
-        try {
-            const ok = await syncFromCloud();
+        btn?.setAttribute('aria-busy','true');
+        financeSyncNotice('Checking your Supabase account',
+            'Looking for records owned by '+(financeAuthUser.email||'this login')+'…','info');
+        try{
+            // Finish active save first, so a refresh cannot race it.
+            await saveQueue.catch(()=>{});
+            const ok=await syncFromCloud(false,true);
             await financeLoadProfileAccess();
-            if (ok) triggerSaveIndicator('✓ Cloud refreshed for this account');
-        } catch (err) {
-            console.error('Refresh error:', err);
-            warnSync('Cloud refresh failed: '+(err.message || 'Connection unavailable'));
-        } finally {
+            if(ok)triggerSaveIndicator('✓ Refreshed from cloud');
+        }catch(err){
+            console.error('Manual cloud refresh failed:',err);
+            warnSync('Refresh failed: '+(err?.message||'Unable to contact Supabase'));
+        }finally{
+            financeManualRefreshBusy=false;
             btn?.classList.remove('spinning');
+            btn?.removeAttribute('aria-busy');
         }
     }
 
@@ -5177,6 +5216,9 @@
         document.body.classList.remove('finance-authenticated');
         financeAuthUser=null;financeAuthProfile=null;
         financeSharedProfiles.clear();financeOutgoingPermissions=[];financeSharedSaveQueues.clear();
+        financeMostRecentCloudInfo=null;
+        const cloudBanner=document.getElementById('financeCloudResult');
+        if(cloudBanner)cloudBanner.hidden=true;
         FINANCE_STORAGE_KEY='household_finance_LOCKED';
         FINANCE_CONFIRMED_KEY='finance_confirmed_LOCKED';
         financeAlertCacheKey='finance_reminder_delivery_v2_locked';
