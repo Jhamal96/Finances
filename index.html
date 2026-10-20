@@ -1189,7 +1189,7 @@
         
         <div class="settings-card" id="financeSharingSettings">
             <div class="settings-card-heading"><h3>🔒 Account Sharing Permissions</h3>
-                <p>Private by default. Give another account read-only access to a selected section by username. You can revoke access at any time.</p></div>
+                <p>Private by default. Give another account read-only access to a selected section across all your named profiles by username. You can revoke access at any time.</p></div>
             <div class="income-form-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
               <input id="financeShareUsername" type="text" placeholder="Other account username" autocomplete="off" maxlength="24">
               <select id="financeShareSection">
@@ -3349,14 +3349,17 @@
                 ...(entries.her || []).filter(x => !x.isPaid).map(x => ({id:'bill-her-'+x.id, name:x.name, amount:x.amount, dueDate:x.dueDate, lead:x.reminderDays ?? 1, owner:'Hers'})),
                 ...(data.esso || []).filter(x => !x.isPaid).map(x => ({id:'esso-'+x.id, name:x.name, amount:x.amount, dueDate:x.dueDate, lead:x.reminderDays ?? data.essoReminderLead ?? 1, owner:'ESSO'}))
             ];
-            for (const plan of (data.payFourPlans || [])) {
+            // Review all account profiles, not only the currently selected one.
+            for (const [profileId, profile] of Object.entries(financeNormalizeProfiles(data).financeProfiles)) {
+              for (const plan of (profile.payFourPlans || [])) {
                 for (let ix=0;ix<(plan.installments || []).length;ix++) {
                     const payment=plan.installments[ix];
                     if (payment.paid) continue;
-                    alerts.push({ id:'p4-'+plan.id+'-'+ix, name:(plan.store || plan.provider || 'Purchase')+' installment '+(ix+1)+'/'+plan.count,
+                    alerts.push({ id:'p4-'+profileId+'-'+plan.id+'-'+ix, name:(plan.store || plan.provider || 'Purchase')+' installment '+(ix+1)+'/'+plan.count,
                         amount: payment.amountCents/100, dueDate: payment.dueDate,
-                        lead: data.payFourReminderLead ?? 1, owner: plan.provider || 'Pay in 4' });
+                        lead: data.payFourReminderLead ?? 1, owner: (profile.name||'Profile')+' · '+(plan.provider || 'Pay in 4') });
                 }
+              }
             }
             let delivered = {};
             try { delivered = JSON.parse(localStorage.getItem(financeAlertCacheKey) || '{}'); } catch (err) {}
@@ -4720,6 +4723,11 @@
                                 if(Array.isArray(profile[key]))old[key]=mergeById(old[key]||[],profile[key]);
                         }
                     }
+                }
+                if(imported.financeProfiles && typeof imported.financeProfiles==='object'){
+                    // Imported profile data becomes the selected view before saving.
+                    const selected=masterData.financeProfiles[financeActiveProfile(masterData)];
+                    for(const field of financeProfileFields)masterData[field]=financeClone(selected[field]);
                 }
                 if (imported.months || imported.esso || imported.paymentPlans || imported.payFourPlans || imported.purchasePlans || imported.allocations) {
                     if (imported.months) {
