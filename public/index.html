@@ -2572,79 +2572,102 @@
             keys.slice(0, Math.max(0,keys.length-3)).forEach(k => localStorage.removeItem(k));
         } catch (err) { console.warn('Recovery copy could not be stored:', err); }
     }
+    // Normalization prevents differences in PostgreSQL jsonb key order from
+    // creating false cloud conflicts on another browser or device.
+    function financeStableStringify(value){
+        return JSON.stringify(value,(key,item)=>{
+            if(item && Object.prototype.toString.call(item)==='[object Object]'){
+                return Object.keys(item).sort().reduce((out,k)=>(out[k]=item[k],out),{});
+            }
+            return item;
+        });
+    }
+    function financeStableRaw(raw){
+        if(!raw)return raw;
+        try{return financeStableStringify(JSON.parse(raw));}catch{return raw;}
+    }
     async function saveData(data) {
-        if (!financeAuthUser) return false;
-        const writingUserId = financeAuthUser.id;
-        const share=financeTrackerVisible()?financeSelectedShared():null;
-        if(share)return financeSaveSharedProfile(data,share);
-        // Immediately commit one combined dataset. This survives a tab refresh.
-        const previousSnapshot = financeBaseSnapshots.get(data);
+        if(!financeAuthUser)return false;
+        const userId=financeAuthUser.id;
+        const shared=financeTrackerVisible()?financeSelectedShared():null;
+        if(shared)return financeSaveSharedProfile(data,shared);
+        const originalBase=financeBaseSnapshots.get(data);
         data=financeSaveProfile(data);
-        const currentRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
-        if(previousSnapshot!==undefined && previousSnapshot!==currentRaw){
-            const prior=previousSnapshot?JSON.parse(previousSnapshot):{};
-            const newest=currentRaw?JSON.parse(currentRaw):{};
-            data=mergeFinanceEdits(prior,data,newest);
+        const currentRaw=localStorage.getItem(FINANCE_STORAGE_KEY);
+        if(originalBase!==undefined && originalBase!==currentRaw){
+            try{
+                data=mergeFinanceEdits(originalBase?JSON.parse(originalBase):{},data,
+                    currentRaw?JSON.parse(currentRaw):{});
+            }catch(err){
+                warnSync('Another browser tab changed records while editing. No data was deleted. Download a backup.');
+                return false;
+            }
         }
-        const raw=JSON.stringify(data);
-        try {localStorage.setItem(FINANCE_STORAGE_KEY,raw);}
-        catch(err){warnSync('Saving on this device failed. Please download a JSON backup now.');console.error(err);return false;}
-        void writeFinanceMirror(raw);
-        notifyFinanceTabs();
-        locallyUnsynced=true;
-        editSequence++;
-        triggerSaveIndicator('✓ All pages saved on this device');
-        // Prevent multiple browser tabs from uploading an outdated whole-file snapshot.
-        const uploadOne = async()=>{
+        const raw=financeStableStringify(data);
+        try{localStorage.setItem(FINANCE_STORAGE_KEY,raw);}
+        catch(err){warnSync('Saving locally failed. Download a safety backup.');return false;}
+        void writeFinanceMirror(raw);notifyFinanceTabs();
+        locallyUnsynced=true;editSequence++;
+        triggerSaveIndicator('✓ Saved on device · syncing…');
+        const attempt=async()=>{
             if(initialCloudLoad)await initialCloudLoad;
-            if(!financeAuthUser || financeAuthUser.id!==writingUserId || localStorage.getItem(FINANCE_STORAGE_KEY)!==raw)return false;
-            let row;
-            try{
-                const response=await supabaseClient.from('household_user_data').select('payload').eq('user_id',writingUserId).maybeSingle();
-                if(response.error)throw response.error;
-                row=response.data;
-            }catch(err){
-                console.error('Cloud read failed:',err);
-                warnSync('Cloud unavailable; everything is still saved on this device. Download a JSON backup for another device.');
-                return false;
-            }
-            if(!financeAuthUser || financeAuthUser.id!==writingUserId || localStorage.getItem(FINANCE_STORAGE_KEY)!==raw)return false;
-            const remote=row?.payload || null;
-            const remoteRaw=remote?JSON.stringify(remote):null;
-            const confirmed=localStorage.getItem(FINANCE_CONFIRMED_KEY);
-            // Shared-browser-tab saves update the confirmed snapshot key after cloud completion.
-            if (confirmed===remoteRaw && confirmed!==null) lastCloudSnapshot=confirmed;
-            if ((lastCloudSnapshot!==undefined && remoteRaw!==lastCloudSnapshot && remoteRaw!==raw) ||
-                (lastCloudSnapshot===undefined && remoteRaw!==raw && hasFinancialRecords(remote))) {
-                warnSync('The cloud has other changes. Your complete local record is safe and was not uploaded over them. Download a backup before choosing a version.',true);
-                return false;
-            }
-            if(!hasFinancialRecords(data) && hasFinancialRecords(remote)){
-                warnSync('Safety stop: an empty local file cannot erase cloud finance records.');
-                return false;
-            }
-            try{
-                const {error}=await supabaseClient.from('household_user_data').upsert({user_id:writingUserId,payload:data,updated_at:new Date().toISOString()},{onConflict:'user_id'});
-                if(error)throw error;
-                if(!financeAuthUser || financeAuthUser.id!==writingUserId)return true;
-                lastCloudSnapshot=raw;
-                localStorage.setItem(FINANCE_CONFIRMED_KEY,raw);
-                if(localStorage.getItem(FINANCE_STORAGE_KEY)===raw){
-                    locallyUnsynced=false;
-                    clearSyncWarning();
-                    triggerSaveIndicator('✓ All pages synced');
+            if(financeAuthUser?.id!==userId || localStorage.getItem(FINANCE_STORAGE_KEY)!==raw)return false;
+            const read=await supabaseClient.from('household_user_data')
+                .select('payload').eq('user_id',userId).maybeSingle();
+            if(read.error){warnSync('Could not read your cloud account: '+read.error.message);return false;}
+            let remote=read.data?.payload||null;
+            const originalCloud=financeStableStringify(remote);
+            const confirmed=financeStableRaw(localStorage.getItem(FINANCE_CONFIRMED_KEY));
+            let mine=financeClone(data);
+            if(originalCloud!==raw && remote && hasFinancialRecords(remote)){
+                if(!confirmed && financeStableStringify(mine)!==originalCloud){
+                    warnSync('Both cloud and device have records with no confirmed common version. Download a backup and resolve before uploading.',true);
+                    return false;
                 }
-                return true;
-            }catch(err){
-                console.error('Cloud save failed; device data retained:',err);
-                warnSync('Cloud save failed, but your entries are retained on this device. Download one JSON backup.');
-                return false;
+                if(confirmed && confirmed!==originalCloud){
+                    try{mine=mergeFinanceEdits(JSON.parse(confirmed),mine,remote);}
+                    catch(err){warnSync('Could not merge edits safely. Both copies remain saved.');return false;}
+                }
             }
+            if(!hasFinancialRecords(mine)&&hasFinancialRecords(remote)){
+                warnSync('Safety stop: an empty file cannot replace saved cloud finances.');return false;
+            }
+            for(let retry=0;retry<3;retry++){
+                const resp=await supabaseClient.rpc('finance_save_my_document',{
+                    p_expected:remote,p_new:mine
+                });
+                if(resp.error){
+                    warnSync('Cloud save was not completed: '+resp.error.message);return false;
+                }
+                if(resp.data?.ok){
+                    if(financeAuthUser?.id!==userId)return true;
+                    const savedRaw=financeStableStringify(mine);
+                    lastCloudSnapshot=savedRaw;
+                    localStorage.setItem(FINANCE_CONFIRMED_KEY,savedRaw);
+                    if(localStorage.getItem(FINANCE_STORAGE_KEY)===raw){
+                        if(raw!==savedRaw)keepLocalRecoveryCopy(raw);
+                        localStorage.setItem(FINANCE_STORAGE_KEY,savedRaw);
+                        void writeFinanceMirror(savedRaw);notifyFinanceTabs();
+                        locallyUnsynced=false;
+                        clearSyncWarning();
+                        triggerSaveIndicator('✓ Account synced across devices');
+                        if(raw!==savedRaw)render();
+                    }
+                    return true;
+                }
+                if(!resp.data?.conflict)break;
+                const newest=resp.data.payload||null;
+                try{mine=mergeFinanceEdits(remote||{},mine,newest||{});}
+                catch(err){break;}
+                remote=newest;
+            }
+            warnSync('Another device saved while you were editing. Your local copy was preserved; retry refresh after backing it up.',true);
+            return false;
         };
-        const uploadWithLock=()=>navigator.locks?.request
-          ? navigator.locks.request('household_finance_user_cloud_write_'+writingUserId, {mode:'exclusive'},uploadOne)
-          : uploadOne();
-        const queued=saveQueue.catch(()=>{}).then(uploadWithLock);
+        const run=()=>navigator.locks?.request
+           ? navigator.locks.request('household_finance_user_cloud_write_'+userId,{mode:'exclusive'},attempt)
+           : attempt();
+        const queued=saveQueue.catch(()=>{}).then(run);
         saveQueue=queued;
         return queued;
     }
@@ -2659,10 +2682,11 @@
             if (error) throw error;
             if (financeAuthUser?.id !== uid) return false;
             const cloud = row?.payload || null;
-            const cloudRaw = cloud ? JSON.stringify(cloud) : null;
+            const cloudRaw = cloud ? financeStableStringify(cloud) : null;
             const localRaw = localStorage.getItem(FINANCE_STORAGE_KEY);
-            const local = financeSaveProfile(getStoredData());
-            const confirmedRaw = localStorage.getItem(FINANCE_CONFIRMED_KEY);
+            const normalizedLocalRaw=financeStableRaw(localRaw);
+            const local = localRaw?JSON.parse(localRaw):{};
+            const confirmedRaw = financeStableRaw(localStorage.getItem(FINANCE_CONFIRMED_KEY));
             if (!cloud) {
                 lastCloudSnapshot = null;
                 if (hasFinancialRecords(local)) {
@@ -2678,8 +2702,8 @@
                 return false;
             }
             let next = cloud;
-            if (localRaw && localRaw !== cloudRaw && hasFinancialRecords(local)) {
-                if (!forceCloudCopy && confirmedRaw !== localRaw) {
+            if (localRaw && normalizedLocalRaw !== cloudRaw && hasFinancialRecords(local)) {
+                if (!forceCloudCopy && confirmedRaw !== normalizedLocalRaw) {
                     if (!confirmedRaw) {
                         lastCloudSnapshot = cloudRaw;
                         warnSync('This device and the cloud both contain records, but no common saved version exists. Download a backup and review both copies before replacing either.',true);
@@ -2693,7 +2717,7 @@
                 }
                 keepLocalRecoveryCopy(localRaw);
             }
-            const nextRaw=JSON.stringify(next);
+            const nextRaw=financeStableStringify(next);
             localStorage.setItem(FINANCE_STORAGE_KEY,nextRaw);
             // Confirmed baseline must refer to the actual cloud document, not an unuploaded merge.
             localStorage.setItem(FINANCE_CONFIRMED_KEY,cloudRaw);
@@ -2715,13 +2739,13 @@
     // Explicit upload for safe first-device migration or a merged version.
     async function financeUploadThisDevice() {
         if (!financeAuthUser) return;
-        const uid=financeAuthUser.id, local=financeSaveProfile(getStoredData());
+        const uid=financeAuthUser.id, local=JSON.parse(localStorage.getItem(FINANCE_STORAGE_KEY)||'{}');
         if (!hasFinancialRecords(local)) { warnSync('No saved finance records are available on this device to upload.'); return; }
         const {data,error}=await supabaseClient.from('household_user_data').select('payload').eq('user_id',uid).maybeSingle();
         if (error) {warnSync('Could not verify the cloud before uploading: '+error.message);return;}
         const remote=data?.payload||null;
-        const raw=JSON.stringify(local), remoteRaw=remote?JSON.stringify(remote):null;
-        const confirmedRaw=localStorage.getItem(FINANCE_CONFIRMED_KEY);
+        const raw=financeStableStringify(local), remoteRaw=remote?financeStableStringify(remote):null;
+        const confirmedRaw=financeStableRaw(localStorage.getItem(FINANCE_CONFIRMED_KEY));
         let toSave=local;
         if (remoteRaw && remoteRaw!==raw) {
             if (!confirmedRaw) {
@@ -2733,7 +2757,7 @@
         }
         if (!confirm('Upload your finance records to your private account so other devices can see them?'))return;
         keepLocalRecoveryCopy(raw);
-        const savedRaw=JSON.stringify(toSave);
+        const savedRaw=financeStableStringify(toSave);
         const {error:writeError}=await supabaseClient.from('household_user_data')
             .upsert({user_id:uid,payload:toSave,updated_at:new Date().toISOString()},{onConflict:'user_id'});
         if (writeError){warnSync('Cloud upload failed: '+writeError.message);return;}
