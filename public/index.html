@@ -1065,6 +1065,19 @@
             button.finance-button-flash:not(:disabled){animation:none;box-shadow:0 0 0 2px var(--finance-highlight);}
         }
 
+
+    /* Always-visible results for manual cloud sync, including the compact header refresh. */
+    .finance-cloud-result{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+       gap:9px;margin:0 0 15px;padding:11px 14px;border:1px solid rgba(56,189,248,.4);
+       border-radius:12px;background:rgba(56,189,248,.09);font-size:.86rem;line-height:1.55}
+    .finance-cloud-result[data-kind="warning"]{border-color:rgba(251,191,36,.50);background:rgba(251,191,36,.09)}
+    .finance-cloud-result[data-kind="error"]{border-color:rgba(248,113,113,.48);background:rgba(248,113,113,.09)}
+    .finance-cloud-result[data-kind="success"]{border-color:rgba(52,211,153,.48);background:rgba(52,211,153,.09)}
+    .finance-cloud-result[hidden]{display:none!important}
+    .finance-cloud-result strong{font-weight:750}
+    .finance-cloud-result button{width:auto;min-height:36px;padding:7px 12px;font-size:.81rem}
+    .finance-cloud-result-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+    .finance-cloud-detail{margin:5px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem;color:var(--text-muted)}
     </style>
 </head>
 <body>
@@ -1203,6 +1216,14 @@
             <span class="save-indicator" id="saveIndicator">✓ Synced</span>
         </div>
     </header>
+    <div class="finance-cloud-result" id="financeCloudResult" role="status" aria-live="polite" hidden data-kind="info">
+      <div style="flex:1;min-width:180px"><strong id="financeCloudResultHeadline">Cloud refresh</strong>
+        <p id="financeCloudResultDetail" class="finance-cloud-detail"></p></div>
+      <div class="finance-cloud-result-actions">
+        <button type="button" id="financeShowSavedBtn" class="btn-secondary" onclick="financeShowSavedCloudRecords()" hidden>View saved records</button>
+        <button type="button" class="btn-secondary" onclick="switchMainPage('settings')">Cloud Settings</button>
+      </div>
+    </div>
 
     <input type="month" id="monthPicker" style="display:none;">
 
@@ -1329,10 +1350,12 @@
 
             <div class="settings-button-row">
                 <button type="button" class="btn-secondary" onclick="handleManualRefresh()">↻ Refresh From Cloud</button>
+                <button type="button" class="btn-secondary" onclick="financeDownloadCloudCopy()">↓ Download Cloud Backup</button>
+                <button type="button" class="btn-secondary" onclick="acceptCloudCopy()">Restore Cloud to Device…</button>
                 <button type="button" class="btn-secondary" onclick="financeUploadThisDevice()">☁ Upload This Device</button>
                 <button type="button" class="btn-secondary" onclick="exportUnifiedBackup()">📦 Download Safety Backup</button>
             </div>
-            <p class="settings-muted-note">If you see “Cloud copy appears empty,” download a backup before attempting to replace your local data. A missing cloud copy does not mean your device records were deleted.</p>
+            <p class="settings-muted-note">Refreshing only reads data for the email account currently signed in. If another account owns the records, use its login or ask the owner to share a profile. <strong>Restore Cloud to Device</strong> downloads a backup of this device before replacing its copy. If you have unsynced work, keep that backup.</p>
         </div>
         <div class="settings-card">
             <div class="settings-card-heading">
@@ -2608,12 +2631,99 @@
         if (d.allocations && ['his','her'].some(k => (d.allocations[k] || []).length)) return true;
         return Object.values(d.months || {}).some(m => m && ['his','her','hisPay','herPay'].some(k => (m[k] || []).length));
     }
+
+    let financeMostRecentCloudInfo=null;
+    let financeManualRefreshBusy=false;
+    function financeDescribeCloud(doc){
+        if(!doc || typeof doc!=='object')return {profiles:[],total:0,monthKeys:[],firstUseful:null};
+        const p=doc.financeProfiles && typeof doc.financeProfiles==='object' && !Array.isArray(doc.financeProfiles)
+          ? doc.financeProfiles:{default:{name:'Default',allocations:doc.allocations,paymentPlans:doc.paymentPlans,
+              payFourPlans:doc.payFourPlans,purchasePlans:doc.purchasePlans}};
+        const items=[];
+        for(const [id,profile] of Object.entries(p)){
+            const counts={
+                allocations:(profile?.allocations?.his?.length||0)+(profile?.allocations?.her?.length||0),
+                paymentPlans:profile?.paymentPlans?.length||0,
+                payFourPlans:profile?.payFourPlans?.length||0,
+                purchasePlans:profile?.purchasePlans?.length||0
+            };
+            const total=Object.values(counts).reduce((a,b)=>a+b,0);
+            items.push({id,name:String(profile?.name||'Profile'),total,counts});
+        }
+        const months=Object.entries(doc.months||{}).filter(([key,m])=>
+            m && ['his','her','hisPay','herPay'].some(field=>Array.isArray(m[field])&&m[field].length));
+        const monthKeys=months.map(x=>x[0]).sort();
+        const firstUseful=items.filter(x=>x.total>0).sort((a,b)=>b.total-a.total)[0]||null;
+        return {profiles:items,total:items.reduce((n,x)=>n+x.total,0),
+            monthKeys,firstUseful};
+    }
+    function financeSyncNotice(title,detail='',kind='info'){
+        const panel=document.getElementById('financeCloudResult');
+        if(!panel)return;
+        panel.hidden=false;panel.dataset.kind=kind;
+        document.getElementById('financeCloudResultHeadline').textContent=title;
+        document.getElementById('financeCloudResultDetail').textContent=detail;
+        const action=document.getElementById('financeShowSavedBtn');
+        if(action)action.hidden=!financeMostRecentCloudInfo?.summary?.firstUseful;
+    }
+    function financeShowSavedCloudRecords(){
+        const info=financeMostRecentCloudInfo;
+        if(!financeAuthUser || !info || !info.summary)return;
+        const summary=info.summary;
+        if(summary.firstUseful){
+            const raw=localStorage.getItem(FINANCE_STORAGE_KEY);
+            const data=raw?JSON.parse(raw):null;
+            if(!data || !financeNormalizeProfiles(data).financeProfiles[summary.firstUseful.id]){
+                financeSyncNotice('Cloud records are available',
+                    'Choose Restore Cloud to Device in Settings after saving your local backup, so this profile becomes available.','warning');
+                switchMainPage('settings');return;
+            }
+            financeSelectProfile(summary.firstUseful.id);
+            const c=summary.firstUseful.counts;
+            const destination=c.paymentPlans?'paymentPlan':c.payFourPlans?'payFour':
+                c.purchasePlans?'purchasePlan':'allocation';
+            switchMainPage(destination);
+        }else if(summary.monthKeys.length){
+            monthPicker.value=summary.monthKeys[summary.monthKeys.length-1];
+            switchMainPage('dashboard');
+            render();
+        }else{
+            financeSyncNotice('No populated profiles found',
+                'This login has no saved entries in its cloud finance document.','warning');
+        }
+    }
+    function financeExportJsonObject(object,filename){
+        const file=new Blob([JSON.stringify(object,null,2)],{type:'application/json'});
+        const url=URL.createObjectURL(file),a=document.createElement('a');
+        a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),2500);
+    }
+    async function financeDownloadCloudCopy(){
+        if(!financeAuthUser)return;
+        const uid=financeAuthUser.id;
+        financeSyncNotice('Downloading cloud backup','Checking the saved records for this signed-in account…');
+        try{
+            const {data,error}=await supabaseClient.from('household_user_data')
+                .select('payload,updated_at').eq('user_id',uid).maybeSingle();
+            if(error)throw error;
+            if(financeAuthUser?.id!==uid)return;
+            if(!data?.payload){
+                financeSyncNotice('No cloud copy for this account',
+                    'Check that you signed in with the same email that originally saved the records.','warning');
+                return;
+            }
+            financeExportJsonObject(data.payload,'household_finance_CLOUD_'+new Date().toISOString().slice(0,10)+'.json');
+            financeSyncNotice('Cloud backup downloaded',
+                'This download contains the cloud document for the signed-in account. It did not change the data on this device.','success');
+        }catch(err){financeSyncNotice('Cloud download failed',err?.message||'Check your connection.','error');}
+    }
     function warnSync(msg, canUseCloud = false) {
         const banner = document.getElementById('syncWarning');
         document.getElementById('syncWarningText').textContent = msg;
         document.getElementById('useCloudCopyBtn').style.display = canUseCloud ? '' : 'none';
         banner.classList.remove('hidden');
         setSettingsSyncAttention(true, msg);
+        financeSyncNotice('Cloud sync needs attention',msg,'warning');
         triggerSaveIndicator('⚠ Saved locally only');
     }
     function setSettingsSyncAttention(hasWarning, message='') {
@@ -2637,13 +2747,22 @@
         setSettingsSyncAttention(false);
     }
     async function acceptCloudCopy() {
-        const ok = confirm('Use the latest cloud copy on this device? Your local version might differ. A JSON safety backup will download first. Do not proceed unless you want the cloud version.');
-        if (!ok) return;
-        // Save and download first so local-only records can be reimported if needed.
-        keepLocalRecoveryCopy(localStorage.getItem(FINANCE_STORAGE_KEY));
-        document.getElementById('exportBtn').click();
-        locallyUnsynced = false;
-        await syncFromCloud(true);
+        if(!financeAuthUser)return;
+        const uid=financeAuthUser.id;
+        const {data,error}=await supabaseClient.from('household_user_data')
+            .select('payload').eq('user_id',uid).maybeSingle();
+        if(error){warnSync('Cannot verify cloud copy: '+error.message);return;}
+        if(!data?.payload){warnSync('This account has no cloud copy to restore. Confirm you are signed in with the correct email.');return;}
+        const current=localStorage.getItem(FINANCE_STORAGE_KEY);
+        if(!confirm('Restore the signed-in account\'s CLOUD data to THIS DEVICE? Any unsynced local records will be replaced in the app, so a JSON safety backup will download automatically first. Continue only if you want the cloud version.'))return;
+        if(current){
+            keepLocalRecoveryCopy(current);
+            try{financeExportJsonObject(JSON.parse(current),'household_finance_DEVICE_BEFORE_CLOUD_RESTORE_'+new Date().toISOString().slice(0,10)+'.json');}
+            catch(e){warnSync('Could not download your device safety backup. Restore canceled.');return;}
+        }
+        const ok=await syncFromCloud(true);
+        if(ok)financeSyncNotice('Cloud copy restored',
+            'The current account’s cloud document is now visible on this device. The previous device copy was backed up.','success');
     }
     function keepLocalRecoveryCopy(raw) {
         if (!raw) return;
@@ -4965,7 +5084,9 @@
     function exportUnifiedBackup() {
         if (!financeAuthUser) return;
         // This is the complete master record, not a backup of just the visible tab.
-        const allPages=financeSaveProfile(getStoredData());
+        // Export the private document as saved. Never merge shared-profile projections into this backup.
+        const raw=localStorage.getItem(FINANCE_STORAGE_KEY);
+        const allPages=raw?JSON.parse(raw):financeSaveProfile(getPrivateAccountData());
         const blob=new Blob([JSON.stringify(allPages,null,2)],{type:'application/json'});
         const href=URL.createObjectURL(blob);
         const link=document.createElement('a');
