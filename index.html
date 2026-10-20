@@ -2836,6 +2836,31 @@
         saveTimeout = setTimeout(() => { indicator.classList.remove('active'); }, 2000);
     }
 
+
+    // Refresh the signed-in account after returning to the tab and periodically.
+    // While a user is editing a field, leave form state alone until next refresh.
+    let financeAutoRefreshInFlight=false;
+    let financeLastRemoteCheck=0;
+    async function financeAutoRefreshAccount() {
+        if (!financeAuthUser || financeAutoRefreshInFlight || isImporting ||
+            document.visibilityState !== 'visible') return;
+        const active=document.activeElement;
+        if(active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return;
+        // In-flight local edits must never be overwritten by a background pull.
+        if(locallyUnsynced || (localStorage.getItem(FINANCE_STORAGE_KEY) &&
+           localStorage.getItem(FINANCE_STORAGE_KEY)!==localStorage.getItem(FINANCE_CONFIRMED_KEY))) return;
+        if(Date.now()-financeLastRemoteCheck<12000)return;
+        financeAutoRefreshInFlight=true;
+        financeLastRemoteCheck=Date.now();
+        try { await syncFromCloud(); }
+        finally { financeAutoRefreshInFlight=false; }
+    }
+    document.addEventListener('visibilitychange',()=>{
+        if(document.visibilityState==='visible')void financeAutoRefreshAccount();
+    });
+    window.addEventListener('focus',()=>void financeAutoRefreshAccount());
+    setInterval(()=>void financeAutoRefreshAccount(),60000);
+
     async function handleManualRefresh() {
         const btn = document.getElementById('refreshBtn');
         if (!financeAuthUser || isImporting) { warnSync('Sign in and finish any imports before refreshing.'); return; }
