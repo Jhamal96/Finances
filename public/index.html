@@ -1142,6 +1142,12 @@
         <h2 id="financeProfilesTitle">👤 Finance Profiles</h2>
         <p class="finance-profile-help">Each profile has separate Money Allocation, Payment Plans, Pay in 4, and Purchase Plan records. The Dashboard and ESSO remain account-wide.</p>
         <div class="finance-profile-switcher"><label for="financeManagerProfileSelect">Selected profile</label><select id="financeManagerProfileSelect" data-finance-profile onchange="financeSelectProfile(this.value)"></select></div>
+        <div class="finance-profile-action" aria-label="Open selected profile trackers">
+          <button class="btn-secondary" type="button" onclick="switchMainPage('allocation')">💰 Money Allocation</button>
+          <button class="btn-secondary" type="button" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button>
+          <button class="btn-secondary" type="button" onclick="switchMainPage('payFour')">🛍️ Pay in 4</button>
+          <button class="btn-secondary" type="button" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button>
+        </div>
         <h3>Create profile</h3>
         <form class="finance-profile-action" onsubmit="financeCreateProfile(event)">
           <input id="financeNewProfileName" type="text" required maxlength="50" autocomplete="off" placeholder="Personal, Partner, Family, Side Business">
