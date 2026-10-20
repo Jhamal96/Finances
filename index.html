@@ -2512,11 +2512,14 @@
                 return rememberSnapshot(own,saved);
             }
         }catch(err){console.error('Local finance record unavailable:',err);}
-        return rememberSnapshot(financeShowProfile({
+        const initial=financeShowProfile({
             months:{},esso:[],paymentPlans:[],payFourPlans:[],purchasePlans:[],
             allocations:{his:[],her:[]},essoReminderLead:1,payFourReminderLead:1,
             activeView:'dashboard',activeAllocPerson:'his',activeDashboardTab:'page1'
-        }),null);
+        });
+        const external=financeTrackerVisible()?financeSelectedShared():null;
+        if(external)for(const field of financeProfileFields)initial[field]=financeClone(external.profile[field]);
+        return rememberSnapshot(initial,null);
     }
     function hasFinancialRecords(d) {
         if (!d || typeof d !== 'object') return false;
@@ -2758,9 +2761,15 @@
         if (!confirm('Upload your finance records to your private account so other devices can see them?'))return;
         keepLocalRecoveryCopy(raw);
         const savedRaw=financeStableStringify(toSave);
-        const {error:writeError}=await supabaseClient.from('household_user_data')
-            .upsert({user_id:uid,payload:toSave,updated_at:new Date().toISOString()},{onConflict:'user_id'});
-        if (writeError){warnSync('Cloud upload failed: '+writeError.message);return;}
+        const response=await supabaseClient.rpc('finance_save_my_document',{
+            p_expected:remote,p_new:toSave
+        });
+        if (response.error||!response.data?.ok){
+            warnSync(response.data?.conflict
+                ? 'Cloud records changed while uploading. Your device records were preserved. Refresh and retry.'
+                : 'Cloud upload failed: '+(response.error?.message||'Unknown error'));
+            return;
+        }
         if (financeAuthUser?.id!==uid)return;
         localStorage.setItem(FINANCE_STORAGE_KEY,savedRaw);
         localStorage.setItem(FINANCE_CONFIRMED_KEY,savedRaw);
@@ -3087,7 +3096,7 @@
         if(active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return;
         // In-flight local edits must never be overwritten by a background pull.
         if(locallyUnsynced || (localStorage.getItem(FINANCE_STORAGE_KEY) &&
-           localStorage.getItem(FINANCE_STORAGE_KEY)!==localStorage.getItem(FINANCE_CONFIRMED_KEY))) return;
+           financeStableRaw(localStorage.getItem(FINANCE_STORAGE_KEY))!==financeStableRaw(localStorage.getItem(FINANCE_CONFIRMED_KEY)))) return;
         if(Date.now()-financeLastRemoteCheck<12000)return;
         financeAutoRefreshInFlight=true;
         financeLastRemoteCheck=Date.now();
@@ -5203,9 +5212,13 @@
             if(financeAuthUser?.id!==mine||!financeSharedProfiles.has(entry.key))return false;
             const expected=financeClone(entry.serverProfile);
             const proposal=mergeFinanceEdits(prior,draft,expected);
-            const {data:result,error}=await supabaseClient.rpc('finance_save_shared_profile',{
-                p_owner:entry.ownerId,p_profile:entry.profileId,p_expected:expected,p_new:proposal
-            });
+            let result,error;
+            try{
+                const response=await supabaseClient.rpc('finance_save_shared_profile',{
+                    p_owner:entry.ownerId,p_profile:entry.profileId,p_expected:expected,p_new:proposal
+                });
+                result=response.data;error=response.error;
+            }catch(networkError){error=networkError;}
             if(error||!result?.ok){
                 financeBackupSharedDraft(draft,entry);
                 warnSync(result?.conflict
