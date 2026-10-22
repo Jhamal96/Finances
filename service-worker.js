@@ -1,7 +1,7 @@
 /* Household Finance PWA: service worker for app shell and real Web Push reception.
    Background reminders require a separately configured web-push sender.
 */
-const CACHE_NAME = 'household-finance-pwa-v12-expenses-updates-android';
+const CACHE_NAME = 'household-finance-pwa-v13-hide-installed-prompts';
 const APP_HOME = new URL('index.html', self.registration.scope).toString();
 
 self.addEventListener('install', event => {

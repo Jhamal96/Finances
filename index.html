@@ -1181,7 +1181,35 @@
     @media(max-width:480px){.expense-stats{gap:7px}.expense-stat{padding:11px;min-height:112px}.expense-stat span{font-size:.75rem}
        .expense-stat strong{font-size:1.1rem}.expense-form{grid-template-columns:1fr}
        .expense-cat-row{grid-template-columns:minmax(70px,1fr) 1fr auto}}
+
+        /* Never flash install prompts inside the Chrome-installed PWA or native APK. */
+        html.finance-app-installed #financeHeaderInstallBtn,
+        html.finance-app-installed #financeAuthInstallSection,
+        html.finance-app-installed #financeInstallSettings,
+        html.finance-app-installed #financeAndroidApkDownload,
+        #financeInstallSettings[hidden],
+        #financeAndroidApkDownload[hidden],
+        #financeAuthInstallSection[hidden],
+        #financeInstallAction[hidden] {display:none!important;}
+        @media (display-mode:standalone), (display-mode:fullscreen) {
+            #financeHeaderInstallBtn, #financeAuthInstallSection,
+            #financeInstallSettings, #financeAndroidApkDownload {display:none!important;}
+        }
     </style>
+    <script>
+        // Detect an installed app before the first paint (avoids an Install-button flash).
+        (() => {
+            let remembered = false;
+            try { remembered = localStorage.getItem('finance_pwa_installed_on_device_v1') === '1'; }
+            catch (_) {}
+            const ua = navigator.userAgent || '';
+            const apk = /HouseholdFinanceAndroid\//i.test(ua);
+            const standalone = !!(window.matchMedia?.('(display-mode: standalone)').matches
+                || window.matchMedia?.('(display-mode: fullscreen)').matches
+                || navigator.standalone === true);
+            document.documentElement.classList.toggle('finance-app-installed', apk || standalone || remembered);
+        })();
+    </script>
 </head>
 <body>
 
@@ -1338,10 +1366,14 @@
     <div class="finance-guide-top">
       <span class="finance-guide-kicker">New Update · October 22, 2026</span>
       <h2 id="financeReleaseTitle">🎉 What's New in Household Finance</h2>
-      <p id="financeReleaseIntro">New tools are available to help your household understand where money goes each month.</p>
+      <p id="financeReleaseIntro">Install prompts are now hidden automatically when you're using Household Finance as an installed app. The expense tracker and recent improvements remain available.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📱</span><div>
+          <h3>Cleaner Installed App</h3>
+          <p>The website now hides its Install icon, installation prompts, and APK download card when opened inside the installed PWA or Android APK. Install options remain in the regular browser.</p>
+        </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🧾</span><div>
           <h3>Monthly Expense Tracker</h3>
           <p>Track His, Hers, and Combined Spending. Add joint purchases under Together so they count just once toward the combined total.</p>
@@ -1543,7 +1575,9 @@
             <button type="button" class="btn-secondary" onclick="financeOpenReleaseUpdates(true)">✨ View Latest Update</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 22, 2026 — Monthly Expense Tracker &amp; Android</strong></summary>
+            <details open><summary><strong>October 22, 2026 — Smart Install Visibility</strong></summary>
+              <p class="settings-muted-note">When Household Finance runs as an installed PWA or Android APK, the in-page Install icon and installation cards no longer appear. The site also remembers successful PWA installation on that browser, and prompts return if the browser offers installation again after an uninstall.</p></details>
+            <details><summary><strong>October 22, 2026 — Monthly Expense Tracker &amp; Android</strong></summary>
               <p class="settings-muted-note">Added His Spending, Hers Spending and Combined Spending, including Together expenses. Includes editable purchases, categories, monthly filtering, category totals and CSV download. Added one-time release announcements and Android APK build project.</p></details>
             <details><summary><strong>October 20, 2026 — Feature Guide</strong></summary>
               <p class="settings-muted-note">Added the home-screen feature walkthrough with its Don't show again setting, plus reopening the guide from Settings.</p></details>
@@ -2446,11 +2480,31 @@
 <script>
     // Install UX works before login and from Settings. Browser toolbar promotions
     // are controlled by the browser; do NOT suppress its default install UI.
+    const financeInstallPreferenceKey = 'finance_pwa_installed_on_device_v1';
     let financeDeferredInstallPrompt = null;
     let financeAppWasInstalled = false;
+    // Android WebView does not expose the PWA standalone display mode. The
+    // Android APK appends this identifier to its User-Agent in MainActivity.
+    function financeRunsInInstalledShell() {
+        const apk = /HouseholdFinanceAndroid\//i.test(navigator.userAgent || '');
+        let pwa = false;
+        try {
+            pwa = !!(window.matchMedia?.('(display-mode: standalone)').matches ||
+                window.matchMedia?.('(display-mode: fullscreen)').matches ||
+                navigator.standalone === true);
+        } catch (_) {}
+        return apk || pwa;
+    }
+    function financePreviouslyInstalled() {
+        try { return localStorage.getItem(financeInstallPreferenceKey) === '1'; }
+        catch (_) { return false; }
+    }
+    function financeRememberInstall() {
+        try { localStorage.setItem(financeInstallPreferenceKey, '1'); }
+        catch (_) {}
+    }
     function financeIsStandalone() {
-        try { return financeAppWasInstalled || window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true; }
-        catch (_) { return financeAppWasInstalled; }
+        return financeRunsInInstalledShell() || financeAppWasInstalled || financePreviouslyInstalled();
     }
     function financeInstallInstructions() {
         const ua = navigator.userAgent || '';
@@ -2468,27 +2522,44 @@
     }
     function updateFinanceInstallUi() {
         const installed = financeIsStandalone();
-        const header = document.getElementById('financeHeaderInstallBtn');
-        const authButton = document.getElementById('financeAuthInstallBtn');
-        const settingsButton = document.getElementById('financeInstallAction');
-        if (header) header.hidden = installed;
-        if (authButton) { authButton.hidden = installed; }
-        if (settingsButton) { settingsButton.disabled = installed; settingsButton.textContent = installed ? '✓ App Already Installed' : '⬇ Install Finance App'; }
-        if (installed) financeInstallStatus('Installed and running as an app on this device.');
-        else if (financeDeferredInstallPrompt) financeInstallStatus('Ready to install. Tap Install Finance App to open your browser’s install prompt.');
+        // Hide ALL in-page installation promotions, not just the header icon.
+        // This covers the login screen, Settings, Chrome PWA, and Android APK.
+        document.documentElement.classList.toggle('finance-app-installed', installed);
+        for (const id of ['financeHeaderInstallBtn', 'financeAuthInstallSection',
+                          'financeAuthInstallBtn', 'financeInstallSettings',
+                          'financeInstallAction', 'financeAndroidApkDownload']) {
+            const element = document.getElementById(id);
+            if (element) element.hidden = installed;
+        }
+        if (installed) return; // Do not show a status message or install notification.
+        if (financeDeferredInstallPrompt)
+            financeInstallStatus('Ready to install. Tap Install Finance App to open your browser’s install prompt.');
         else financeInstallStatus(financeInstallInstructions());
     }
     window.addEventListener('beforeinstallprompt', event => {
-        // Preserve Chrome’s own install indicator; the custom button is an alternative.
+        // Browser availability means the app may have been uninstalled. Let the
+        // browser show install options again instead of retaining a stale flag.
+        if (!financeRunsInInstalledShell()) {
+            financeAppWasInstalled = false;
+            try { localStorage.removeItem(financeInstallPreferenceKey); } catch (_) {}
+        }
         financeDeferredInstallPrompt = event;
         updateFinanceInstallUi();
     });
     window.addEventListener('appinstalled', () => {
         financeDeferredInstallPrompt = null;
         financeAppWasInstalled = true;
+        financeRememberInstall();
         updateFinanceInstallUi();
     });
-    window.addEventListener('pageshow', () => updateFinanceInstallUi());
+    window.addEventListener('pageshow', updateFinanceInstallUi);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) updateFinanceInstallUi();
+    });
+    for (const mode of ['(display-mode: standalone)', '(display-mode: fullscreen)']) {
+        try { window.matchMedia(mode).addEventListener('change', updateFinanceInstallUi); }
+        catch (_) {}
+    }
     async function installFinanceApp() {
         if (financeIsStandalone()) { updateFinanceInstallUi(); return; }
         if (financeDeferredInstallPrompt) {
@@ -3517,7 +3588,7 @@
         document.getElementById('financeGuideConfirmBtn').focus();
     }
 
-    const financeLatestUpdateId='2026-10-22-expenses-android-01';
+    const financeLatestUpdateId='2026-10-22-installed-app-hide-prompts-02';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
