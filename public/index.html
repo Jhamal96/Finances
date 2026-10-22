@@ -1135,6 +1135,52 @@
     }
     @media(prefers-reduced-motion:reduce){.finance-guide-overlay{scroll-behavior:auto}}
 
+
+    /* Monthly spending: His, Hers and inclusive Combined (joint expenses counted once). */
+    .expense-page{max-width:1200px;margin:0 auto}
+    .expense-intro{font-size:.89rem;color:var(--text-muted);line-height:1.55;margin:0 0 18px}
+    .expense-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+    .expense-toolbar label{font-size:.85rem;font-weight:750}
+    .expense-toolbar input,.expense-toolbar select,
+    .expense-form input,.expense-form select,.expense-form textarea{
+       padding:10px 12px;min-height:42px;border-radius:11px;border:1px solid var(--card-border);
+       background:var(--card-bg);color:var(--text-main);max-width:100%}
+    .expense-toolbar .btn-secondary{width:auto}
+    .expense-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:17px}
+    .expense-stat{border:1px solid var(--card-border);border-radius:15px;padding:16px;text-align:left;cursor:pointer;
+      background:var(--card-bg);color:var(--text-main);min-height:115px;display:flex;flex-direction:column;gap:8px}
+    .expense-stat span{font-weight:750;font-size:.9rem}
+    .expense-stat strong{font-size:clamp(1.15rem,2vw,1.65rem);font-variant-numeric:tabular-nums}
+    .expense-stat small{color:var(--text-muted);font-size:.74rem}
+    .expense-stat.active{border-color:#38bdf8;background:linear-gradient(130deg,rgba(14,165,233,.15),rgba(99,102,241,.08));
+      box-shadow:inset 0 0 0 1px rgba(56,189,248,.4),0 0 16px rgba(56,189,248,.11)}
+    .expense-panel{padding:17px;border:1px solid var(--card-border);background:var(--card-bg);border-radius:15px;margin-bottom:16px}
+    .expense-panel h3{margin:0 0 6px}
+    .expense-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .expense-field{display:flex;flex-direction:column;gap:6px}
+    .expense-field label{font-size:.82rem;color:var(--text-muted);font-weight:700}
+    .expense-field input,.expense-field select,.expense-field textarea{width:100%}
+    .expense-form .expense-full{grid-column:1/-1}
+    .expense-form-actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
+    .expense-form-actions button{width:auto;min-height:42px}
+    .expense-row{display:flex;gap:12px;justify-content:space-between;align-items:center;border-bottom:1px solid var(--card-border);padding:13px 0}
+    .expense-row:last-child{border-bottom:0}
+    .expense-row-title{font-weight:760;overflow-wrap:anywhere}
+    .expense-row-note{font-size:.78rem;color:var(--text-muted);margin:4px 0 0;overflow-wrap:anywhere}
+    .expense-row-amount{font-size:1.02rem;font-weight:800;font-variant-numeric:tabular-nums}
+    .expense-row-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+    .expense-row-actions{display:flex;gap:6px}
+    .expense-row-actions button{min-height:33px;padding:6px 10px;font-size:.78rem;width:auto}
+    .expense-split{display:inline-block;margin-left:5px;padding:2px 7px;border:1px solid var(--card-border);border-radius:7px;font-size:.69rem;white-space:nowrap}
+    .expense-cats{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+    .expense-cat-row{display:grid;grid-template-columns:minmax(80px,1fr) 2fr auto;align-items:center;gap:10px;font-size:.83rem}
+    .expense-cat-track{height:9px;background:rgba(148,163,184,.17);border-radius:12px;overflow:hidden}
+    .expense-cat-fill{height:100%;background:linear-gradient(90deg,#0ea5e9,#6366f1);border-radius:12px}
+    .expense-empty{padding:25px 12px;text-align:center;color:var(--text-muted);font-size:.88rem}
+    @media(max-width:750px){.expense-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:480px){.expense-stats{gap:7px}.expense-stat{padding:11px;min-height:112px}.expense-stat span{font-size:.75rem}
+       .expense-stat strong{font-size:1.1rem}.expense-form{grid-template-columns:1fr}
+       .expense-cat-row{grid-template-columns:minmax(70px,1fr) 1fr auto}}
     </style>
 </head>
 <body>
@@ -1202,6 +1248,7 @@
         <div class="drawer-nav-row"><button class="drawer-link" id="navPaymentPlan" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button><button class="drawer-tab-open" onclick="openFinanceTab('paymentPlan')" title="Open Payment Plans in a new tab" aria-label="Open Payment Plans in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPayFour" onclick="switchMainPage('payFour')">🛍️ Pay in 4 Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('payFour')" title="Open Pay in 4 in a new tab" aria-label="Open Pay in 4 in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button><button class="drawer-tab-open" onclick="openFinanceTab('purchasePlan')" title="Open Purchase Plan in a new tab" aria-label="Open Purchase Plan in a new tab">↗</button></div>
+        <div class="drawer-nav-row"><button class="drawer-link" id="navExpenses" onclick="switchMainPage('expenses')">🧾 Monthly Expense Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('expenses')" title="Open Monthly Expenses in a new tab" aria-label="Open Monthly Expenses in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navProfiles" onclick="switchMainPage('profiles')">👤 Profiles</button><button class="drawer-tab-open" onclick="openFinanceTab('profiles')" title="Open Profiles in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navSettings" onclick="switchMainPage('settings')">⚙️ Settings <span class="sync-attention-dot" id="settingsNavWarning" hidden aria-label="Cloud sync needs attention"></span></button><button class="drawer-tab-open" onclick="openFinanceTab('settings')" title="Open Settings in a new tab" aria-label="Open Settings in a new tab">↗</button></div>
     </div>
@@ -1283,6 +1330,45 @@
     </div>
 
 
+
+<!-- Each release is announced once per account/browser until acknowledged. -->
+<div id="financeReleaseUpdates" class="finance-guide-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="financeReleaseTitle" aria-describedby="financeReleaseIntro" hidden>
+  <div class="finance-guide-panel" style="max-width:630px">
+    <div class="finance-guide-top">
+      <span class="finance-guide-kicker">New Update · October 22, 2026</span>
+      <h2 id="financeReleaseTitle">🎉 What's New in Household Finance</h2>
+      <p id="financeReleaseIntro">New tools are available to help your household understand where money goes each month.</p>
+    </div>
+    <div class="finance-guide-scroll">
+      <div class="finance-guide-grid">
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🧾</span><div>
+          <h3>Monthly Expense Tracker</h3>
+          <p>Track His, Hers, and Combined Spending. Add joint purchases under Together so they count just once toward the combined total.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🛒</span><div>
+          <h3>Spending Categories</h3>
+          <p>Organize groceries, shopping, dining, gas, bills and more. Filter by month, edit purchases, compare categories and export CSV.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🔔</span><div>
+          <h3>Recent Updates</h3>
+          <p>New release announcements now appear once. Visit Settings → Recent Updates to review changes later.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🤖</span><div>
+          <h3>Android APK Project</h3>
+          <p>The Android app source and APK build workflow are available in your GitHub repository.</p>
+        </div></article>
+      </div>
+      <p class="finance-guide-privacy">All registered and email-confirmed Finance accounts share and edit the same household finances, including the new expense tracker.</p>
+    </div>
+    <div class="finance-guide-footer">
+      <span style="color:var(--text-muted);font-size:.84rem">Acknowledging keeps this release popup hidden when you reopen or refresh the app.</span>
+      <button type="button" class="finance-guide-done" id="financeReleaseOkay"
+              onclick="financeAcknowledgeUpdate()">OK, Got It</button>
+    </div>
+  </div>
+</div>
+
 <!-- First-login/home walkthrough. Popup state is per signed-in account and device. -->
 <div class="finance-guide-overlay" id="financeFeatureGuide" role="dialog" aria-modal="true"
      aria-labelledby="financeGuideTitle" aria-describedby="financeGuideIntro" hidden>
@@ -1301,6 +1387,10 @@
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">👤</span><div>
           <h3>Finance Profiles · Menu → Profiles</h3>
           <p>Create, rename, and switch profiles such as Personal or Business. Each profile has its own four trackers, and everyone in the household can use them.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🧾</span><div>
+          <h3>Monthly Expense Tracker</h3>
+          <p>Record His, Hers and Together spending by month and category. Combined shows all purchases without double counting joint spending.</p>
         </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💰</span><div>
           <h3>Money Allocation</h3>
@@ -1382,9 +1472,85 @@
       </div>
       <p class="finance-profile-help">All profiles belong to the shared household. Every registered Finance email can view and edit them. Switching profiles never deletes records.</p>
     </section>
+
+    <!-- HOUSEHOLD-WIDE MONTHLY EXPENSE TRACKER: distinct His/Hers/Together entries. -->
+    <section id="mainExpensesView" class="expense-page" style="display:none" aria-labelledby="expensePageTitle">
+      <h2 id="expensePageTitle">🧾 Monthly Expense Tracker</h2>
+      <p class="expense-intro">Track individual purchases and money spent together. <strong>Combined Spending = His + Hers + Together</strong>, with no double counting. All registered household accounts can view and update the same expense ledger.</p>
+      <div class="expense-toolbar">
+        <label for="expenseMonth">Month</label>
+        <input type="month" id="expenseMonth" onchange="financeRenderExpenses()">
+        <label for="expenseCategoryFilter">Category</label>
+        <select id="expenseCategoryFilter" onchange="financeRenderExpenses()"><option value="">All categories</option></select>
+        <button class="btn-secondary" type="button" onclick="financeExportExpensesCsv()">↓ Export Month CSV</button>
+      </div>
+      <div class="expense-stats" aria-label="Select spending view">
+        <button class="expense-stat active" id="expenseHisStat" type="button" onclick="financeSetExpenseView('his')" aria-pressed="true">
+          <span>👤 His Spending</span><strong id="expenseHisTotal">$0.00</strong><small>Personal expenses</small></button>
+        <button class="expense-stat" id="expenseHerStat" type="button" onclick="financeSetExpenseView('her')" aria-pressed="false">
+          <span>👩 Her Spending</span><strong id="expenseHerTotal">$0.00</strong><small>Personal expenses</small></button>
+        <button class="expense-stat" id="expenseCombinedStat" type="button" onclick="financeSetExpenseView('combined')" aria-pressed="false">
+          <span>👥 Combined Spending</span><strong id="expenseCombinedTotal">$0.00</strong><small id="expenseTogetherSubtotal">Includes $0.00 together</small></button>
+      </div>
+      <div class="expense-panel">
+        <h3 id="expenseFormTitle">Add Monthly Expense</h3>
+        <p class="expense-intro" style="margin-bottom:13px">Choose <strong>Together</strong> for purchases made jointly. They are included once in Combined Spending and not added to either personal total.</p>
+        <form id="expenseForm" class="expense-form" onsubmit="financeSaveExpense(event)">
+          <input id="expenseEditId" type="hidden">
+          <div class="expense-field"><label for="expenseDescription">What was purchased? *</label>
+            <input id="expenseDescription" type="text" placeholder="e.g. Weekly groceries" maxlength="130" required></div>
+          <div class="expense-field"><label for="expenseAmount">Amount ($) *</label>
+            <input id="expenseAmount" type="number" min="0.01" max="9999999" step="0.01" placeholder="0.00" required></div>
+          <div class="expense-field"><label for="expenseDate">Purchase date *</label>
+            <input id="expenseDate" type="date" required></div>
+          <div class="expense-field"><label for="expenseOwner">Who spent it? *</label>
+            <select id="expenseOwner" required>
+              <option value="his">His</option><option value="her">Hers</option><option value="together">Together (Joint)</option>
+            </select></div>
+          <div class="expense-field"><label for="expenseCategory">Category *</label>
+            <select id="expenseCategory" onchange="financeToggleCustomExpenseCategory()" required></select></div>
+          <div class="expense-field" id="expenseCustomCategoryWrap" hidden><label for="expenseCustomCategory">Custom category *</label>
+            <input id="expenseCustomCategory" maxlength="45" placeholder="e.g. School expenses"></div>
+          <div class="expense-field expense-full"><label for="expenseNote">Optional note</label>
+            <textarea id="expenseNote" rows="2" maxlength="400" placeholder="Store, receipt details or what the expense was for"></textarea></div>
+          <div class="expense-form-actions">
+            <button class="btn-add" type="submit" id="expenseSubmit">+ Save Expense</button>
+            <button class="btn-secondary" type="button" onclick="financeResetExpenseForm()">Clear / Cancel</button>
+          </div>
+        </form>
+      </div>
+      <div class="expense-panel">
+        <h3 id="expenseListTitle">His Expenses</h3>
+        <p class="expense-intro" id="expenseListSubheading">Monthly purchase details</p>
+        <div id="expenseEntries" aria-live="polite"></div>
+      </div>
+      <div class="expense-panel">
+        <h3>Spending by Category</h3>
+        <p class="expense-intro">Totals for the selected month and spending view.</p>
+        <div id="expenseCategorySummary" class="expense-cats"></div>
+      </div>
+    </section>
     <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
     <section id="mainSettingsView" class="finance-settings-view" style="display:none;" aria-labelledby="settingsPageTitle">
 
+
+        <div class="settings-card" id="financeRecentUpdatesSettings">
+          <div class="settings-card-heading">
+            <h3>📣 Recent Updates</h3>
+            <p>Release notes for the Finance Dashboard. Each new update appears automatically only until you acknowledge it.</p>
+          </div>
+          <div class="settings-button-row">
+            <button type="button" class="btn-secondary" onclick="financeOpenReleaseUpdates(true)">✨ View Latest Update</button>
+          </div>
+          <div style="display:grid;gap:11px;margin-top:12px">
+            <details open><summary><strong>October 22, 2026 — Monthly Expense Tracker &amp; Android</strong></summary>
+              <p class="settings-muted-note">Added His Spending, Hers Spending and Combined Spending, including Together expenses. Includes editable purchases, categories, monthly filtering, category totals and CSV download. Added one-time release announcements and Android APK build project.</p></details>
+            <details><summary><strong>October 20, 2026 — Feature Guide</strong></summary>
+              <p class="settings-muted-note">Added the home-screen feature walkthrough with its Don't show again setting, plus reopening the guide from Settings.</p></details>
+            <details><summary><strong>October 20, 2026 — Shared Household Cloud</strong></summary>
+              <p class="settings-muted-note">Registered and confirmed email accounts now share one household finance document. Updated cloud refresh, conflict checks and safe backups.</p></details>
+          </div>
+        </div>
         <div class="settings-card" id="financeFeatureGuideSettings">
           <div class="settings-card-heading">
             <h3>✨ Feature Guide &amp; What's New</h3>
@@ -2417,7 +2583,7 @@
     const FINANCE_TAB_DASHBOARD_KEY = 'finance_tab_dashboard_v1';
     const FINANCE_TAB_ALLOC_KEY = 'finance_tab_alloc_v1';
     const FINANCE_TAB_MONTH_KEY = 'finance_tab_month_v1';
-    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','profiles','settings'];
+    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','profiles','settings'];
     const financeSourceId = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : String(Math.random());
     const financeBaseSnapshots = new WeakMap();
     const financeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('household_finance_master_v12') : null;
@@ -2757,7 +2923,7 @@
     }
     function hasFinancialRecords(d) {
         if (!d || typeof d !== 'object') return false;
-        if (['esso','paymentPlans','payFourPlans','purchasePlans'].some(k => Array.isArray(d[k]) && d[k].length)) return true;
+        if (['esso','paymentPlans','payFourPlans','purchasePlans','monthlyExpenses'].some(k => Array.isArray(d[k]) && d[k].length)) return true;
         if(d.financeProfiles && Object.values(d.financeProfiles).some(p=>p&&((p.allocations?.his?.length||0)+(p.allocations?.her?.length||0)+(p.paymentPlans?.length||0)+(p.payFourPlans?.length||0)+(p.purchasePlans?.length||0)>0)))return true;
         if (d.allocations && ['his','her'].some(k => (d.allocations[k] || []).length)) return true;
         return Object.values(d.months || {}).some(m => m && ['his','her','hisPay','herPay'].some(k => (m[k] || []).length));
@@ -2766,7 +2932,7 @@
     let financeMostRecentCloudInfo=null;
     let financeManualRefreshBusy=false;
     function financeDescribeCloud(doc){
-        if(!doc || typeof doc!=='object')return {profiles:[],total:0,monthKeys:[],firstUseful:null};
+        if(!doc || typeof doc!=='object')return {profiles:[],total:0,monthKeys:[],firstUseful:null,expenseCount:0};
         const p=doc.financeProfiles && typeof doc.financeProfiles==='object' && !Array.isArray(doc.financeProfiles)
           ? doc.financeProfiles:{default:{name:'Default',allocations:doc.allocations,paymentPlans:doc.paymentPlans,
               payFourPlans:doc.payFourPlans,purchasePlans:doc.purchasePlans}};
@@ -2785,7 +2951,7 @@
             m && ['his','her','hisPay','herPay'].some(field=>Array.isArray(m[field])&&m[field].length));
         const monthKeys=months.map(x=>x[0]).sort();
         const firstUseful=items.filter(x=>x.total>0).sort((a,b)=>b.total-a.total)[0]||null;
-        return {profiles:items,total:items.reduce((n,x)=>n+x.total,0),
+        return {profiles:items,total:items.reduce((n,x)=>n+x.total,0),expenseCount:Array.isArray(doc.monthlyExpenses)?doc.monthlyExpenses.length:0,
             monthKeys,firstUseful};
     }
     function financeSyncNotice(title,detail='',kind='info'){
@@ -3093,6 +3259,7 @@
                         'Signed in as: '+(financeAuthUser?.email||'unknown')+
                         ' · Profiles: '+profileText+
                         ' · Populated months: '+summary.monthKeys.length+
+                        ' · Expenses: '+summary.expenseCount+
                         ' · Last cloud save: '+when+'.','success');
                 }
             }
@@ -3330,7 +3497,58 @@
         modal.hidden=false;
         document.getElementById('financeGuideConfirmBtn').focus();
     }
+
+    const financeLatestUpdateId='2026-10-22-expenses-android-01';
+    let financeReleasePreviousFocus=null;
+    const financeUpdateSeenKey=()=>financeAuthUser
+        ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
+    function financeHasUnreadUpdate(){
+        const key=financeUpdateSeenKey();
+        return !!(key&&localStorage.getItem(key)!==financeLatestUpdateId);
+    }
+    function financeOpenReleaseUpdates(force=false){
+        if(!financeAuthUser||!document.body.classList.contains('finance-authenticated'))return;
+        if(!force&&!financeHasUnreadUpdate())return;
+        const modal=document.getElementById('financeReleaseUpdates');
+        if(!modal || !modal.hidden)return;
+        const welcome=document.getElementById('financeFeatureGuide');
+        if(welcome&&!welcome.hidden)return;
+        financeReleasePreviousFocus=document.activeElement;
+        modal.hidden=false;
+        document.getElementById('financeReleaseOkay')?.focus();
+    }
+    function financeMaybeShowUpdates(){
+        if(!financeHasUnreadUpdate())return;
+        if(document.getElementById('mainDashboardView')?.style.display!=='block')return;
+        financeOpenReleaseUpdates(false);
+    }
+    function financeAcknowledgeUpdate(){
+        const modal=document.getElementById('financeReleaseUpdates');
+        if(!modal || modal.hidden)return;
+        const key=financeUpdateSeenKey();
+        if(key){
+            try{localStorage.setItem(key,financeLatestUpdateId);}
+            catch(err){console.warn('Update acknowledgement not saved by browser',err);}
+        }
+        modal.hidden=true;
+        const prior=financeReleasePreviousFocus;
+        financeReleasePreviousFocus=null;
+        if(prior?.isConnected&&typeof prior.focus==='function')prior.focus();
+    }
+    document.addEventListener('keydown',event=>{
+        const modal=document.getElementById('financeReleaseUpdates');
+        if(!modal||modal.hidden)return;
+        if(event.key==='Escape'){event.preventDefault();financeAcknowledgeUpdate();return;}
+        if(event.key!=='Tab')return;
+        const controls=Array.from(modal.querySelectorAll('button:not([disabled]),input:not([disabled])'));
+        if(!controls.length)return;
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    });
+
     function financeMaybeShowFeatureGuide(){
+        if(financeHasUnreadUpdate()){financeMaybeShowUpdates();return;}
         if(financeGuideShownThisLogin||!financeAuthUser)return;
         if(!document.body.classList.contains('finance-authenticated'))return;
         const dashboard=document.getElementById('mainDashboardView');
@@ -3380,9 +3598,11 @@
         const payFourView = document.getElementById('mainPayFourView');
         const settingsView = document.getElementById('mainSettingsView');
         const profilesView = document.getElementById('mainProfilesView');
+        const expenseView = document.getElementById('mainExpensesView');
         const navPayFour = document.getElementById('navPayFour');
         const navSettings = document.getElementById('navSettings');
         const navProfiles = document.getElementById('navProfiles');
+        const navExpenses = document.getElementById('navExpenses');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navAllocation = document.getElementById('navAllocation');
@@ -3399,6 +3619,7 @@
         payFourView.style.display = 'none';
         settingsView.style.display = 'none';
         profilesView.style.display = 'none';
+        expenseView.style.display = 'none';
         
         navDashboard.classList.remove('active');
         navAllocation.classList.remove('active');
@@ -3408,6 +3629,7 @@
         navPayFour.classList.remove('active');
         navSettings.classList.remove('active');
         navProfiles.classList.remove('active');
+        navExpenses.classList.remove('active');
 
         if (view === 'allocation') {
             allocationView.style.display = 'block';
@@ -3429,6 +3651,13 @@
             headerTitle.textContent = 'Pay in 4 Tracker';
             navPayFour.classList.add('active');
             monthCalendarBtn.style.display = 'none';
+        } else if (view === 'expenses') {
+            expenseView.style.display = 'block';
+            headerTitle.textContent = 'Monthly Expenses';
+            navExpenses.classList.add('active');
+            monthCalendarBtn.style.display = 'none';
+            financeEnsureExpenseMonth();
+            financeRenderExpenses();
         } else if (view === 'profiles') {
             profilesView.style.display = 'block';
             headerTitle.textContent = 'Profiles';
@@ -5020,14 +5249,248 @@
         }).join(''):'<p style="color:var(--text-muted)">No matching Pay in 4 plans yet. Add your first one above.</p>';
     }
 
+
+    // Household-wide expense ledger: each purchase has one unique id and one owner.
+    // Together expenses are included in Combined, never counted in His or Hers.
+    const financeExpenseCategories=['Shopping','Groceries','Eating Out','Dinner','Coffee & Snacks',
+        'Gas','Transportation','Bills & Utilities','Rent & Housing','Subscriptions','Entertainment',
+        'Travel','Healthcare','Childcare','Education','Home & Household','Clothing','Gifts',
+        'Personal Care','Car Maintenance','Insurance','Other'];
+    let financeExpenseView='his';
+    function financeExpenseMoney(cents){
+        return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format((Number(cents)||0)/100);
+    }
+    function financeExpenseToday(){
+        const d=new Date();
+        return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    function financeExpenseMonthKey(){
+        const el=document.getElementById('expenseMonth');
+        return el?.value || (document.getElementById('monthPicker')?.value||new Date().toISOString().slice(0,7));
+    }
+    function financeEnsureExpenseMonth(){
+        const el=document.getElementById('expenseMonth');
+        if(el&&!el.value)el.value=document.getElementById('monthPicker')?.value||new Date().toISOString().slice(0,7);
+        const cat=document.getElementById('expenseCategory');
+        if(cat && cat.options.length===0){
+            for(const name of financeExpenseCategories)cat.add(new Option(name,name));
+            cat.add(new Option('Custom category…','__custom__'));
+        }
+        const filter=document.getElementById('expenseCategoryFilter');
+        if(filter&&filter.options.length===1){
+            for(const name of financeExpenseCategories)filter.add(new Option(name,name));
+        }
+        if(!document.getElementById('expenseDate').value){
+            const current=financeExpenseToday();
+            const month=financeExpenseMonthKey();
+            document.getElementById('expenseDate').value=current.startsWith(month)?current:month+'-01';
+        }
+    }
+    function financeToggleCustomExpenseCategory(){
+        const active=document.getElementById('expenseCategory')?.value==='__custom__';
+        const wrap=document.getElementById('expenseCustomCategoryWrap');
+        if(wrap)wrap.hidden=!active;
+        const field=document.getElementById('expenseCustomCategory');
+        if(field)field.required=active;
+    }
+    function financeSetExpenseView(view){
+        if(!['his','her','combined'].includes(view))return;
+        financeExpenseView=view;
+        const choice=document.getElementById('expenseOwner');
+        if(choice&&!document.getElementById('expenseEditId').value)
+            choice.value=view==='combined'?'together':view;
+        financeRenderExpenses();
+    }
+    function financeExpenseItems(data){
+        return Array.isArray(data?.monthlyExpenses)?data.monthlyExpenses:[];
+    }
+    function financeRenderExpenses(data){
+        const section=document.getElementById('mainExpensesView');
+        if(!section || section.style.display!=='block')return;
+        financeEnsureExpenseMonth();
+        const state=data||getPrivateAccountData();
+        const month=financeExpenseMonthKey();
+        const all=financeExpenseItems(state).filter(x=>x && typeof x.date==='string' && x.date.slice(0,7)===month);
+        const amountFor=owner=>all.filter(x=>x.owner===owner).reduce((sum,x)=>sum+Number(x.amountCents||0),0);
+        const his=amountFor('his'),her=amountFor('her'),together=amountFor('together');
+        const combined=his+her+together;
+        for(const [id,n] of [['expenseHisTotal',his],['expenseHerTotal',her],['expenseCombinedTotal',combined]]){
+            document.getElementById(id).textContent=financeExpenseMoney(n);
+        }
+        document.getElementById('expenseTogetherSubtotal').textContent='Includes '+financeExpenseMoney(together)+' together';
+        for(const [value,id] of [['his','expenseHisStat'],['her','expenseHerStat'],['combined','expenseCombinedStat']]){
+            const card=document.getElementById(id);
+            const active=value===financeExpenseView;
+            card.classList.toggle('active',active);card.setAttribute('aria-pressed',String(active));
+        }
+        const title=financeExpenseView==='his'?'His Expenses':financeExpenseView==='her'?'Her Expenses':'Combined Spending';
+        document.getElementById('expenseListTitle').textContent=title;
+        const category=document.getElementById('expenseCategoryFilter').value;
+        const filtered=all.filter(x=>(financeExpenseView==='combined'||x.owner===financeExpenseView) &&
+            (!category||x.category===category))
+            .sort((a,b)=>String(b.date).localeCompare(String(a.date))||
+                String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+        document.getElementById('expenseListSubheading').textContent=filtered.length+
+            ' expense'+(filtered.length===1?'':'s')+' · '+new Date(month+'-01T12:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'});
+        const rows=document.getElementById('expenseEntries');
+        rows.replaceChildren();
+        if(!filtered.length){
+            const empty=document.createElement('p');
+            empty.className='expense-empty';empty.textContent='No expenses for this month and selection. Add one above.';
+            rows.append(empty);
+        }
+        for(const item of filtered){
+            const row=document.createElement('div');row.className='expense-row';
+            const left=document.createElement('div');left.style.minWidth='0';
+            const name=document.createElement('div');name.className='expense-row-title';
+            name.textContent=String(item.description||'Expense');
+            const who=document.createElement('span');who.className='expense-split';
+            who.textContent=item.owner==='his'?'His':item.owner==='her'?'Hers':'Together';
+            name.append(who);
+            const detail=document.createElement('p');detail.className='expense-row-note';
+            detail.textContent=[item.date,item.category,item.note].filter(Boolean).join(' · ');
+            left.append(name,detail);
+            const right=document.createElement('div');right.className='expense-row-right';
+            const amount=document.createElement('strong');amount.className='expense-row-amount';
+            amount.textContent=financeExpenseMoney(item.amountCents);
+            const buttons=document.createElement('div');buttons.className='expense-row-actions';
+            const edit=document.createElement('button');edit.className='btn-secondary';edit.type='button';
+            edit.textContent='Edit';edit.onclick=()=>financeEditExpense(item.id);
+            const remove=document.createElement('button');remove.className='btn-secondary';remove.type='button';
+            remove.textContent='Delete';remove.onclick=()=>financeDeleteExpense(item.id);
+            buttons.append(edit,remove);right.append(amount,buttons);row.append(left,right);rows.append(row);
+        }
+        const totals=new Map();
+        const categoryItems=all.filter(x=>(financeExpenseView==='combined'||x.owner===financeExpenseView)
+            &&(!category||x.category===category));
+        for(const e of categoryItems){
+            const key=String(e.category||'Other');
+            totals.set(key,(totals.get(key)||0)+Number(e.amountCents||0));
+        }
+        const cats=document.getElementById('expenseCategorySummary');cats.replaceChildren();
+        const sorted=Array.from(totals.entries()).sort((a,b)=>b[1]-a[1]);
+        if(!sorted.length){const empty=document.createElement('p');empty.className='expense-empty';empty.textContent='No category spending to show.';cats.append(empty);}
+        const max=Math.max(1,...sorted.map(x=>x[1]));
+        for(const [key,cents] of sorted){
+            const line=document.createElement('div');line.className='expense-cat-row';
+            const lbl=document.createElement('span');lbl.textContent=key;
+            const bar=document.createElement('div');bar.className='expense-cat-track';
+            const fill=document.createElement('div');fill.className='expense-cat-fill';
+            fill.style.width=(100*cents/max).toFixed(2)+'%';bar.append(fill);
+            const val=document.createElement('strong');val.textContent=financeExpenseMoney(cents);
+            line.append(lbl,bar,val);cats.append(line);
+        }
+        const filter=document.getElementById('expenseCategoryFilter');
+        for(const e of all){
+            if(e.category && !Array.from(filter.options).some(o=>o.value===e.category))
+                filter.add(new Option(e.category,e.category));
+        }
+    }
+    function financeResetExpenseForm(){
+        const form=document.getElementById('expenseForm');
+        form?.reset();
+        document.getElementById('expenseEditId').value='';
+        document.getElementById('expenseFormTitle').textContent='Add Monthly Expense';
+        document.getElementById('expenseSubmit').textContent='+ Save Expense';
+        const month=financeExpenseMonthKey();
+        const now=financeExpenseToday();
+        document.getElementById('expenseDate').value=now.startsWith(month)?now:month+'-01';
+        document.getElementById('expenseOwner').value=financeExpenseView==='combined'?'together':financeExpenseView;
+        financeToggleCustomExpenseCategory();
+    }
+    async function financeSaveExpense(event){
+        event.preventDefault();
+        if(!financeAuthUser)return;
+        const date=document.getElementById('expenseDate').value;
+        const month=financeExpenseMonthKey();
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date.slice(0,7)!==month){
+            alert('Choose a date inside the selected expense month.');return;
+        }
+        const amount=Number(document.getElementById('expenseAmount').value);
+        if(!Number.isFinite(amount)||amount<=0||amount>9999999){alert('Enter a valid positive amount.');return;}
+        const amountCents=Math.round(amount*100);
+        if(!Number.isSafeInteger(amountCents)||amountCents<1)return;
+        const description=document.getElementById('expenseDescription').value.trim();
+        if(!description){alert('Enter what was purchased.');return;}
+        let category=document.getElementById('expenseCategory').value;
+        if(category==='__custom__')category=document.getElementById('expenseCustomCategory').value.trim();
+        if(!category||category.length>45){alert('Choose a valid spending category.');return;}
+        const owner=document.getElementById('expenseOwner').value;
+        if(!['his','her','together'].includes(owner))return;
+        const editId=document.getElementById('expenseEditId').value;
+        const data=getPrivateAccountData();
+        if(!Array.isArray(data.monthlyExpenses))data.monthlyExpenses=[];
+        const existing=editId?data.monthlyExpenses.find(x=>x.id===editId):null;
+        if(editId&&!existing){alert('That expense was changed on another device. Refresh and try again.');return;}
+        const entry={
+            id:editId||('expense_'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'_'+Math.random().toString(36).slice(2))),
+            date,owner,description:description.slice(0,130),category,
+            amountCents,note:document.getElementById('expenseNote').value.trim().slice(0,400),
+            createdAt:existing?.createdAt||new Date().toISOString(),
+            updatedAt:new Date().toISOString()
+        };
+        if(existing)Object.assign(existing,entry);
+        else data.monthlyExpenses.push(entry);
+        const button=document.getElementById('expenseSubmit');button.disabled=true;
+        try{
+            const synced=await saveData(data,true);
+            financeResetExpenseForm();
+            financeRenderExpenses();
+            if(!synced)warnSync('Expense saved on this device but cloud sync needs attention. Open Settings → Cloud Sync.');
+        }finally{button.disabled=false;}
+    }
+    function financeEditExpense(id){
+        const entry=financeExpenseItems(getPrivateAccountData()).find(x=>x.id===id);
+        if(!entry)return;
+        document.getElementById('expenseEditId').value=entry.id;
+        document.getElementById('expenseDescription').value=entry.description||'';
+        document.getElementById('expenseAmount').value=(Number(entry.amountCents||0)/100).toFixed(2);
+        document.getElementById('expenseDate').value=entry.date;
+        document.getElementById('expenseOwner').value=entry.owner;
+        document.getElementById('expenseNote').value=entry.note||'';
+        const select=document.getElementById('expenseCategory');
+        const option=Array.from(select.options).find(o=>o.value===entry.category);
+        select.value=option?entry.category:'__custom__';
+        document.getElementById('expenseCustomCategory').value=option?'':entry.category||'';
+        financeToggleCustomExpenseCategory();
+        document.getElementById('expenseFormTitle').textContent='Edit Expense';
+        document.getElementById('expenseSubmit').textContent='✓ Save Changes';
+        document.getElementById('expenseForm').scrollIntoView({behavior:'smooth',block:'center'});
+        document.getElementById('expenseDescription').focus();
+    }
+    async function financeDeleteExpense(id){
+        if(!confirm('Delete this expense from the shared household?'))return;
+        const d=getPrivateAccountData();
+        d.monthlyExpenses=financeExpenseItems(d).filter(x=>x.id!==id);
+        const result=await saveData(d,true);
+        if(result){financeResetExpenseForm();financeRenderExpenses();}
+        else warnSync('Expense removal is saved locally but could not be confirmed in the cloud.');
+    }
+    function financeExportExpensesCsv(){
+        const month=financeExpenseMonthKey();
+        const items=financeExpenseItems(getPrivateAccountData()).filter(x=>x?.date?.slice(0,7)===month)
+          .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+        const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+        const rows=[['Date','Spending','Category','Description','Amount USD','Notes'],
+            ...items.map(x=>[x.date,x.owner==='together'?'Together':x.owner==='her'?'Hers':'His',
+                x.category,x.description,(Number(x.amountCents)/100).toFixed(2),x.note])];
+        const csv='\ufeff'+rows.map(row=>row.map(esc).join(',')).join('\r\n');
+        const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+        const url=URL.createObjectURL(blob),a=document.createElement('a');
+        a.href=url;a.download='household_expenses_'+month+'.csv';document.body.append(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),2000);
+    }
+
     function render() {
         const data = getStoredData();
         renderFinanceProfiles(data);
+        if(document.getElementById('mainExpensesView')?.style.display==='block')financeRenderExpenses(data);
         const selectedMonth = monthPicker.value;
         const monthEntries=Object.values(data.months||{}).reduce((n,m)=>n+['his','her','hisPay','herPay'].reduce((a,k)=>a+(Array.isArray(m?.[k])?m[k].length:0),0),0);
         const otherEntries=['esso','paymentPlans','payFourPlans','purchasePlans'].reduce((n,k)=>n+(Array.isArray(data[k])?data[k].length:0),0);
         const allocEntries=['his','her'].reduce((n,k)=>n+(data.allocations?.[k]?.length||0),0);
-        document.getElementById('masterDataSummary').textContent=`${monthEntries+otherEntries+allocEntries} saved entries across all pages · ${Object.keys(data.months||{}).length} months · 1 combined JSON backup`;
+        const expenseEntries=Array.isArray(data.monthlyExpenses)?data.monthlyExpenses.length:0;
+        document.getElementById('masterDataSummary').textContent=`${monthEntries+otherEntries+allocEntries+expenseEntries} saved entries across all pages · ${Object.keys(data.months||{}).length} months · 1 combined JSON backup`;
 
         // Render Selected Month text & Today's Date
         if (selectedMonth) {
@@ -5416,6 +5879,9 @@
     function financeExitAccount() {
         const guide=document.getElementById('financeFeatureGuide');
         if(guide)guide.hidden=true;
+        const release=document.getElementById('financeReleaseUpdates');
+        if(release)release.hidden=true;
+        financeReleasePreviousFocus=null;
         financeGuidePreviousFocus=null;
         financeGuideShownThisLogin=false;
         financeAuthEpoch++;
