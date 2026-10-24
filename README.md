@@ -1,6 +1,21 @@
 # Household Finance — GitHub + Cloudflare + Supabase account login
 
-**Live destination:** `https://finances.jhamal16.workers.dev/`  
+## Download Household Finance (Windows, Mac, Android, iOS)
+
+**Dedicated download center:** https://finance.ajdapp.org/download
+
+- Windows 10/11 x64: [Household-Finance-Windows-Setup.exe](https://github.com/Jhamal96/Finances/releases/download/desktop-latest/Household-Finance-Windows-Setup.exe)
+- Mac (Apple Silicon and Intel): [Household-Finance-macOS.dmg](https://github.com/Jhamal96/Finances/releases/download/desktop-latest/Household-Finance-macOS.dmg)
+- Android preview: [Household-Finance-Android.apk](https://github.com/Jhamal96/Finances/releases/download/android-preview/Household-Finance-Android.apk)
+- iPhone/iPad: open https://finance.ajdapp.org/ in Safari, then Share → Add to Home Screen.
+- Inside the finance website: **Settings → Download Household Finance → Download App**.
+
+The Windows and Mac desktop shells open the live authenticated site, not a new budget or database. Apps share online records only after signing in with an authorized Finance account; browser and native app local storage remain separate. Desktop installers are unsigned test builds, and the Android APK is debug signed. Because this GitHub repository is private, release downloads require authorized repository access. Do not distribute private GitHub repository access or Supabase credentials publicly.
+
+**Cloudflare deployment:** GitHub saves the source at `index.html` and deployed asset copy at `public/index.html`. There are no automatic Cloudflare GitHub build triggers configured, so pushing those files does not by itself update the `finances` Worker assets. The download page is available through the dedicated download Worker route. The Settings download link is also provided through a narrow Cloudflare HTML overlay on `finance.ajdapp.org/` and `finance.ajdapp.org/index.html` pending a full static assets deployment. Avoid removing the overlay until the updated `public/index.html` is published, to prevent the button disappearing.
+
+
+**Live custom domain:** `https://finance.ajdapp.org/` (also deployed to `https://finances.jhamal16.workers.dev/`)  
 **Cloudflare Worker:** `finances`  
 **Supabase project:** `vxpufrahrnwmtgltjstd`
 
