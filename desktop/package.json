@@ -1,0 +1,57 @@
+{
+  "name": "household-finance-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Household Finance Dashboard Desktop App",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist:mac": "electron-builder --mac dmg --universal"
+  },
+  "devDependencies": {
+    "electron": "^34.5.8",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "org.ajdapp.householdfinance",
+    "productName": "Household Finance",
+    "asar": true,
+    "files": [
+      "main.cjs"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "icon": "../icon-512.png",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Household-Finance-Windows-Setup.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "artifactName": "Household-Finance-macOS.dmg"
+    }
+  }
+}
