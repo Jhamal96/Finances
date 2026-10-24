@@ -1,0 +1,3 @@
+# Finance username-login is invoked from the public website before a user has a JWT.
+[functions.finance-username-login]
+verify_jwt = false

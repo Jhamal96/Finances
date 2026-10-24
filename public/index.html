@@ -1224,6 +1224,7 @@
     </div>
     <form id="authLoginPanel" class="auth-panel" onsubmit="financeLogin(event)">
       <div><label for="authIdentifier">Username or email address</label><input id="authIdentifier" name="username" autocomplete="username" placeholder="Your username or email" required></div>
+      <p class="settings-muted-note" style="margin:4px 0 10px">If username login is unavailable, enter the email linked to your account with the same password.</p>
       <div><label for="authLoginPassword">Password</label><input id="authLoginPassword" type="password" autocomplete="current-password" placeholder="Your password" required></div>
       <button type="submit" class="btn-add">Log In</button>
       <div class="auth-links"><button type="button" class="auth-link" onclick="showAuthPanel('forgot-password')">Forgot password?</button><button type="button" class="auth-link" onclick="showAuthPanel('forgot-username')">Forgot username?</button></div>
@@ -1364,12 +1365,16 @@
      aria-labelledby="financeReleaseTitle" aria-describedby="financeReleaseIntro" hidden>
   <div class="finance-guide-panel" style="max-width:630px">
     <div class="finance-guide-top">
-      <span class="finance-guide-kicker">New Update · October 22, 2026</span>
+      <span class="finance-guide-kicker">New Update · October 23, 2026</span>
       <h2 id="financeReleaseTitle">🎉 What's New in Household Finance</h2>
-      <p id="financeReleaseIntro">Install prompts are now hidden automatically when you're using Household Finance as an installed app. The expense tracker and recent improvements remain available.</p>
+      <p id="financeReleaseIntro">Username sign-in was updated with more reliable browser communication and clearer errors. You can always sign in using your account email and the same password.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🔐</span><div>
+          <h3>Username Sign-In Improvements</h3>
+          <p>Updated Supabase's sign-in function to handle browser requests reliably, with clearer messages for invalid credentials, connection issues, and temporary server errors.</p>
+        </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📱</span><div>
           <h3>Cleaner Installed App</h3>
           <p>The website now hides its Install icon, installation prompts, and APK download card when opened inside the installed PWA or Android APK. Install options remain in the regular browser.</p>
@@ -1575,7 +1580,9 @@
             <button type="button" class="btn-secondary" onclick="financeOpenReleaseUpdates(true)">✨ View Latest Update</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 22, 2026 — Smart Install Visibility</strong></summary>
+            <details open><summary><strong>October 23, 2026 — Username Sign-In Repair</strong></summary>
+              <p class="settings-muted-note">Updated the Supabase username-login Edge Function (including browser CORS) and added clearer sign-in error messages. Email and password sign-in continues to work as an alternative.</p></details>
+            <details><summary><strong>October 22, 2026 — Smart Install Visibility</strong></summary>
               <p class="settings-muted-note">When Household Finance runs as an installed PWA or Android APK, the in-page Install icon and installation cards no longer appear. The site also remembers successful PWA installation on that browser, and prompts return if the browser offers installation again after an uninstall.</p></details>
             <details><summary><strong>October 22, 2026 — Monthly Expense Tracker &amp; Android</strong></summary>
               <p class="settings-muted-note">Added His Spending, Hers Spending and Combined Spending, including Together expenses. Includes editable purchases, categories, monthly filtering, category totals and CSV download. Added one-time release announcements and Android APK build project.</p></details>
@@ -3588,7 +3595,7 @@
         document.getElementById('financeGuideConfirmBtn').focus();
     }
 
-    const financeLatestUpdateId='2026-10-22-installed-app-hide-prompts-02';
+    const financeLatestUpdateId='2026-10-23-username-signin-fix-03';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -6033,8 +6040,29 @@
             }else{
                 if(!FINANCE_USERNAME_REGEX.test(id))throw new Error('Enter a valid username or email.');
                 const response=await supabaseClient.functions.invoke('finance-username-login',{body:{username:id,password}});
-                if(response.error)throw new Error('Username sign-in failed. Check your credentials, and confirm the username-login Edge Function was deployed.');
-                if(!response.data?.access_token||!response.data?.refresh_token)throw new Error('Username sign-in could not complete.');
+                if(response.error){
+                    // HTTP error bodies are stored in context by supabase-js. Read
+                    // only the sanitized message emitted by our Edge Function.
+                    let reason=response.data?.error;
+                    try{
+                        if(!reason && typeof response.error.context?.clone==='function'){
+                            const body=await response.error.context.clone().json();
+                            reason=body?.error;
+                        }
+                    }catch(_){}
+                    const safeReasons=[
+                        'Invalid username or password.',
+                        'Too many attempts. Try again in 15 minutes.',
+                        'Username sign-in temporarily unavailable. Sign in with your email instead.',
+                        'Request not allowed.'
+                    ];
+                    if(safeReasons.includes(reason))throw new Error(reason);
+                    if(response.error.name==='FunctionsFetchError')
+                        throw new Error('Cannot connect to username sign-in. Check your connection or sign in using your email and password.');
+                    throw new Error('Username sign-in is unavailable. Please use your email address and password, or try again shortly.');
+                }
+                if(!response.data?.access_token||!response.data?.refresh_token)
+                    throw new Error('Username sign-in did not return a valid session. Please try your email address and password.');
                 result=await supabaseClient.auth.setSession({access_token:response.data.access_token,refresh_token:response.data.refresh_token});
             }
             if(result.error)throw result.error;
