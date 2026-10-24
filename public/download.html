@@ -9,7 +9,6 @@
 <link rel="canonical" href="https://finance.ajdapp.org/download">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="manifest" href="/manifest.webmanifest">
 <title>Download Household Finance • AJD Apps</title>
 <style>
 :root{color-scheme:dark;--bg:#090d16;--panel:#131c2e;--line:#2b3a54;--ink:#f8fafc;--muted:#a1acc0;--his:#38bdf8;--hers:#ec4899;--both:#b97dfb}
@@ -28,10 +27,6 @@ h1{font-size:clamp(40px,5.7vw,68px);line-height:1.08;letter-spacing:-.066em;font
 #download{padding-top:20px;scroll-margin-top:20px}.section-title{font-size:31px;letter-spacing:-.04em;margin:0 0 4px}.sub{color:#a9b8ce;margin:0 0 17px}.platforms{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.platform{background:#131f33;border:1px solid #2f3f5a;border-radius:16px;text-align:left;color:#f0f7ff;padding:15px;min-height:107px}.platform:hover{background:#1b2942}.platform[aria-pressed=true]{border-color:#7dd3fc;background:#203451;box-shadow:0 0 0 1px #7dd3fc}.platform .emoji{font-size:25px}.platform strong{display:block;margin-top:3px}.platform small{display:block;color:#a4b3c9;font-size:11px}
 .option{border-radius:18px;border:1px solid #32435e;background:#121e32;padding:24px;margin-top:15px}.option h3{font-size:22px;margin:0 0 6px;letter-spacing:-.035em}.option>p{margin:0;color:#b2c2d7}.option .buttons{margin-top:17px}.note{color:#acbed6;font-size:13px;margin-top:18px}.note a{color:#9bd9fd}.privacy{display:flex;gap:14px;align-items:flex-start;border:1px solid #305671;border-radius:16px;background:#122838;padding:17px 19px;margin-top:18px}.privacy span{font-size:26px}.privacy b{display:block}.privacy p{margin:2px 0 0;color:#aec2da;font-size:13px}
 .features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:28px 0 56px}.feature{padding:20px;border:1px solid #2d3d56;border-radius:16px;background:#141e31}.feature>span{font-size:25px}.feature h3{font-size:15px;margin:7px 0 5px}.feature p{margin:0;color:#a9b9d0;font-size:12px}.features-title{margin-top:49px;font-size:29px;letter-spacing:-.04em}
-.access-explainer{margin-top:15px;background:#1a253d;border:1px solid #3d5479;border-left:3px solid #83c7eb;border-radius:12px;padding:14px 16px;color:#e6edf9;font-size:13px;line-height:1.6}
-.access-explainer strong{color:#d9edff}.access-explainer a{color:#8bd9ff;text-decoration:underline}
-#install-browser.hidden,#option-releases.hidden{display:none!important}
-@media(max-width:650px){.access-explainer{padding:13px}.option .buttons{gap:10px}}
 footer{border-top:1px solid #26364d;display:flex;justify-content:space-between;gap:12px;padding:24px 0 33px;color:#96a9c1;font-size:12px}footer a{color:#dbedfc}
 .hidden{display:none!important}
 @media(max-width:880px){.hero{gap:20px}.platforms{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.container{width:calc(100% - 30px)}.hero{grid-template-columns:1fr;padding:37px 0}.lead{font-size:16px}h1{font-size:47px}.mock{transform:none}.buttons{flex-direction:column}.btn{width:100%}.features{grid-template-columns:1fr}footer{flex-direction:column}.option{padding:19px}}@media(prefers-reduced-motion:reduce){.btn{transition:none}}
@@ -56,7 +51,7 @@ footer{border-top:1px solid #26364d;display:flex;justify-content:space-between;g
 <button class="platform" data-os="android" type="button" aria-pressed="false"><span class="emoji">🤖</span><strong>Android</strong><small>APK preview</small></button>
 <button class="platform" data-os="ios" type="button" aria-pressed="false"><span class="emoji">📱</span><strong>iPhone & iPad</strong><small>Home Screen app</small></button>
 </div>
-<div class="option" aria-live="polite"><h3 id="option-title">Select your platform</h3><p id="option-subtitle">Pick a device to see available options.</p><div class="buttons"><button type="button" class="btn primary hidden" id="install-browser">💻 Open app / Install with browser</button><a class="btn primary" id="option-primary" href="/">Open web dashboard ↗</a><a class="btn secondary" id="option-releases" href="https://github.com/Jhamal96/Finances/releases" rel="noopener noreferrer">View GitHub Releases ↗</a></div><div id="github-access-note" class="access-explainer hidden" role="note"></div><div class="note" id="option-note"></div></div>
+<div class="option" aria-live="polite"><h3 id="option-title">Select your platform</h3><p id="option-subtitle">Pick a device to see available options.</p><div class="buttons"><a class="btn primary" id="option-primary" href="/">Open web dashboard ↗</a><a class="btn secondary" id="option-releases" href="https://github.com/Jhamal96/Finances/releases" rel="noopener noreferrer">All GitHub Releases ↗</a></div><div class="note" id="option-note"></div></div>
 <div class="privacy"><span aria-hidden="true">🛡️</span><div><b>Your financial data remains private.</b><p>Apps use the same Household Finance website and shared Supabase data under your authenticated household account. Installing an app never bypasses login, and it does not create a public copy of your financial information.</p></div></div>
 </section>
 <h2 class="features-title">Everyday money, organized together</h2>
@@ -73,25 +68,6 @@ const urls={
 };
 const p=navigator.userAgentData?.platform||navigator.platform||"";
 const ua=navigator.userAgent||"";
-let deferredBrowserInstall=null;
-const browserInstallButton=document.getElementById("install-browser");
-const gitAccess=document.getElementById("github-access-note");
-window.addEventListener("beforeinstallprompt",event=>{
- event.preventDefault();
- deferredBrowserInstall=event;
- browserInstallButton.textContent="💻 Install Finance as Desktop App — No GitHub";
-});
-window.addEventListener("appinstalled",()=>{deferredBrowserInstall=null;browserInstallButton.textContent="💻 Open Finance Dashboard";});
-browserInstallButton.addEventListener("click",async()=>{
- if(deferredBrowserInstall){
-  const event=deferredBrowserInstall;
-  deferredBrowserInstall=null;
-  try{await event.prompt();}catch(_){location.assign(site);}
-  browserInstallButton.textContent="💻 Open Finance Dashboard";
- } else {
-  location.assign(site);
- }
-});
 function device(){if(/iPad|iPhone|iPod/i.test(ua)||(p==="MacIntel"&&navigator.maxTouchPoints>1))return"ios";if(/Android/i.test(ua))return"android";if(/Win/i.test(p)||/Windows/i.test(ua))return"windows";if(/Mac/i.test(p)||/Mac OS X/i.test(ua))return"mac";return"web";}
 let selected=device();
 const names={windows:"Windows PC",mac:"Mac computer",android:"Android phone or tablet",ios:"iPhone or iPad",web:"Web browser"};
@@ -102,9 +78,6 @@ function render(){
  document.querySelectorAll("[data-os]").forEach(el=>el.setAttribute("aria-pressed",String(el.dataset.os===selected)));
  const title=document.getElementById("option-title"),subtitle=document.getElementById("option-subtitle"),button=document.getElementById("option-primary"),releases=document.getElementById("option-releases"),note=document.getElementById("option-note"),hero=document.getElementById("hero-download");
  releases.href=github;releases.classList.remove("hidden");
- browserInstallButton.classList.add("hidden");
- gitAccess.classList.add("hidden");
- button.classList.remove("secondary");button.classList.add("primary");
  if(selected==="ios"){
  title.textContent="Add Household Finance to your iPhone or iPad";subtitle.textContent="Install a Home Screen shortcut using Safari. An Android APK does not run on iOS.";
  button.href=site;button.textContent="📱 Open in Safari ↗";releases.classList.add("hidden");
@@ -115,28 +88,21 @@ function render(){
  note.textContent="You can also install the website through your browser’s app installation menu, when supported.";
  }else{
  button.href=urls[selected];
- if(selected==="windows"||selected==="mac"){
-  browserInstallButton.classList.remove("hidden");
-  browserInstallButton.textContent=deferredBrowserInstall?"💻 Install Finance as Desktop App — No GitHub":"💻 Open Finance to Install — No GitHub";
-  button.classList.remove("primary");button.classList.add("secondary");
-  gitAccess.classList.remove("hidden");
-  gitAccess.innerHTML='<strong>GitHub access required for the .exe/.dmg:</strong> The native installer is stored in a private repository. Sign in to <a href="https://github.com/login" rel="noopener noreferrer">GitHub</a> using an account that can access <strong>Jhamal96/Finances</strong> before selecting the installer. A GitHub 404 often means the account lacks permission. For an app without GitHub, choose the first button and install the website using Chrome or Edge on Windows, or Chrome on Mac. Both use your existing secure Finance login.';
- }
  if(selected==="windows"){
- title.textContent="Household Finance for Windows";subtitle.textContent="Use the installable website without GitHub, or download the optional native Windows installer with authorized GitHub access.";
- button.textContent="🪟 Native Windows (.exe) — GitHub sign-in ↗";
- note.textContent="Browser installation: open the Finance site in Chrome or Edge, then choose the Install icon in the address bar or the browser menu's Install app option. The native .exe is an unsigned Windows x64 test build and needs GitHub repo access.";
+ title.textContent="Household Finance for Windows";subtitle.textContent="Install a dedicated desktop window for the shared finance dashboard.";
+ button.textContent="🪟 Download Windows (.exe) ↓";
+ note.textContent="Windows x64 test installer. May show an unsigned-app warning. GitHub access is required because the repository is private. The app needs internet access.";
  }else if(selected==="mac"){
- title.textContent="Household Finance for Mac";subtitle.textContent="Install the Finance website as a desktop app without GitHub, or use the native Mac installer with authorized GitHub access.";
- button.textContent="🍎 Native Mac (.dmg) — GitHub sign-in ↗";
- note.textContent="Browser installation: open Finance in Chrome, then choose Install page as app from the browser menu or address bar. Safari can Add to Dock on supported newer macOS versions. Native Mac DMG is an unsigned/unnotarized test build and requires GitHub repo access.";
+ title.textContent="Household Finance for Mac";subtitle.textContent="Install on Intel or Apple Silicon Macs for a dedicated finance app.";
+ button.textContent="🍎 Download macOS (.dmg) ↓";
+ note.textContent="Unsigned/unnotarized universal test installer. Apple may require a trusted-installation approval. GitHub login may be required. The app needs internet access.";
  }else{
  title.textContent="Household Finance for Android";subtitle.textContent="Install the Android finance app preview, connected to the same secure finance dashboard.";
  button.textContent="🤖 Download Android APK ↓";
  note.textContent="Debug-signed preview APK. Only install from a source you trust; upgrades may require uninstalling an old preview. GitHub sign-in may be required. Your Supabase financial records remain online.";
  }
  }
- if(selected==="windows"||selected==="mac"){hero.href="#download";hero.textContent="Install desktop app without GitHub ↓";}else{hero.href=button.href;hero.textContent=button.textContent;}
+ hero.href=button.href;hero.textContent=button.textContent;
 }
 document.querySelectorAll("[data-os]").forEach(el=>el.addEventListener("click",()=>{selected=el.dataset.os;render();document.getElementById("download").scrollIntoView({behavior:"smooth",block:"start"});}));
 render();
