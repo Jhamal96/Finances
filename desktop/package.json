@@ -57,6 +57,10 @@
         }
       ],
       "artifactName": "Household-Finance-macOS.dmg"
+    },
+    "dmg": {
+      "title": "Household Finance",
+      "backgroundColor": "#101b2b"
     }
   }
 }
