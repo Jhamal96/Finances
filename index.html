@@ -1219,7 +1219,19 @@
             #financeHeaderInstallBtn, #financeAuthInstallSection,
             #financeInstallSettings, #financeAndroidApkDownload {display:none!important;}
         }
-    </style>
+    
+/* Household Finance appearance settings; existing default dashboard colors are the Dark palette. */
+html[data-finance-theme="light"]{color-scheme:light;--bg:#f4f7fc;--card-bg:#ffffff;--card-border:#d2dce9;--text:#162437;--text-main:#162437;--text-muted:#53667e;--accent-his:#096ca3;--accent-hers:#ae2367;--accent-combined:#7237c4;--bills:#c02749;--debts:#965906;--savings:#167e5d;--subscriptions:#096ca3}
+html[data-finance-theme="light"] body{background-image:radial-gradient(circle at 50% 0%,#e2e8fc 0%,var(--bg) 70%)}
+html[data-finance-theme="light"] .auth-modes,html[data-finance-theme="light"] .unified-data-status{background:#ebf0f9}
+html[data-finance-theme="light"] .auth-panel label,html[data-finance-theme="light"] .account-field-label{color:var(--text)}
+html[data-finance-theme="light"] input[type="date"],html[data-finance-theme="light"] input[type="month"],html[data-finance-theme="light"] .auth-panel input,html[data-finance-theme="light"] .account-form input{color-scheme:light}
+html[data-finance-theme="light"] .finance-guide-panel,html[data-finance-theme="light"] .finance-guide-overlay{--text-main:#162437}
+html[data-finance-theme="dark"]{color-scheme:dark}
+html[data-finance-theme="ultra-dark"]{color-scheme:dark;--bg:#000000;--card-bg:#0a0b0d;--card-border:#272b32;--text:#f4f5f7;--text-main:#f4f5f7;--text-muted:#aab3bf}
+html[data-finance-theme="ultra-dark"] body{background-image:none;background-color:#000}
+html[data-finance-theme="ultra-dark"] .auth-modes,html[data-finance-theme="ultra-dark"] .unified-data-status{background:#0c0e12}
+</style>
     <script>
         // Detect an installed app before the first paint (avoids an Install-button flash).
         (() => {
@@ -1234,7 +1246,7 @@
             document.documentElement.classList.toggle('finance-app-installed', apk || standalone || remembered);
         })();
     </script>
-</head>
+<script>(function(){const key='finance_appearance_v1',allowed=['system','light','dark','ultra-dark'],media=window.matchMedia('(prefers-color-scheme: dark)');let pref='system';try{pref=localStorage.getItem(key)||'system'}catch(e){}if(!allowed.includes(pref))pref='system';function paint(){const effective=pref==='system'?(media.matches?'dark':'light'):pref;document.documentElement.setAttribute('data-finance-theme',effective);document.documentElement.style.colorScheme=effective==='light'?'light':'dark';const el=document.getElementById('financeThemeSelect');if(el)el.value=pref;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=effective==='light'?'#f4f7fc':effective==='ultra-dark'?'#000000':'#090d16'}window.changeFinanceTheme=function(choice){if(!allowed.includes(choice))return;pref=choice;try{localStorage.setItem(key,choice)}catch(e){}paint()};if(media.addEventListener)media.addEventListener('change',()=>{if(pref==='system')paint()});else media.addListener(()=>{if(pref==='system')paint()});window.addEventListener('storage',e=>{if(e.key===key){pref=allowed.includes(e.newValue)?e.newValue:'system';paint()}});document.addEventListener('DOMContentLoaded',paint);paint()})();</script></head>
 <body>
 
 <div id="financeAuthGate" aria-labelledby="financeAuthTitle">
@@ -1593,6 +1605,8 @@
     </section>
     <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
     <section id="mainSettingsView" class="finance-settings-view" style="display:none;" aria-labelledby="settingsPageTitle">
+<div class="settings-card" id="financeAppearanceSettings"><div class="settings-card-heading"><h3>◐ Appearance</h3><p>Match your device or choose your preferred brightness. Only your display changes; household records and shared data stay the same.</p></div><label class="account-field-label" for="financeThemeSelect">Display mode</label><select id="financeThemeSelect" onchange="changeFinanceTheme(this.value)" style="width:min(100%,370px);min-height:46px;background:var(--card-bg);border:1px solid var(--card-border);color:var(--text);border-radius:12px;padding:11px 13px"><option value="system">💻 System — match device</option><option value="light">☀️ Light</option><option value="dark">🌙 Dark</option><option value="ultra-dark">⬛ Ultra Dark</option></select><p class="settings-muted-note" style="margin-top:10px">Saved on this device. System mode responds automatically when your device appearance changes.</p></div>
+
 
 
         <div class="settings-card" id="financeRecentUpdatesSettings">
