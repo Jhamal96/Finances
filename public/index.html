@@ -1219,6 +1219,42 @@
             #financeHeaderInstallBtn, #financeAuthInstallSection,
             #financeInstallSettings, #financeAndroidApkDownload {display:none!important;}
         }
+
+    /* Private personal To-Dos, separate from the shared finance dataset */
+    .finance-todo-page{max-width:1000px;margin:0 auto}
+    .finance-todo-card{border:1px solid var(--card-border);background:var(--card-bg);
+      border-radius:15px;padding:17px;margin:0 0 16px}
+    .finance-todo-card h3{margin:0 0 10px}
+    .finance-todo-note{color:var(--text-muted);font-size:.86rem;line-height:1.55}
+    .finance-todo-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .finance-todo-fields>label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.84rem}
+    .finance-todo-fields input,.finance-todo-fields textarea,.finance-todo-fields select{
+      min-height:42px;width:100%;padding:10px;border:1px solid var(--card-border);
+      border-radius:10px;background:var(--card-bg);color:var(--text-main);font:inherit}
+    .finance-todo-full{grid-column:1/-1}
+    .finance-todo-buttons{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+    .finance-todo-buttons button{width:auto;min-height:38px}
+    .finance-todo-totals{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 17px}
+    .finance-todo-totals span{background:rgba(148,163,184,.09);border:1px solid var(--card-border);
+      border-radius:10px;padding:8px 12px;font-size:.86rem}
+    .finance-todo-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--card-border)}
+    .finance-todo-item:last-child{border-bottom:0}
+    .finance-todo-item input[type=checkbox]{width:20px;height:20px;flex:none;margin-top:3px;accent-color:#38bdf8}
+    .finance-todo-item .todo-title{font-weight:800;overflow-wrap:anywhere}
+    .finance-todo-item.done .todo-title{text-decoration:line-through;opacity:.65}
+    .finance-todo-item p{font-size:.83rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0 0;color:var(--text-muted)}
+    .finance-todo-item .todo-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .finance-todo-item .todo-actions button{width:auto;min-height:32px;padding:5px 10px;font-size:.78rem}
+    #financeTodoNavCount[hidden]{display:none!important}
+    #financeTodoNavCount{margin-left:6px;border-radius:12px;padding:2px 7px;
+      background:rgba(56,189,248,.24);font-size:.75rem}
+    .finance-todo-reminder-list{padding-left:20px;line-height:1.8}
+    .finance-todo-reminder-list li{overflow-wrap:anywhere}
+    .finance-todo-reminder-list small{color:var(--text-muted);margin-left:6px}
+    .finance-todo-reminder-buttons{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+    .finance-todo-reminder-buttons button{width:auto}
+    @media(max-width:600px){.finance-todo-fields{grid-template-columns:1fr}
+      .finance-todo-reminder-buttons{width:100%}.finance-todo-reminder-buttons button{flex:1}}
     </style>
     <script>
         // Detect an installed app before the first paint (avoids an Install-button flash).
@@ -1302,6 +1338,7 @@
         <div class="drawer-nav-row"><button class="drawer-link" id="navPayFour" onclick="switchMainPage('payFour')">🛍️ Pay in 4 Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('payFour')" title="Open Pay in 4 in a new tab" aria-label="Open Pay in 4 in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button><button class="drawer-tab-open" onclick="openFinanceTab('purchasePlan')" title="Open Purchase Plan in a new tab" aria-label="Open Purchase Plan in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navExpenses" onclick="switchMainPage('expenses')">🧾 Monthly Expense Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('expenses')" title="Open Monthly Expenses in a new tab" aria-label="Open Monthly Expenses in a new tab">↗</button></div>
+        <div class="drawer-nav-row"><button class="drawer-link" id="navTodo" onclick="switchMainPage('todo')">✅ My To-Do List <span id="financeTodoNavCount" hidden></span></button><button class="drawer-tab-open" onclick="openFinanceTab('todo')" title="Open personal To-Dos in new tab" aria-label="Open personal To-Dos in new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navProfiles" onclick="switchMainPage('profiles')">👤 Profiles</button><button class="drawer-tab-open" onclick="openFinanceTab('profiles')" title="Open Profiles in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navSettings" onclick="switchMainPage('settings')">⚙️ Settings <span class="sync-attention-dot" id="settingsNavWarning" hidden aria-label="Cloud sync needs attention"></span></button><button class="drawer-tab-open" onclick="openFinanceTab('settings')" title="Open Settings in a new tab" aria-label="Open Settings in a new tab">↗</button></div>
     </div>
@@ -1384,6 +1421,25 @@
 
 
 
+
+<!-- To-Do reminder only appears for new incomplete tasks belonging to this login. -->
+<div class="finance-guide-overlay" id="financeTodoReminder" role="dialog" aria-modal="true"
+     aria-labelledby="financeTodoReminderTitle" aria-describedby="financeTodoReminderText" hidden>
+  <div class="finance-guide-panel" style="max-width:550px">
+    <div class="finance-guide-top"><span class="finance-guide-kicker">Personal To-Do Reminder</span>
+      <h2 id="financeTodoReminderTitle">✅ New Tasks on Your List</h2>
+      <p id="financeTodoReminderText">These unfinished tasks belong only to your email account.</p>
+    </div>
+    <div class="finance-guide-scroll"><ul id="financeTodoReminderItems" class="finance-todo-reminder-list"></ul></div>
+    <div class="finance-guide-footer">
+      <span class="finance-todo-note">Dismissed tasks won't pop up again unless new tasks are added.</span>
+      <div class="finance-todo-reminder-buttons">
+        <button class="btn-secondary" type="button" onclick="financeDismissTodoReminder(false)">Not Now</button>
+        <button class="finance-guide-done" id="financeTodoReminderOpen" type="button" onclick="financeDismissTodoReminder(true)">Open To-Dos</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- Each release is announced once per account/browser until acknowledged. -->
 <div id="financeReleaseUpdates" class="finance-guide-overlay" role="dialog" aria-modal="true"
      aria-labelledby="financeReleaseTitle" aria-describedby="financeReleaseIntro" hidden>
@@ -1444,6 +1500,10 @@
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🏠</span><div>
           <h3>Household Dashboard</h3>
           <p>See monthly income, expenses, and household totals for His, Hers, or Combined. Review and roll over your monthly budget.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">✅</span><div>
+          <h3>My To-Do List · Menu → My To-Do List</h3>
+          <p>Each login has a private task list, separate from shared finances. New unfinished tasks prompt a Home reminder only until acknowledged.</p>
         </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">👤</span><div>
           <h3>Finance Profiles · Menu → Profiles</h3>
@@ -1591,6 +1651,52 @@
         <div id="expenseCategorySummary" class="expense-cats"></div>
       </div>
     </section>
+
+    <!-- The to-do list is private to the signed-in user, NOT shared with other Finance emails. -->
+    <section class="finance-todo-page" id="mainTodoView" style="display:none" aria-labelledby="financeTodoHeading">
+      <h2 id="financeTodoHeading">✅ My To-Do List</h2>
+      <div class="finance-todo-card">
+        <p class="finance-todo-note">Tasks belong only to <strong id="financeTodoAccount">your current email</strong>.
+          They sync between your devices, but other Finance accounts cannot view or edit them.
+          A Home reminder appears when there are new unfinished tasks you haven't acknowledged.</p>
+        <div class="finance-todo-totals"><span>Open: <strong id="financeTodoOpen">0</strong></span>
+          <span>Completed: <strong id="financeTodoDone">0</strong></span>
+          <span>Total: <strong id="financeTodoTotal">0</strong></span></div>
+      </div>
+      <div class="finance-todo-card">
+        <h3 id="financeTodoFormTitle">Add a Task</h3>
+        <form id="financeTodoForm" class="finance-todo-fields" onsubmit="financeSaveTodo(event)">
+          <input id="financeTodoEditId" type="hidden">
+          <label class="finance-todo-full">Task *
+            <input id="financeTodoText" required maxlength="180" placeholder="e.g. Review upcoming bills" autocomplete="off">
+          </label>
+          <label>Due date (optional) <input id="financeTodoDue" type="date"></label>
+          <label>Priority
+            <select id="financeTodoPriority"><option value="normal">Normal</option>
+              <option value="high">High</option><option value="low">Low</option></select>
+          </label>
+          <label class="finance-todo-full">Notes (optional)
+            <textarea id="financeTodoNotes" rows="2" maxlength="1200" placeholder="Additional details"></textarea>
+          </label>
+          <div class="finance-todo-buttons finance-todo-full">
+            <button id="financeTodoSaveBtn" class="btn-add" type="submit">+ Save Task</button>
+            <button class="btn-secondary" type="button" onclick="financeResetTodoForm()">Clear / Cancel</button>
+            <button class="btn-secondary" type="button" onclick="financeLoadTodos()">↻ Refresh</button>
+          </div>
+        </form>
+        <p class="finance-todo-note" id="financeTodoStatus" role="status" aria-live="polite"></p>
+      </div>
+      <div class="finance-todo-card">
+        <h3>Tasks</h3>
+        <div class="finance-todo-buttons" style="margin:10px 0">
+          <label for="financeTodoFilter">Show</label>
+          <select id="financeTodoFilter" onchange="financeRenderTodos()" style="min-height:38px;border-radius:10px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--card-border)">
+            <option value="open">Open</option><option value="all">All</option><option value="done">Completed</option>
+          </select>
+        </div>
+        <div id="financeTodoItems" aria-live="polite"></div>
+      </div>
+    </section>
     <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
     <section id="mainSettingsView" class="finance-settings-view" style="display:none;" aria-labelledby="settingsPageTitle">
 
@@ -1604,7 +1710,9 @@
             <button type="button" class="btn-secondary" onclick="financeOpenReleaseUpdates(true)">✨ View Latest Update</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 23, 2026 — Username Sign-In Repair</strong></summary>
+            <details open><summary><strong>October 25, 2026 — Private Personal To-Do Lists</strong></summary>
+              <p class="settings-muted-note">Added My To-Do List in the Finance menu. Each registered email has its own private task list with due dates, priority, notes, completion and editing. Only new, unfinished tasks trigger the Home reminder; acknowledging them prevents repeat popups until more are added. Tasks sync across devices signed into that email, separately from shared household finances.</p></details>
+            <details><summary><strong>October 23, 2026 — Username Sign-In Repair</strong></summary>
               <p class="settings-muted-note">Updated the Supabase username-login Edge Function (including browser CORS) and added clearer sign-in error messages. Email and password sign-in continues to work as an alternative.</p></details>
             <details><summary><strong>October 22, 2026 — Smart Install Visibility</strong></summary>
               <p class="settings-muted-note">When Household Finance runs as an installed PWA or Android APK, the in-page Install icon and installation cards no longer appear. The site also remembers successful PWA installation on that browser, and prompts return if the browser offers installation again after an uninstall.</p></details>
@@ -2714,7 +2822,7 @@
     const FINANCE_TAB_DASHBOARD_KEY = 'finance_tab_dashboard_v1';
     const FINANCE_TAB_ALLOC_KEY = 'finance_tab_alloc_v1';
     const FINANCE_TAB_MONTH_KEY = 'finance_tab_month_v1';
-    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','profiles','settings'];
+    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','todo','profiles','settings'];
     const financeSourceId = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : String(Math.random());
     const financeBaseSnapshots = new WeakMap();
     const financeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('household_finance_master_v12') : null;
@@ -3665,6 +3773,7 @@
         const prior=financeReleasePreviousFocus;
         financeReleasePreviousFocus=null;
         if(prior?.isConnected&&typeof prior.focus==='function')prior.focus();
+        queueMicrotask(()=>{financeMaybeShowFeatureGuide();financeMaybeShowTodoReminder();});
     }
     document.addEventListener('keydown',event=>{
         const modal=document.getElementById('financeReleaseUpdates');
@@ -3703,6 +3812,7 @@
         financeGuidePreviousFocus=null;
         if(prev?.isConnected&&typeof prev.focus==='function')prev.focus();
         else document.getElementById('refreshBtn')?.focus();
+        queueMicrotask(financeMaybeShowTodoReminder);
     }
     document.addEventListener('keydown',event=>{
         const modal=document.getElementById('financeFeatureGuide');
@@ -3720,6 +3830,259 @@
         else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
     });
 
+
+    // Private, email-account-scoped tasks live in an RLS-protected Supabase table.
+    // The finance household document and its cloud sync are never modified here.
+    let financeTodoCache=[];
+    let financeTodoLoading=false;
+    let financeTodoAccountId=null;
+    let financeTodoReadEpoch=0;
+    let financeTodoLastCheck=0;
+    let financeTodoPreviousFocus=null;
+    const financeTodoSeenKey=()=>financeAuthUser ? 'finance_todo_reminder_seen_v1_'+financeAuthUser.id : null;
+    const financeTodoElement=id=>document.getElementById(id);
+    function financeTodoStatus(msg){
+        const el=financeTodoElement('financeTodoStatus');
+        if(el)el.textContent=msg;
+    }
+    function financeTodoPending(){
+        return financeTodoCache.filter(x=>x && !x.completed);
+    }
+    function financeTodoSeenIds(){
+        const key=financeTodoSeenKey();
+        if(!key)return new Set();
+        try{
+            const ids=JSON.parse(localStorage.getItem(key)||'[]');
+            return new Set(Array.isArray(ids)?ids.filter(x=>typeof x==='string'):[]);
+        }catch{return new Set();}
+    }
+    function financeTodoUnseen(){
+        const seen=financeTodoSeenIds();
+        return financeTodoPending().filter(x=>!seen.has(x.id));
+    }
+    function financeMaybeShowTodoReminder(){
+        if(!financeAuthUser||!document.body.classList.contains('finance-authenticated'))return;
+        if(financeTodoAccountId!==financeAuthUser.id||financeTodoLoading)return;
+        if(financeTodoElement('mainDashboardView')?.style.display!=='block')return;
+        if(['financeFeatureGuide','financeReleaseUpdates','financeTodoReminder'].some(id=>!financeTodoElement(id)?.hidden))return;
+        // Higher-priority release/feature announcements should display first.
+        if(financeHasUnreadUpdate())return;
+        if(!financeGuideShownThisLogin && localStorage.getItem(financeGuidePreferenceKey())!=='1')return;
+        const unseen=financeTodoUnseen();
+        if(!unseen.length)return; // Never pop up for an empty or completed list.
+        const list=financeTodoElement('financeTodoReminderItems');
+        if(!list)return;
+        list.replaceChildren();
+        for(const task of unseen.slice(0,6)){
+            const li=document.createElement('li');
+            li.textContent=task.title;
+            if(task.due_date){
+                const note=document.createElement('small');
+                note.textContent='Due '+task.due_date;
+                li.append(note);
+            }
+            list.append(li);
+        }
+        if(unseen.length>6){
+            const other=document.createElement('li');
+            other.textContent='And '+(unseen.length-6)+' more…';
+            list.append(other);
+        }
+        financeTodoElement('financeTodoReminderTitle').textContent=
+            unseen.length===1?'✅ New Task on Your List':'✅ '+unseen.length+' New Tasks on Your List';
+        financeTodoPreviousFocus=document.activeElement;
+        const popup=financeTodoElement('financeTodoReminder');
+        popup.hidden=false;
+        financeTodoElement('financeTodoReminderOpen')?.focus();
+    }
+    function financeDismissTodoReminder(openPage){
+        const modal=financeTodoElement('financeTodoReminder');
+        if(!modal||modal.hidden)return;
+        const key=financeTodoSeenKey();
+        if(key){
+            const ids=financeTodoSeenIds();
+            for(const task of financeTodoPending())ids.add(task.id);
+            // Keep a bounded preference record, per login and per browser.
+            const saved=Array.from(ids).slice(-1000);
+            try{localStorage.setItem(key,JSON.stringify(saved));}catch(err){
+                console.warn('Task reminder preference could not be saved',err);
+            }
+        }
+        modal.hidden=true;
+        if(openPage)switchMainPage('todo');
+        else if(financeTodoPreviousFocus?.isConnected)financeTodoPreviousFocus.focus();
+        financeTodoPreviousFocus=null;
+    }
+    document.addEventListener('keydown',event=>{
+        const modal=financeTodoElement('financeTodoReminder');
+        if(!modal||modal.hidden)return;
+        if(event.key==='Escape'){
+            event.preventDefault();financeDismissTodoReminder(false);return;
+        }
+        if(event.key!=='Tab')return;
+        const buttons=Array.from(modal.querySelectorAll('button:not([disabled])'));
+        if(!buttons.length)return;
+        const first=buttons[0],last=buttons[buttons.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    });
+    function financeTodoWhen(value){
+        if(!value)return '';
+        const date=new Date(value+'T12:00:00');
+        return Number.isNaN(date.valueOf())?value:date.toLocaleDateString(undefined,{
+            month:'short',day:'numeric',year:'numeric'});
+    }
+    function financeRenderTodos(){
+        const open=financeTodoPending();
+        const completed=financeTodoCache.length-open.length;
+        const labels=[['financeTodoOpen',open.length],['financeTodoDone',completed],
+            ['financeTodoTotal',financeTodoCache.length]];
+        for(const [id,n] of labels){const el=financeTodoElement(id);if(el)el.textContent=String(n);}
+        const tag=financeTodoElement('financeTodoNavCount');
+        if(tag){tag.hidden=!open.length;tag.textContent=String(open.length);}
+        const account=financeTodoElement('financeTodoAccount');
+        if(account)account.textContent=financeAuthUser?.email||'this registered account';
+        const items=financeTodoElement('financeTodoItems');
+        if(!items)return;
+        const filter=financeTodoElement('financeTodoFilter')?.value||'open';
+        const sorted=financeTodoCache.filter(x=>filter==='all'||
+            (filter==='open'?!x.completed:!!x.completed))
+            .slice().sort((a,b)=>Number(a.completed)-Number(b.completed)
+                || Number(b.priority==='high')-Number(a.priority==='high')
+                || String(a.due_date||'9999').localeCompare(String(b.due_date||'9999'))
+                || String(b.created_at).localeCompare(String(a.created_at)));
+        items.replaceChildren();
+        if(!sorted.length){
+            const empty=document.createElement('p');empty.className='finance-todo-empty finance-todo-note';
+            empty.textContent=financeTodoLoading?'Loading tasks…':
+                (filter==='done'?'Nothing completed yet.':
+                 filter==='open'?'No unfinished tasks. Add a task above.':'Your To-Do list is empty.');
+            items.append(empty);return;
+        }
+        for(const task of sorted){
+            const card=document.createElement('div');
+            card.className='finance-todo-item'+(task.completed?' done':'');
+            const checkbox=document.createElement('input');
+            checkbox.type='checkbox';checkbox.checked=!!task.completed;
+            checkbox.setAttribute('aria-label','Mark '+task.title+' '+(task.completed?'incomplete':'completed'));
+            checkbox.onchange=()=>void financeToggleTodo(task.id,checkbox.checked);
+            const info=document.createElement('div');info.style.flex='1';info.style.minWidth='0';
+            const title=document.createElement('div');title.className='todo-title';title.textContent=task.title;
+            const details=document.createElement('p');
+            details.textContent=[
+                task.priority==='high'?'🔴 High priority':task.priority==='low'?'Low priority':'Normal priority',
+                task.due_date?'Due '+financeTodoWhen(task.due_date):'No due date'].join(' · ');
+            info.append(title,details);
+            if(task.notes){
+                const note=document.createElement('p');note.textContent=task.notes;info.append(note);
+            }
+            const buttons=document.createElement('div');buttons.className='todo-actions';
+            const edit=document.createElement('button');edit.className='btn-secondary';edit.type='button';
+            edit.textContent='Edit';edit.onclick=()=>financeEditTodo(task.id);
+            const remove=document.createElement('button');remove.className='btn-secondary';remove.type='button';
+            remove.textContent='Delete';remove.onclick=()=>void financeDeleteTodo(task.id);
+            buttons.append(edit,remove);info.append(buttons);card.append(checkbox,info);items.append(card);
+        }
+    }
+    async function financeLoadTodos(options={}){
+        if(!financeAuthUser)return false;
+        if(financeTodoLoading && !options.force)return false;
+        const uid=financeAuthUser.id,epoch=++financeTodoReadEpoch;
+        financeTodoLoading=true;
+        try{
+            const {data,error}=await supabaseClient.from('finance_personal_todos')
+                .select('id,user_id,title,notes,due_date,priority,completed,created_at,updated_at')
+                .eq('user_id',uid).order('created_at',{ascending:false}).limit(500);
+            if(error)throw error;
+            if(financeAuthUser?.id!==uid||epoch!==financeTodoReadEpoch)return false;
+            financeTodoAccountId=uid;
+            financeTodoCache=Array.isArray(data)?data:[];
+            financeTodoLastCheck=Date.now();
+            financeTodoStatus('');
+            return true;
+        }catch(err){
+            if(financeAuthUser?.id===uid)
+                financeTodoStatus('Unable to refresh your private To-Dos: '+(err?.message||'Connection unavailable'));
+            return false;
+        }finally{
+            if(epoch===financeTodoReadEpoch){
+                financeTodoLoading=false;
+                financeRenderTodos();
+                if(options.showReminder!==false)queueMicrotask(financeMaybeShowTodoReminder);
+            }
+        }
+    }
+    function financeResetTodoForm(){
+        financeTodoElement('financeTodoForm')?.reset();
+        financeTodoElement('financeTodoEditId').value='';
+        financeTodoElement('financeTodoFormTitle').textContent='Add a Task';
+        financeTodoElement('financeTodoSaveBtn').textContent='+ Save Task';
+    }
+    async function financeSaveTodo(event){
+        event.preventDefault();
+        if(!financeAuthUser)return;
+        const uid=financeAuthUser.id;
+        const title=financeTodoElement('financeTodoText').value.trim();
+        if(!title||title.length>180)return financeTodoStatus('Enter a task name (180 characters maximum).');
+        const notes=financeTodoElement('financeTodoNotes').value.trim();
+        const priority=financeTodoElement('financeTodoPriority').value;
+        const due_date=financeTodoElement('financeTodoDue').value||null;
+        if(!['low','normal','high'].includes(priority)||notes.length>1200)return;
+        const editedId=financeTodoElement('financeTodoEditId').value;
+        const button=financeTodoElement('financeTodoSaveBtn');
+        button.disabled=true;financeTodoStatus('Saving task…');
+        const values={title,notes,due_date,priority};
+        try{
+            let result;
+            if(editedId){
+                const prior=financeTodoCache.find(x=>x.id===editedId);
+                if(!prior)throw new Error('This task is no longer in your list. Refresh first.');
+                result=await supabaseClient.from('finance_personal_todos')
+                    .update(values).eq('id',editedId).eq('user_id',uid).select('id').single();
+            }else{
+                result=await supabaseClient.from('finance_personal_todos')
+                    .insert({...values,user_id:uid}).select('id').single();
+            }
+            if(result.error)throw result.error;
+            if(financeAuthUser?.id!==uid)return;
+            financeResetTodoForm();
+            await financeLoadTodos({showReminder:false});
+            financeTodoStatus('✓ Task saved to your private account. It will appear in the Home reminder until acknowledged.');
+        }catch(err){financeTodoStatus('Could not save task: '+(err?.message||'Connection unavailable'));}
+        finally{button.disabled=false;}
+    }
+    function financeEditTodo(id){
+        const task=financeTodoCache.find(x=>x.id===id);
+        if(!task)return;
+        financeTodoElement('financeTodoEditId').value=task.id;
+        financeTodoElement('financeTodoText').value=task.title;
+        financeTodoElement('financeTodoNotes').value=task.notes||'';
+        financeTodoElement('financeTodoDue').value=task.due_date||'';
+        financeTodoElement('financeTodoPriority').value=task.priority||'normal';
+        financeTodoElement('financeTodoFormTitle').textContent='Edit Task';
+        financeTodoElement('financeTodoSaveBtn').textContent='✓ Save Changes';
+        financeTodoElement('financeTodoForm').scrollIntoView({behavior:'smooth',block:'start'});
+        financeTodoElement('financeTodoText').focus();
+    }
+    async function financeToggleTodo(id,completed){
+        if(!financeAuthUser)return;
+        const uid=financeAuthUser.id;
+        const {data,error}=await supabaseClient.from('finance_personal_todos')
+            .update({completed}).eq('id',id).eq('user_id',uid).select('id').single();
+        if(error || !data){financeTodoStatus('Could not update task: '+(error?.message||'Not found'));financeRenderTodos();return;}
+        await financeLoadTodos({showReminder:false});
+    }
+    async function financeDeleteTodo(id){
+        if(!financeAuthUser||!confirm('Permanently delete this task from your private To-Do list?'))return;
+        const uid=financeAuthUser.id;
+        const {data,error}=await supabaseClient.from('finance_personal_todos')
+            .delete().eq('id',id).eq('user_id',uid).select('id').single();
+        if(error || !data){financeTodoStatus('Could not delete task: '+(error?.message||'Not found'));return;}
+        financeResetTodoForm();
+        await financeLoadTodos({showReminder:false});
+        financeTodoStatus('Task deleted.');
+    }
+
     function switchMainPage(view, shouldSave = true) {
         const dashboardView = document.getElementById('mainDashboardView');
         const allocationView = document.getElementById('mainAllocationView');
@@ -3730,10 +4093,12 @@
         const settingsView = document.getElementById('mainSettingsView');
         const profilesView = document.getElementById('mainProfilesView');
         const expenseView = document.getElementById('mainExpensesView');
+        const todoView=document.getElementById('mainTodoView');
         const navPayFour = document.getElementById('navPayFour');
         const navSettings = document.getElementById('navSettings');
         const navProfiles = document.getElementById('navProfiles');
         const navExpenses = document.getElementById('navExpenses');
+        const navTodo=document.getElementById('navTodo');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navAllocation = document.getElementById('navAllocation');
@@ -3751,6 +4116,7 @@
         settingsView.style.display = 'none';
         profilesView.style.display = 'none';
         expenseView.style.display = 'none';
+        todoView.style.display='none';
         
         navDashboard.classList.remove('active');
         navAllocation.classList.remove('active');
@@ -3761,6 +4127,7 @@
         navSettings.classList.remove('active');
         navProfiles.classList.remove('active');
         navExpenses.classList.remove('active');
+        navTodo.classList.remove('active');
 
         if (view === 'allocation') {
             allocationView.style.display = 'block';
@@ -3789,6 +4156,12 @@
             monthCalendarBtn.style.display = 'none';
             financeEnsureExpenseMonth();
             financeRenderExpenses();
+        } else if (view === 'todo') {
+            todoView.style.display='block';
+            headerTitle.textContent='My To-Do List';
+            navTodo.classList.add('active');
+            monthCalendarBtn.style.display='none';
+            financeRenderTodos();
         } else if (view === 'profiles') {
             profilesView.style.display = 'block';
             headerTitle.textContent = 'Profiles';
@@ -3824,7 +4197,11 @@
         }
 
         render();
-        if(view==='dashboard')financeMaybeShowFeatureGuide();
+        if(view==='dashboard'){
+            financeMaybeShowFeatureGuide();
+            queueMicrotask(financeMaybeShowTodoReminder);
+            if(financeAuthUser&&Date.now()-financeTodoLastCheck>20000)void financeLoadTodos();
+        }
     }
 
     function switchDashboardTab(tabId, shouldSave = true) {
@@ -3907,8 +4284,8 @@
     document.addEventListener('visibilitychange',()=>{
         if(document.visibilityState==='visible')void financeAutoRefreshAccount();
     });
-    window.addEventListener('focus',()=>void financeAutoRefreshAccount());
-    setInterval(()=>void financeAutoRefreshAccount(),60000);
+    window.addEventListener('focus',()=>{void financeAutoRefreshAccount();if(financeAuthUser)void financeLoadTodos();});
+    setInterval(()=>{void financeAutoRefreshAccount();if(financeAuthUser&&document.visibilityState==='visible')void financeLoadTodos();},60000);
 
     async function handleManualRefresh() {
         const btn=document.getElementById('refreshBtn');
@@ -5994,9 +6371,12 @@
         initialCloudLoad=syncFromCloud();
         const synced=await initialCloudLoad;
         if(epoch!==financeAuthEpoch)return;
+        await financeLoadTodos({showReminder:false});
+        if(epoch!==financeAuthEpoch)return;
         restoreFinanceTabView();
         initializeAllDateDisplays();
         render();
+        queueMicrotask(financeMaybeShowTodoReminder);
         if(synced)await checkAndAutoRollover(initialMonthStr,false);
         if(epoch!==financeAuthEpoch)return;
         const legacy=localStorage.getItem('household_finance_v12');
@@ -6008,6 +6388,11 @@
         }
     }
     function financeExitAccount() {
+        ++financeTodoReadEpoch;financeTodoCache=[];financeTodoAccountId=null;financeTodoLastCheck=0;
+        financeTodoLoading=false;financeTodoPreviousFocus=null;
+        const todoModal=financeTodoElement('financeTodoReminder');
+        if(todoModal)todoModal.hidden=true;
+        financeRenderTodos();
         const guide=document.getElementById('financeFeatureGuide');
         if(guide)guide.hidden=true;
         const release=document.getElementById('financeReleaseUpdates');
