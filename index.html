@@ -1255,6 +1255,20 @@
     .finance-todo-reminder-buttons button{width:auto}
     @media(max-width:600px){.finance-todo-fields{grid-template-columns:1fr}
       .finance-todo-reminder-buttons{width:100%}.finance-todo-reminder-buttons button{flex:1}}
+
+    #financeOwedNavCount[hidden]{display:none!important}
+    #financeOwedNavCount{margin-left:6px;border-radius:12px;padding:2px 7px;background:rgba(251,191,36,.22);font-size:.75rem}
+    .finance-owed-line{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid var(--card-border);padding:13px 0}
+    .finance-owed-line:last-child{border-bottom:0}
+    .finance-owed-line h4{margin:0 0 5px;overflow-wrap:anywhere}
+    .finance-owed-line p{color:var(--text-muted);font-size:.82rem;line-height:1.5;overflow-wrap:anywhere}
+    .finance-owed-money{font-weight:850;font-variant-numeric:tabular-nums;font-size:1.08rem}
+    .finance-owed-right{text-align:right;flex:none}
+    .finance-owed-right small{display:block;color:var(--text-muted);margin-top:5px}
+    .finance-owed-paid{color:#34d399}
+    .finance-owed-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+    .finance-owed-actions button{width:auto;min-height:32px;padding:6px 10px;font-size:.78rem}
+    .finance-owed-empty{padding:24px;text-align:center;color:var(--text-muted);font-size:.86rem}
     </style>
     <script>
         // Detect an installed app before the first paint (avoids an Install-button flash).
@@ -1339,6 +1353,7 @@
         <div class="drawer-nav-row"><button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button><button class="drawer-tab-open" onclick="openFinanceTab('purchasePlan')" title="Open Purchase Plan in a new tab" aria-label="Open Purchase Plan in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navExpenses" onclick="switchMainPage('expenses')">🧾 Monthly Expense Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('expenses')" title="Open Monthly Expenses in a new tab" aria-label="Open Monthly Expenses in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navTodo" onclick="switchMainPage('todo')">✅ My To-Do List <span id="financeTodoNavCount" hidden></span></button><button class="drawer-tab-open" onclick="openFinanceTab('todo')" title="Open personal To-Dos in new tab" aria-label="Open personal To-Dos in new tab">↗</button></div>
+        <div class="drawer-nav-row"><button class="drawer-link" id="navOwed" onclick="switchMainPage('owed')">💸 What I Owe <span id="financeOwedNavCount" hidden></span></button><button class="drawer-tab-open" onclick="openFinanceTab('owed')" title="Open private What I Owe in new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navProfiles" onclick="switchMainPage('profiles')">👤 Profiles</button><button class="drawer-tab-open" onclick="openFinanceTab('profiles')" title="Open Profiles in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navSettings" onclick="switchMainPage('settings')">⚙️ Settings <span class="sync-attention-dot" id="settingsNavWarning" hidden aria-label="Cloud sync needs attention"></span></button><button class="drawer-tab-open" onclick="openFinanceTab('settings')" title="Open Settings in a new tab" aria-label="Open Settings in a new tab">↗</button></div>
     </div>
@@ -1422,6 +1437,24 @@
 
 
 
+
+<!-- New unpaid IOUs popup only once per entry on Home, specific to this login. -->
+<div class="finance-guide-overlay" id="financeOwedReminder" role="dialog" aria-modal="true"
+ aria-labelledby="financeOwedReminderTitle" aria-describedby="financeOwedReminderText" hidden>
+ <div class="finance-guide-panel" style="max-width:550px">
+   <div class="finance-guide-top"><span class="finance-guide-kicker">My Private Amounts Owed</span>
+     <h2 id="financeOwedReminderTitle">💸 New Amounts Owed</h2>
+     <p id="financeOwedReminderText">These are visible only to your signed-in email. Acknowledged entries won't reappear until new ones are added.</p></div>
+   <div class="finance-guide-scroll"><ul id="financeOwedReminderItems" class="finance-todo-reminder-list"></ul></div>
+   <div class="finance-guide-footer">
+     <span class="finance-todo-note">Only new outstanding items create a reminder.</span>
+     <div class="finance-todo-reminder-buttons">
+       <button class="btn-secondary" type="button" onclick="financeDismissOwedReminder(false)">OK, Got It</button>
+       <button class="finance-guide-done" type="button" id="financeOwedReminderOpen" onclick="financeDismissOwedReminder(true)">View What I Owe</button>
+     </div>
+   </div>
+ </div>
+</div>
 <!-- To-Do reminder only appears for new incomplete tasks belonging to this login. -->
 <div class="finance-guide-overlay" id="financeTodoReminder" role="dialog" aria-modal="true"
      aria-labelledby="financeTodoReminderTitle" aria-describedby="financeTodoReminderText" hidden>
@@ -1445,12 +1478,16 @@
      aria-labelledby="financeReleaseTitle" aria-describedby="financeReleaseIntro" hidden>
   <div class="finance-guide-panel" style="max-width:630px">
     <div class="finance-guide-top">
-      <span class="finance-guide-kicker">New Update · October 23, 2026</span>
+      <span class="finance-guide-kicker">New Update · October 26, 2026</span>
       <h2 id="financeReleaseTitle">🎉 What's New in Household Finance</h2>
-      <p id="financeReleaseIntro">Username sign-in was updated with more reliable browser communication and clearer errors. You can always sign in using your account email and the same password.</p>
+      <p id="financeReleaseIntro">Introducing What I Owe: your own private page to track amounts owed, due dates, payments and remaining balances without sharing them with other Finance accounts.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💸</span><div>
+          <h3>New: What I Owe</h3>
+          <p>Record who you owe, the full amount, due date and payments. Track remaining balances, mark entries paid, and get a Home reminder only for new outstanding entries.</p>
+        </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🔐</span><div>
           <h3>Username Sign-In Improvements</h3>
           <p>Updated Supabase's sign-in function to handle browser requests reliably, with clearer messages for invalid credentials, connection issues, and temporary server errors.</p>
@@ -1697,6 +1734,60 @@
         <div id="financeTodoItems" aria-live="polite"></div>
       </div>
     </section>
+
+    <!-- Per-email private IOU/debt tracker. Never part of shared-household payload. -->
+    <section id="mainOwedView" class="finance-todo-page" style="display:none" aria-labelledby="financeOwedHeading">
+      <h2 id="financeOwedHeading">💸 What I Owe</h2>
+      <div class="finance-todo-card">
+        <p class="finance-todo-note">Private to <strong id="financeOwedAccount">your current email</strong>. Track who you owe, payments and remaining balances. Other Finance email accounts cannot view or change these records.</p>
+        <div class="finance-todo-totals">
+          <span>Original: <strong id="financeOwedOriginal">$0.00</strong></span>
+          <span>Paid: <strong id="financeOwedPaid">$0.00</strong></span>
+          <span>Remaining: <strong id="financeOwedRemaining">$0.00</strong></span>
+          <span>Open: <strong id="financeOwedOpen">0</strong></span>
+        </div>
+      </div>
+      <div class="finance-todo-card">
+        <h3 id="financeOwedFormTitle">Add What I Owe</h3>
+        <form class="finance-todo-fields" id="financeOwedForm" onsubmit="financeSaveOwed(event)">
+          <input type="hidden" id="financeOwedEditId">
+          <label>Who do you owe? *
+            <input id="financeOwedCreditor" required maxlength="160" autocomplete="off" placeholder="Name, store, company or lender">
+          </label>
+          <label>Total amount ($) *
+            <input id="financeOwedAmount" type="number" min="0.01" step="0.01" max="999999999.99" required placeholder="0.00">
+          </label>
+          <label>Already paid ($)
+            <input id="financeOwedAlreadyPaid" type="number" min="0" step="0.01" max="999999999.99" value="0" placeholder="0.00">
+          </label>
+          <label>Due date (optional)
+            <input id="financeOwedDue" type="date">
+          </label>
+          <label class="finance-todo-full">What is it for?
+            <input id="financeOwedDescription" maxlength="350" placeholder="e.g. car repair, borrowed money, installment">
+          </label>
+          <label class="finance-todo-full">Notes
+            <textarea id="financeOwedNotes" rows="2" maxlength="1200" placeholder="Payment details, agreement, reference"></textarea>
+          </label>
+          <div class="finance-todo-buttons finance-todo-full">
+            <button id="financeOwedSaveBtn" class="btn-add" type="submit">+ Save What I Owe</button>
+            <button class="btn-secondary" type="button" onclick="financeResetOwedForm()">Clear / Cancel</button>
+            <button class="btn-secondary" type="button" onclick="financeLoadOwed()">↻ Refresh</button>
+          </div>
+        </form>
+        <p id="financeOwedStatus" class="finance-todo-note" role="status" aria-live="polite"></p>
+      </div>
+      <div class="finance-todo-card">
+        <h3>Amounts Owed</h3>
+        <div class="finance-todo-buttons" style="margin:10px 0">
+          <label for="financeOwedFilter">Show</label>
+          <select id="financeOwedFilter" onchange="financeRenderOwed()" style="min-height:38px;border-radius:10px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--card-border)">
+            <option value="open">Still owed</option><option value="all">All</option><option value="paid">Paid off</option>
+          </select>
+        </div>
+        <div id="financeOwedItems" aria-live="polite"></div>
+      </div>
+    </section>
     <!-- MAIN PAGE: Settings (device notifications, cloud status, safety backups) -->
     <section id="mainSettingsView" class="finance-settings-view" style="display:none;" aria-labelledby="settingsPageTitle">
 
@@ -1710,7 +1801,9 @@
             <button type="button" class="btn-secondary" onclick="financeOpenReleaseUpdates(true)">✨ View Latest Update</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 25, 2026 — Private Personal To-Do Lists</strong></summary>
+            <details open><summary><strong>October 26, 2026 — Private What I Owe Tracker</strong></summary>
+              <p class="settings-muted-note">Added a per-email What I Owe page for creditors, total owed, due dates, partial payments, remaining balances and paid-off tracking. Private across Finance logins, with optional one-time Home reminders when new unpaid entries are added.</p></details>
+            <details><summary><strong>October 25, 2026 — Private Personal To-Do Lists</strong></summary>
               <p class="settings-muted-note">Added My To-Do List in the Finance menu. Each registered email has its own private task list with due dates, priority, notes, completion and editing. Only new, unfinished tasks trigger the Home reminder; acknowledging them prevents repeat popups until more are added. Tasks sync across devices signed into that email, separately from shared household finances.</p></details>
             <details><summary><strong>October 23, 2026 — Username Sign-In Repair</strong></summary>
               <p class="settings-muted-note">Updated the Supabase username-login Edge Function (including browser CORS) and added clearer sign-in error messages. Email and password sign-in continues to work as an alternative.</p></details>
@@ -2822,7 +2915,7 @@
     const FINANCE_TAB_DASHBOARD_KEY = 'finance_tab_dashboard_v1';
     const FINANCE_TAB_ALLOC_KEY = 'finance_tab_alloc_v1';
     const FINANCE_TAB_MONTH_KEY = 'finance_tab_month_v1';
-    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','todo','profiles','settings'];
+    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','todo','owed','profiles','settings'];
     const financeSourceId = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : String(Math.random());
     const financeBaseSnapshots = new WeakMap();
     const financeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('household_finance_master_v12') : null;
@@ -3737,7 +3830,7 @@
         document.getElementById('financeGuideConfirmBtn').focus();
     }
 
-    const financeLatestUpdateId='2026-10-23-username-signin-fix-03';
+    const financeLatestUpdateId='2026-10-26-personal-owed-tracker-04';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -3773,7 +3866,7 @@
         const prior=financeReleasePreviousFocus;
         financeReleasePreviousFocus=null;
         if(prior?.isConnected&&typeof prior.focus==='function')prior.focus();
-        queueMicrotask(()=>{financeMaybeShowFeatureGuide();financeMaybeShowTodoReminder();});
+        queueMicrotask(()=>{financeMaybeShowFeatureGuide();financeMaybeShowTodoReminder();financeMaybeShowOwedReminder();});
     }
     document.addEventListener('keydown',event=>{
         const modal=document.getElementById('financeReleaseUpdates');
@@ -3808,6 +3901,7 @@
             }catch(err){console.warn('Feature guide preference could not be saved',err);}
         }
         modal.hidden=true;
+        queueMicrotask(()=>{financeMaybeShowTodoReminder();financeMaybeShowOwedReminder();});
         const prev=financeGuidePreviousFocus;
         financeGuidePreviousFocus=null;
         if(prev?.isConnected&&typeof prev.focus==='function')prev.focus();
@@ -3909,6 +4003,7 @@
             }
         }
         modal.hidden=true;
+        if(!openPage)queueMicrotask(financeMaybeShowOwedReminder);
         if(openPage)switchMainPage('todo');
         else if(financeTodoPreviousFocus?.isConnected)financeTodoPreviousFocus.focus();
         financeTodoPreviousFocus=null;
@@ -4083,6 +4178,248 @@
         financeTodoStatus('Task deleted.');
     }
 
+
+    // Per-email personal amounts owed. Deliberately outside finance_household_shared.
+    let financeOwedCache=[];
+    let financeOwedAccountId=null;
+    let financeOwedLoading=false;
+    let financeOwedReadEpoch=0;
+    let financeOwedLastCheck=0;
+    let financeOwedPreviousFocus=null;
+    const financeOwedEl=id=>document.getElementById(id);
+    const financeOwedSeenKey=()=>financeAuthUser?'finance_owed_seen_v1_'+financeAuthUser.id:null;
+    const financeOwedRemaining=row=>Math.max(0,Number(row.original_cents||0)-Number(row.paid_cents||0));
+    const financeOwedMoney=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format((Number(cents)||0)/100);
+    function financeOwedStatus(message){
+        const el=financeOwedEl('financeOwedStatus');if(el)el.textContent=message;
+    }
+    function financeParseMoney(value){
+        const v=String(value||'').trim();
+        if(!/^(?:0|[1-9]\d{0,8})(?:\.\d{1,2})?$/.test(v))return null;
+        const cents=Math.round(Number(v)*100);
+        return Number.isSafeInteger(cents)&&cents>=0&&cents<=99999999999?cents:null;
+    }
+    function financeOwedPending(){return financeOwedCache.filter(x=>financeOwedRemaining(x)>0);}
+    function financeOwedSeenIds(){
+        if(!financeAuthUser)return new Set();
+        try{const ids=JSON.parse(localStorage.getItem(financeOwedSeenKey())||'[]');
+            return new Set(Array.isArray(ids)?ids.filter(x=>typeof x==='string'):[]);}
+        catch{return new Set();}
+    }
+    function financeOwedUnseen(){
+        const seen=financeOwedSeenIds();
+        return financeOwedPending().filter(x=>!seen.has(x.id));
+    }
+    function financeMaybeShowOwedReminder(){
+        if(!financeAuthUser||!document.body.classList.contains('finance-authenticated'))return;
+        if(financeOwedAccountId!==financeAuthUser.id||financeOwedLoading)return;
+        if(financeOwedEl('mainDashboardView')?.style.display!=='block')return;
+        if(['financeFeatureGuide','financeReleaseUpdates','financeTodoReminder','financeOwedReminder']
+            .some(id=>!financeOwedEl(id)?.hidden))return;
+        if(financeHasUnreadUpdate()||financeTodoUnseen().length)return;
+        if(!financeGuideShownThisLogin && localStorage.getItem(financeGuidePreferenceKey())!=='1')return;
+        const unseen=financeOwedUnseen();
+        if(!unseen.length)return;
+        const list=financeOwedEl('financeOwedReminderItems');if(!list)return;
+        list.replaceChildren();
+        for(const x of unseen.slice(0,6)){
+            const li=document.createElement('li');
+            li.textContent=x.creditor+' — '+financeOwedMoney(financeOwedRemaining(x));
+            if(x.due_date){const small=document.createElement('small');small.textContent='Due '+x.due_date;li.append(small);}
+            list.append(li);
+        }
+        if(unseen.length>6){const li=document.createElement('li');li.textContent='And '+(unseen.length-6)+' more…';list.append(li);}
+        financeOwedEl('financeOwedReminderTitle').textContent=unseen.length===1?'💸 New Amount Owed':'💸 '+unseen.length+' New Amounts Owed';
+        financeOwedPreviousFocus=document.activeElement;
+        financeOwedEl('financeOwedReminder').hidden=false;
+        financeOwedEl('financeOwedReminderOpen')?.focus();
+    }
+    function financeDismissOwedReminder(openPage=false){
+        const dialog=financeOwedEl('financeOwedReminder');
+        if(!dialog||dialog.hidden)return;
+        const ids=financeOwedSeenIds();
+        for(const record of financeOwedPending())ids.add(record.id);
+        try{localStorage.setItem(financeOwedSeenKey(),JSON.stringify(Array.from(ids).slice(-1000)));}
+        catch(err){console.warn('Owed reminder preference unavailable',err);}
+        dialog.hidden=true;
+        if(openPage)switchMainPage('owed');
+        else if(financeOwedPreviousFocus?.isConnected)financeOwedPreviousFocus.focus();
+        financeOwedPreviousFocus=null;
+    }
+    document.addEventListener('keydown',event=>{
+        const modal=financeOwedEl('financeOwedReminder');if(!modal||modal.hidden)return;
+        if(event.key==='Escape'){event.preventDefault();financeDismissOwedReminder();return;}
+        if(event.key==='Tab'){
+            const buttons=Array.from(modal.querySelectorAll('button:not([disabled])'));
+            if(buttons.length){
+                if(event.shiftKey&&document.activeElement===buttons[0]){event.preventDefault();buttons[buttons.length-1].focus();}
+                else if(!event.shiftKey&&document.activeElement===buttons[buttons.length-1]){event.preventDefault();buttons[0].focus();}
+            }
+        }
+    });
+    function financeRenderOwed(){
+        const open=financeOwedPending();
+        const total=financeOwedCache.reduce((a,x)=>a+Number(x.original_cents||0),0);
+        const paid=financeOwedCache.reduce((a,x)=>a+Number(x.paid_cents||0),0);
+        for(const [id,text] of [
+            ['financeOwedOriginal',financeOwedMoney(total)],
+            ['financeOwedPaid',financeOwedMoney(paid)],
+            ['financeOwedRemaining',financeOwedMoney(total-paid)],
+            ['financeOwedOpen',String(open.length)] ]){
+                const el=financeOwedEl(id);if(el)el.textContent=text;
+        }
+        const nav=financeOwedEl('financeOwedNavCount');
+        if(nav){nav.hidden=!open.length;nav.textContent=String(open.length);}
+        const account=financeOwedEl('financeOwedAccount');
+        if(account)account.textContent=financeAuthUser?.email||'this registered login';
+        const container=financeOwedEl('financeOwedItems');if(!container)return;
+        const filter=financeOwedEl('financeOwedFilter')?.value||'open';
+        const records=financeOwedCache.filter(x=>filter==='all'||(filter==='open'?financeOwedRemaining(x)>0:financeOwedRemaining(x)===0))
+            .slice().sort((a,b)=>Number(financeOwedRemaining(a)===0)-Number(financeOwedRemaining(b)===0)
+                ||String(a.due_date||'9999-12-31').localeCompare(String(b.due_date||'9999-12-31'))
+                ||String(b.created_at).localeCompare(String(a.created_at)));
+        container.replaceChildren();
+        if(!records.length){
+            const empty=document.createElement('p');empty.className='finance-owed-empty';
+            empty.textContent=filter==='paid'?'Nothing paid off yet.':'Nothing owed here yet. Add an entry above.';
+            container.append(empty);return;
+        }
+        for(const item of records){
+            const rem=financeOwedRemaining(item),line=document.createElement('div');line.className='finance-owed-line';
+            const left=document.createElement('div');left.style.minWidth='0';
+            const heading=document.createElement('h4');heading.textContent=item.creditor;
+            const details=document.createElement('p');
+            details.textContent=[item.description,item.due_date?'Due '+financeTodoWhen(item.due_date):'',item.notes].filter(Boolean).join(' · ');
+            const progress=document.createElement('p');
+            progress.textContent='Original '+financeOwedMoney(item.original_cents)+' · Paid '+financeOwedMoney(item.paid_cents);
+            const actions=document.createElement('div');actions.className='finance-owed-actions';
+            function action(text,fn){
+                const btn=document.createElement('button');btn.type='button';btn.className='btn-secondary';btn.textContent=text;btn.onclick=fn;actions.append(btn);
+            }
+            if(rem>0){action('+ Payment',()=>financeAddOwedPayment(item.id));action('Mark Paid',()=>financePayOwedInFull(item.id));}
+            action('Edit',()=>financeEditOwed(item.id));
+            action('Delete',()=>financeDeleteOwed(item.id));
+            left.append(heading,details,progress,actions);
+            const right=document.createElement('div');right.className='finance-owed-right';
+            const amount=document.createElement('strong');amount.className='finance-owed-money'+(rem===0?' finance-owed-paid':'');
+            amount.textContent=rem===0?'Paid Off':financeOwedMoney(rem);
+            const label=document.createElement('small');label.textContent=rem===0?'Paid in full':'Remaining';
+            right.append(amount,label);line.append(left,right);container.append(line);
+        }
+    }
+    async function financeLoadOwed(options={}){
+        if(!financeAuthUser)return false;
+        if(financeOwedLoading&&!options.force)return false;
+        const uid=financeAuthUser.id,epoch=++financeOwedReadEpoch;
+        financeOwedLoading=true;
+        try{
+            const {data,error}=await supabaseClient.from('finance_personal_owed')
+                .select('id,user_id,creditor,description,original_cents,paid_cents,due_date,notes,created_at,updated_at')
+                .eq('user_id',uid).order('created_at',{ascending:false}).limit(500);
+            if(error)throw error;
+            if(financeAuthUser?.id!==uid||epoch!==financeOwedReadEpoch)return false;
+            financeOwedCache=Array.isArray(data)?data:[];
+            financeOwedAccountId=uid;
+            financeOwedLastCheck=Date.now();
+            financeOwedStatus('');
+            return true;
+        }catch(err){
+            if(financeAuthUser?.id===uid)financeOwedStatus('Unable to load private amounts owed: '+(err?.message||'Connection unavailable'));
+            return false;
+        }finally{
+            if(epoch===financeOwedReadEpoch){
+                financeOwedLoading=false;financeRenderOwed();
+                if(options.showReminder!==false)queueMicrotask(financeMaybeShowOwedReminder);
+            }
+        }
+    }
+    function financeResetOwedForm(){
+        financeOwedEl('financeOwedForm')?.reset();
+        financeOwedEl('financeOwedEditId').value='';
+        financeOwedEl('financeOwedAlreadyPaid').value='0';
+        financeOwedEl('financeOwedFormTitle').textContent='Add What I Owe';
+        financeOwedEl('financeOwedSaveBtn').textContent='+ Save What I Owe';
+    }
+    async function financeSaveOwed(event){
+        event.preventDefault();if(!financeAuthUser)return;
+        const uid=financeAuthUser.id;
+        const creditor=financeOwedEl('financeOwedCreditor').value.trim();
+        const description=financeOwedEl('financeOwedDescription').value.trim();
+        const original_cents=financeParseMoney(financeOwedEl('financeOwedAmount').value);
+        const paid_cents=financeParseMoney(financeOwedEl('financeOwedAlreadyPaid').value);
+        if(!creditor||creditor.length>160||description.length>350||original_cents===null||original_cents<1||
+           paid_cents===null||paid_cents>original_cents){
+           financeOwedStatus('Please enter a valid amount and make sure paid does not exceed total owed.');return;
+        }
+        const payload={creditor,description,original_cents,paid_cents,
+          due_date:financeOwedEl('financeOwedDue').value||null,notes:financeOwedEl('financeOwedNotes').value.trim()};
+        if(payload.notes.length>1200)return financeOwedStatus('Notes are too long.');
+        const id=financeOwedEl('financeOwedEditId').value;
+        const btn=financeOwedEl('financeOwedSaveBtn');
+        btn.disabled=true;financeOwedStatus('Saving your private entry…');
+        try{
+            const query=supabaseClient.from('finance_personal_owed');
+            const result=id
+                ?await query.update(payload).eq('id',id).eq('user_id',uid).select('id').single()
+                :await query.insert({...payload,user_id:uid}).select('id').single();
+            if(result.error)throw result.error;
+            if(financeAuthUser?.id!==uid)return;
+            financeResetOwedForm();await financeLoadOwed({showReminder:false});
+            financeOwedStatus('Saved privately to your email account.');
+        }catch(err){financeOwedStatus('Could not save: '+(err?.message||'Network unavailable'));}
+        finally{btn.disabled=false;}
+    }
+    function financeEditOwed(id){
+        const x=financeOwedCache.find(v=>v.id===id);if(!x)return;
+        for(const [id,value] of [
+            ['financeOwedEditId',x.id],['financeOwedCreditor',x.creditor],
+            ['financeOwedDescription',x.description||''],
+            ['financeOwedAmount',(Number(x.original_cents)/100).toFixed(2)],
+            ['financeOwedAlreadyPaid',(Number(x.paid_cents)/100).toFixed(2)],
+            ['financeOwedDue',x.due_date||''],['financeOwedNotes',x.notes||'']
+        ])financeOwedEl(id).value=value;
+        financeOwedEl('financeOwedFormTitle').textContent='Edit Amount Owed';
+        financeOwedEl('financeOwedSaveBtn').textContent='✓ Save Changes';
+        financeOwedEl('financeOwedForm').scrollIntoView({behavior:'smooth',block:'center'});
+        financeOwedEl('financeOwedCreditor').focus();
+    }
+    async function financeUpdateOwedPaid(item,amount){
+        if(!financeAuthUser)return;
+        const uid=financeAuthUser.id,previous=Number(item.paid_cents||0);
+        try{
+            const {data,error}=await supabaseClient.from('finance_personal_owed')
+                .update({paid_cents:amount}).eq('id',item.id).eq('user_id',uid)
+                .eq('paid_cents',previous).select('id').maybeSingle();
+            if(error)throw error;
+            if(!data){financeOwedStatus('This amount changed on another device. Refresh first.');await financeLoadOwed({showReminder:false});return;}
+            await financeLoadOwed({showReminder:false});
+            financeOwedStatus('Payment recorded for this email.');
+        }catch(err){financeOwedStatus('Could not save payment: '+(err?.message||'Connection unavailable'));}
+    }
+    function financeAddOwedPayment(id){
+        const row=financeOwedCache.find(x=>x.id===id);if(!row)return;
+        const remaining=financeOwedRemaining(row);if(remaining<=0)return;
+        const input=prompt('Record a payment to '+row.creditor+' (remaining '+financeOwedMoney(remaining)+'):',(remaining/100).toFixed(2));
+        if(input===null)return;
+        const cents=financeParseMoney(input);
+        if(cents===null||cents<=0||cents>remaining){financeOwedStatus('Payment must be positive and no more than the remaining balance.');return;}
+        void financeUpdateOwedPaid(row,Number(row.paid_cents)+cents);
+    }
+    function financePayOwedInFull(id){
+        const row=financeOwedCache.find(x=>x.id===id);
+        if(!row||financeOwedRemaining(row)===0)return;
+        if(confirm('Mark '+row.creditor+' as paid in full?'))void financeUpdateOwedPaid(row,Number(row.original_cents));
+    }
+    async function financeDeleteOwed(id){
+        if(!financeAuthUser||!confirm('Permanently delete this private amount owed?'))return;
+        const uid=financeAuthUser.id;
+        const {data,error}=await supabaseClient.from('finance_personal_owed')
+            .delete().eq('id',id).eq('user_id',uid).select('id').maybeSingle();
+        if(error||!data){financeOwedStatus('Could not delete entry: '+(error?.message||'Not found'));return;}
+        financeResetOwedForm();await financeLoadOwed({showReminder:false});
+        financeOwedStatus('Entry deleted.');
+    }
+
     function switchMainPage(view, shouldSave = true) {
         const dashboardView = document.getElementById('mainDashboardView');
         const allocationView = document.getElementById('mainAllocationView');
@@ -4094,11 +4431,13 @@
         const profilesView = document.getElementById('mainProfilesView');
         const expenseView = document.getElementById('mainExpensesView');
         const todoView=document.getElementById('mainTodoView');
+        const owedView=document.getElementById('mainOwedView');
         const navPayFour = document.getElementById('navPayFour');
         const navSettings = document.getElementById('navSettings');
         const navProfiles = document.getElementById('navProfiles');
         const navExpenses = document.getElementById('navExpenses');
         const navTodo=document.getElementById('navTodo');
+        const navOwed=document.getElementById('navOwed');
         const headerTitle = document.getElementById('mainPageHeaderTitle');
         const navDashboard = document.getElementById('navDashboard');
         const navAllocation = document.getElementById('navAllocation');
@@ -4117,6 +4456,7 @@
         profilesView.style.display = 'none';
         expenseView.style.display = 'none';
         todoView.style.display='none';
+        owedView.style.display='none';
         
         navDashboard.classList.remove('active');
         navAllocation.classList.remove('active');
@@ -4128,6 +4468,7 @@
         navProfiles.classList.remove('active');
         navExpenses.classList.remove('active');
         navTodo.classList.remove('active');
+        navOwed.classList.remove('active');
 
         if (view === 'allocation') {
             allocationView.style.display = 'block';
@@ -4162,6 +4503,12 @@
             navTodo.classList.add('active');
             monthCalendarBtn.style.display='none';
             financeRenderTodos();
+        } else if (view === 'owed') {
+            owedView.style.display='block';
+            headerTitle.textContent='What I Owe';
+            navOwed.classList.add('active');
+            monthCalendarBtn.style.display='none';
+            financeRenderOwed();
         } else if (view === 'profiles') {
             profilesView.style.display = 'block';
             headerTitle.textContent = 'Profiles';
@@ -4199,8 +4546,9 @@
         render();
         if(view==='dashboard'){
             financeMaybeShowFeatureGuide();
-            queueMicrotask(financeMaybeShowTodoReminder);
+            queueMicrotask(()=>{financeMaybeShowTodoReminder();financeMaybeShowOwedReminder();});
             if(financeAuthUser&&Date.now()-financeTodoLastCheck>20000)void financeLoadTodos();
+            if(financeAuthUser&&Date.now()-financeOwedLastCheck>20000)void financeLoadOwed();
         }
     }
 
@@ -4284,8 +4632,8 @@
     document.addEventListener('visibilitychange',()=>{
         if(document.visibilityState==='visible')void financeAutoRefreshAccount();
     });
-    window.addEventListener('focus',()=>{void financeAutoRefreshAccount();if(financeAuthUser)void financeLoadTodos();});
-    setInterval(()=>{void financeAutoRefreshAccount();if(financeAuthUser&&document.visibilityState==='visible')void financeLoadTodos();},60000);
+    window.addEventListener('focus',()=>{void financeAutoRefreshAccount();if(financeAuthUser){void financeLoadTodos();void financeLoadOwed();}});
+    setInterval(()=>{void financeAutoRefreshAccount();if(financeAuthUser&&document.visibilityState==='visible'){void financeLoadTodos();void financeLoadOwed();}},60000);
 
     async function handleManualRefresh() {
         const btn=document.getElementById('refreshBtn');
@@ -4303,7 +4651,8 @@
             // Finish active save first, so a refresh cannot race it.
             await saveQueue.catch(()=>{});
             const ok=await syncFromCloud(false,true);
-            if(ok)triggerSaveIndicator('✓ Refreshed from cloud');
+            await Promise.allSettled([financeLoadTodos({showReminder:false}),financeLoadOwed({showReminder:false})]);
+            if(ok)triggerSaveIndicator('✓ Shared finance and private lists refreshed');
         }catch(err){
             console.error('Manual cloud refresh failed:',err);
             warnSync('Refresh failed: '+(err?.message||'Unable to contact Supabase'));
@@ -6359,6 +6708,12 @@
     }
     async function financeEnterAccount(user) {
         if(financeAuthUser?.id===user.id && document.body.classList.contains('finance-authenticated'))return;
+        // Clear prior email's private list before any new account can render it.
+        if(financeOwedAccountId!==user.id){
+            ++financeOwedReadEpoch;
+            financeOwedCache=[];financeOwedAccountId=null;financeOwedLastCheck=0;
+            financeOwedLoading=false;financeRenderOwed();
+        }
         setFinanceAuthAccount(user);
         financeGuideShownThisLogin=false;
         const epoch=financeAuthEpoch;
@@ -6371,12 +6726,12 @@
         initialCloudLoad=syncFromCloud();
         const synced=await initialCloudLoad;
         if(epoch!==financeAuthEpoch)return;
-        await financeLoadTodos({showReminder:false});
+        await Promise.all([financeLoadTodos({showReminder:false}),financeLoadOwed({showReminder:false})]);
         if(epoch!==financeAuthEpoch)return;
         restoreFinanceTabView();
         initializeAllDateDisplays();
         render();
-        queueMicrotask(financeMaybeShowTodoReminder);
+        queueMicrotask(()=>{financeMaybeShowTodoReminder();financeMaybeShowOwedReminder();});
         if(synced)await checkAndAutoRollover(initialMonthStr,false);
         if(epoch!==financeAuthEpoch)return;
         const legacy=localStorage.getItem('household_finance_v12');
@@ -6388,6 +6743,9 @@
         }
     }
     function financeExitAccount() {
+        ++financeOwedReadEpoch;financeOwedCache=[];financeOwedAccountId=null;financeOwedLastCheck=0;
+        financeOwedLoading=false;financeOwedPreviousFocus=null;
+        const owedReminder=financeOwedEl('financeOwedReminder');if(owedReminder)owedReminder.hidden=true;
         ++financeTodoReadEpoch;financeTodoCache=[];financeTodoAccountId=null;financeTodoLastCheck=0;
         financeTodoLoading=false;financeTodoPreviousFocus=null;
         const todoModal=financeTodoElement('financeTodoReminder');
@@ -6403,6 +6761,7 @@
         financeAuthEpoch++;
         document.body.classList.remove('finance-authenticated');
         financeAuthUser=null;financeAuthProfile=null;
+        financeRenderOwed();
         financeSharedProfiles.clear();financeOutgoingPermissions=[];financeSharedSaveQueues.clear();
         financeMostRecentCloudInfo=null;
         const cloudBanner=document.getElementById('financeCloudResult');
