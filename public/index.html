@@ -1226,6 +1226,10 @@
       border-radius:15px;padding:17px;margin:0 0 16px}
     .finance-todo-card h3{margin:0 0 10px}
     .finance-todo-note{color:var(--text-muted);font-size:.86rem;line-height:1.55}
+    .finance-entry-toggle{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+    .finance-entry-toggle button{border-radius:10px;min-height:43px;padding:10px 15px;font-weight:750;cursor:pointer}
+    .finance-entry-toggle button[aria-expanded="true"]{outline:2px solid var(--accent-his,#4a9aff);outline-offset:2px}
+    .finance-entry-form[hidden]{display:none!important}
     .finance-todo-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .finance-todo-fields>label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.84rem}
     .finance-todo-fields input,.finance-todo-fields textarea,.finance-todo-fields select{
@@ -1480,10 +1484,14 @@
     <div class="finance-guide-top">
       <span class="finance-guide-kicker">New Update · October 26, 2026</span>
       <h2 id="financeReleaseTitle">🎉 What's New in Household Finance</h2>
-      <p id="financeReleaseIntro">Introducing What I Owe: your own private page to track amounts owed, due dates, payments and remaining balances without sharing them with other Finance accounts.</p>
+      <p id="financeReleaseIntro">New: Add Task and Add What I Owe buttons now open their information forms only when needed. This release also improves how you discover recent updates.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">➕</span><div>
+          <h3>Cleaner Add-Entry Buttons</h3>
+          <p>My To-Do and What I Owe now show Add buttons instead of open information forms. Tap to enter details, then Save or Close. Existing entries stay intact.</p>
+        </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💸</span><div>
           <h3>New: What I Owe</h3>
           <p>Record who you owe, the full amount, due date and payments. Track remaining balances, mark entries paid, and get a Home reminder only for new outstanding entries.</p>
@@ -1701,8 +1709,9 @@
           <span>Total: <strong id="financeTodoTotal">0</strong></span></div>
       </div>
       <div class="finance-todo-card">
-        <h3 id="financeTodoFormTitle">Add a Task</h3>
-        <form id="financeTodoForm" class="finance-todo-fields" onsubmit="financeSaveTodo(event)">
+        <div class="finance-entry-toggle"><button type="button" class="btn-add" id="financeTodoOpenForm" aria-controls="financeTodoForm" aria-expanded="false" onclick="financeToggleEntryForm('todo')">＋ Add Task</button><span class="finance-todo-note">Select Add Task to enter information.</span></div>
+        <h3 id="financeTodoFormTitle" hidden>Add a Task</h3>
+        <form id="financeTodoForm" class="finance-todo-fields finance-entry-form" hidden onsubmit="financeSaveTodo(event)">
           <input id="financeTodoEditId" type="hidden">
           <label class="finance-todo-full">Task *
             <input id="financeTodoText" required maxlength="180" placeholder="e.g. Review upcoming bills" autocomplete="off">
@@ -1748,8 +1757,9 @@
         </div>
       </div>
       <div class="finance-todo-card">
-        <h3 id="financeOwedFormTitle">Add What I Owe</h3>
-        <form class="finance-todo-fields" id="financeOwedForm" onsubmit="financeSaveOwed(event)">
+        <div class="finance-entry-toggle"><button type="button" class="btn-add" id="financeOwedOpenForm" aria-controls="financeOwedForm" aria-expanded="false" onclick="financeToggleEntryForm('owed')">＋ Add What I Owe</button><span class="finance-todo-note">Select Add What I Owe to enter information.</span></div>
+        <h3 id="financeOwedFormTitle" hidden>Add What I Owe</h3>
+        <form class="finance-todo-fields finance-entry-form" id="financeOwedForm" hidden onsubmit="financeSaveOwed(event)">
           <input type="hidden" id="financeOwedEditId">
           <label>Who do you owe? *
             <input id="financeOwedCreditor" required maxlength="160" autocomplete="off" placeholder="Name, store, company or lender">
@@ -1801,7 +1811,9 @@
             <button type="button" class="btn-secondary" onclick="financeOpenReleaseUpdates(true)">✨ View Latest Update</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 26, 2026 — Private What I Owe Tracker</strong></summary>
+            <details open><summary><strong>October 26, 2026 — Add-Entry Buttons and Update Popup</strong></summary>
+              <p class="settings-muted-note">To-Do and What I Owe information forms are now opened through Add buttons. The What's New popup announces this release once per signed-in account and browser, and older updates remain available here.</p></details>
+            <details><summary><strong>October 26, 2026 — Private What I Owe Tracker</strong></summary>
               <p class="settings-muted-note">Added a per-email What I Owe page for creditors, total owed, due dates, partial payments, remaining balances and paid-off tracking. Private across Finance logins, with optional one-time Home reminders when new unpaid entries are added.</p></details>
             <details><summary><strong>October 25, 2026 — Private Personal To-Do Lists</strong></summary>
               <p class="settings-muted-note">Added My To-Do List in the Finance menu. Each registered email has its own private task list with due dates, priority, notes, completion and editing. Only new, unfinished tasks trigger the Home reminder; acknowledging them prevents repeat popups until more are added. Tasks sync across devices signed into that email, separately from shared household finances.</p></details>
@@ -3830,7 +3842,7 @@
         document.getElementById('financeGuideConfirmBtn').focus();
     }
 
-    const financeLatestUpdateId='2026-10-26-personal-owed-tracker-04';
+    const financeLatestUpdateId='2026-10-26-add-entry-buttons-update-05';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -4107,11 +4119,25 @@
             }
         }
     }
+    function financeToggleEntryForm(type, open){
+        const prefix=type==='owed'?'financeOwed':'financeTodo';
+        const form=document.getElementById(prefix+'Form');
+        const title=document.getElementById(prefix+'FormTitle');
+        const button=document.getElementById(prefix+'OpenForm');
+        if(!form||!button)return;
+        const show=typeof open==='boolean'?open:form.hidden;
+        form.hidden=!show;
+        if(title)title.hidden=!show;
+        button.setAttribute('aria-expanded',String(show));
+        button.textContent=show?'✕ Close Form':(type==='owed'?'＋ Add What I Owe':'＋ Add Task');
+        if(show)form.querySelector('input:not([type="hidden"])')?.focus();
+    }
     function financeResetTodoForm(){
         financeTodoElement('financeTodoForm')?.reset();
         financeTodoElement('financeTodoEditId').value='';
         financeTodoElement('financeTodoFormTitle').textContent='Add a Task';
         financeTodoElement('financeTodoSaveBtn').textContent='+ Save Task';
+        financeToggleEntryForm('todo',false);
     }
     async function financeSaveTodo(event){
         event.preventDefault();
@@ -4156,6 +4182,7 @@
         financeTodoElement('financeTodoPriority').value=task.priority||'normal';
         financeTodoElement('financeTodoFormTitle').textContent='Edit Task';
         financeTodoElement('financeTodoSaveBtn').textContent='✓ Save Changes';
+        financeToggleEntryForm('todo',true);
         financeTodoElement('financeTodoForm').scrollIntoView({behavior:'smooth',block:'start'});
         financeTodoElement('financeTodoText').focus();
     }
@@ -4339,6 +4366,7 @@
         financeOwedEl('financeOwedAlreadyPaid').value='0';
         financeOwedEl('financeOwedFormTitle').textContent='Add What I Owe';
         financeOwedEl('financeOwedSaveBtn').textContent='+ Save What I Owe';
+        financeToggleEntryForm('owed',false);
     }
     async function financeSaveOwed(event){
         event.preventDefault();if(!financeAuthUser)return;
@@ -4380,6 +4408,7 @@
         ])financeOwedEl(id).value=value;
         financeOwedEl('financeOwedFormTitle').textContent='Edit Amount Owed';
         financeOwedEl('financeOwedSaveBtn').textContent='✓ Save Changes';
+        financeToggleEntryForm('owed',true);
         financeOwedEl('financeOwedForm').scrollIntoView({behavior:'smooth',block:'center'});
         financeOwedEl('financeOwedCreditor').focus();
     }
