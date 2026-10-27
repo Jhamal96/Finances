@@ -60,6 +60,17 @@ public final class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 if (!request.isForMainFrame()) return false;
                 Uri uri = request.getUrl();
+                // Private receipt links are signed on the website. Let Android's
+                // browser/PDF viewer open them, since WebView cannot render PDF.
+                if ("vxpufrahrnwmtgltjstd.supabase.co".equalsIgnoreCase(uri.getHost()) &&
+                    uri.getPath()!=null &&
+                    uri.getPath().startsWith("/storage/v1/object/sign/finance-household-receipts/")) {
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
+                    catch (Exception err) {
+                        Toast.makeText(MainActivity.this, "No app available to open this receipt", Toast.LENGTH_LONG).show();
+                    }
+                    return true;
+                }
                 if (isTrusted(uri)) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
                 catch (Exception err) {
