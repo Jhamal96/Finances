@@ -1300,6 +1300,20 @@
     .expense-source-form .expense-field{flex:1;min-width:180px}
     .expense-source-form button{min-height:42px;width:auto}
     .expense-source-form input{width:100%}
+    /* Money Allocation percentage controls and readable totals. */
+    .finance-allocation-percent {display:block;color:var(--text-muted);font-size:.81rem;line-height:1.45;margin-top:5px}
+    .finance-allocation-form label {display:flex;flex-direction:column;gap:6px;color:var(--text-muted);font-size:.82rem;font-weight:600;min-width:0}
+    .finance-allocation-form label input,.finance-allocation-form label select {color:var(--text);font-size:1rem}
+    .finance-allocation-form-actions {display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+    .finance-allocation-form-actions button {width:auto;flex:1;min-width:125px}
+    #allocCancelEdit[hidden] {display:none!important}
+    .finance-allocation-preview {margin-top:10px;min-height:1.3em;color:var(--text-muted);font-size:.82rem;line-height:1.5}
+    .finance-allocation-info {flex:1;min-width:0}
+    .finance-allocation-line {display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;overflow-wrap:anywhere}
+    .finance-allocation-note {display:block;color:var(--text-muted);font-size:.77rem;line-height:1.4;margin-top:4px}
+    .finance-allocation-actions {display:flex;align-items:center;gap:6px;flex-shrink:0}
+    .finance-allocation-edit {width:auto;min-height:38px;padding:7px 10px;font-size:.8rem}
+    @media(max-width:480px) {.alloc-bucket-row {align-items:flex-start;flex-wrap:wrap}.finance-allocation-info {flex-basis:100%}.finance-allocation-actions {margin-left:auto}}
     </style>
     <script>
         // Detect an installed app before the first paint (avoids an Install-button flash).
@@ -1685,22 +1699,22 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
   <div class="finance-guide-panel" style="max-width:610px">
     <div class="finance-guide-top">
       <span class="finance-guide-kicker">Latest Update · October 28, 2026</span>
-      <h2 id="financeReleaseTitle">✨ Liquid Glass Appearance</h2>
-      <p id="financeReleaseIntro">Your dashboard now has a soft, glass-inspired look for its navigation and controls. Earlier updates remain in Settings → Recent Updates.</p>
+      <h2 id="financeReleaseTitle">💰 Allocation by Percentage</h2>
+      <p id="financeReleaseIntro">You can now allocate a percentage of your average paycheck and see the percentage allocated and remaining.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">✨</span><div>
-          <h3>A Refreshed Look</h3>
-          <p>Translucent navigation, subtle highlights, and the familiar navy, rose, and teal colors bring a little more depth to your dashboard.</p>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📊</span><div>
+          <h3>Choose Dollars or Percentage</h3>
+          <p>Add or edit an envelope using a fixed dollar amount or a percentage of the selected month’s average paycheck.</p>
         </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">⚙️</span><div>
-          <h3>Make It Yours</h3>
-          <p>Turn Liquid Glass on or off in Settings. Your choice is saved on this browser or device.</p>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🔄</span><div>
+          <h3>Updates With Pay</h3>
+          <p>Percentage-based amounts change when your average paycheck changes. Fixed-dollar amounts stay fixed.</p>
         </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">👓</span><div>
-          <h3>Designed for Readability</h3>
-          <p>Financial information stays clear, and supported accessibility settings can reduce transparency and motion.</p>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">✅</span><div>
+          <h3>See Your Totals</h3>
+          <p>See how much of your average pay is allocated and what percentage is left, for His and Hers.</p>
         </div></article>
       </div>
       <p class="finance-guide-privacy">For every earlier change, open <strong>Settings → Recent Updates</strong>.</p>
@@ -2032,7 +2046,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             <button type="button" class="btn-secondary" onclick="financeExpandUpdateHistory()">📚 View Complete Update History</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 28, 2026 — Liquid Glass Appearance</strong></summary>
+            <details open><summary><strong>October 28, 2026 — Allocation by Percentage</strong></summary>
+              <p class="settings-muted-note">Create or edit an allocation as a percentage of the selected month’s average paycheck, with dollar amounts that update as pay changes. Totals also show the allocated and remaining percentages.</p></details>
+            <details><summary><strong>October 28, 2026 — Liquid Glass Appearance</strong></summary>
               <p class="settings-muted-note">A glass-inspired look adds translucent navigation and controls. Turn it on or off in Settings on each device; your financial data and cloud sync stay the same.</p></details>
             <details><summary><strong>October 28, 2026 — Expense Payment Methods</strong></summary>
               <p class="settings-muted-note">You can now select how an expense was paid (Cash App, Chase Debit Card, Cash, etc.), create your own sources, rename/remove/restore them, filter and compare spending by method, and include methods in CSV exports. Older expenses retain their recorded source even after it is removed from new choices.</p></details>
@@ -2453,10 +2469,12 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             <div class="stat-card">
                 <h3>Total Allocated</h3>
                 <div class="amount" id="allocTotalAllocated" style="color: var(--accent-his);">$0.00</div>
+                <small class="finance-allocation-percent" id="allocTotalPercent">Add a paycheck to see percentage</small>
             </div>
             <div class="stat-card">
                 <h3>Unallocated Remaining</h3>
                 <div class="amount" id="allocRemaining">$0.00</div>
+                <small class="finance-allocation-percent" id="allocRemainingPercent">Add a paycheck to see percentage</small>
             </div>
         </div>
 
@@ -2469,11 +2487,25 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 </div>
             </div>
 
-            <form id="allocForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleAllocSubmit(event)">
-                <input type="text" id="allocNameInput" class="auto-cap" placeholder="Envelope / Category Name" required>
-                <input type="number" id="allocAmountInput" step="0.01" min="0" placeholder="Allocated Amount ($)" required>
-                <button type="submit" class="btn-add">Add Allocation</button>
+            <form id="allocForm" class="income-form-grid finance-allocation-form" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleAllocSubmit(event)">
+                <label for="allocNameInput">Envelope / category
+                    <input type="text" id="allocNameInput" class="auto-cap" placeholder="e.g. Savings" required>
+                </label>
+                <label for="allocTypeInput">Allocate by
+                    <select id="allocTypeInput" onchange="financeAllocationModeChanged()">
+                        <option value="amount">Dollar amount</option><option value="percentage">Percentage of pay</option>
+                    </select>
+                </label>
+                <label for="allocAmountInput"><span id="allocValueLabel">Amount per paycheck ($)</span>
+                    <input type="number" id="allocAmountInput" step="0.01" min="0" max="1000000000000" placeholder="e.g. 200.00" oninput="financeAllocationPreview()" aria-describedby="allocPreview allocPercentHelp" required>
+                </label>
+                <div class="finance-allocation-form-actions">
+                    <button type="submit" id="allocSubmitButton" class="btn-add">Add Allocation</button>
+                    <button type="button" id="allocCancelEdit" class="btn-secondary" onclick="financeCancelAllocationEdit()" hidden>Cancel</button>
+                </div>
             </form>
+            <p class="finance-allocation-preview" id="allocPreview" role="status" aria-live="polite">Enter a dollar amount or choose Percentage of pay.</p>
+            <p class="settings-muted-note" id="allocPercentHelp">Percentages use the average of the selected month’s recorded paychecks. Percentage-based amounts update when that average changes; dollar amounts stay fixed.</p>
         </div>
 
         <div class="allocation-card">
@@ -4078,7 +4110,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         section.querySelectorAll('details').forEach(item=>item.open=true);
         section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
     }
-    const financeLatestUpdateId='2026-10-28-liquid-glass-10';
+    const financeLatestUpdateId='2026-10-28-allocation-percent-11';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -5420,57 +5452,160 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         return totalIncome;
     }
 
+    // Percentage allocations follow the average paycheck for the active person
+    // and selected month. Existing dollar allocations remain fixed amounts.
+    let financeAllocationEdit = null;
+    const financeAllocationPerson = data => sessionStorage.getItem(FINANCE_TAB_ALLOC_KEY) || data.activeAllocPerson || 'his';
+    const financeAllocationContext = person => (financeAuthUser?.id || 'locked') + '|' +
+        (localStorage.getItem(financeProfileKey()) || 'default') + '|' + person;
+    function financeAllocationBasePay(data, person) {
+        const paychecks = getMonthData(data, monthPicker.value)[`${person}Pay`] || [];
+        if (!paychecks.length) return 0;
+        const total = paychecks.reduce((sum, pay) => sum + (Number.isFinite(Number(pay.amount)) ? Number(pay.amount) : 0), 0);
+        return Math.max(0, total / paychecks.length);
+    }
+    function financeAllocationMoney(value) {
+        return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+    function financeAllocationPercent(value) {
+        return Number(value.toFixed(2)).toLocaleString(undefined, {maximumFractionDigits:2});
+    }
+    function financeAllocationValue(bucket, basePay) {
+        const percent = Number(bucket.percentage);
+        if (bucket.allocationType === 'percentage' && Number.isFinite(percent) && percent >= 0)
+            return financeAllocationMoney(basePay * percent / 100);
+        const amount = Number(bucket.amount);
+        return Number.isFinite(amount) && amount >= 0 ? amount : 0;
+    }
+    function financeAllocationModeChanged(convert = true) {
+        const mode = document.getElementById('allocTypeInput').value;
+        const input = document.getElementById('allocAmountInput');
+        const oldMode = input.dataset.mode || 'amount';
+        if (convert && oldMode !== mode && input.value !== '') {
+            const entered = Number(input.value);
+            const data = getStoredData();
+            const base = financeAllocationBasePay(data, financeAllocationPerson(data));
+            if (Number.isFinite(entered) && base > 0) {
+                input.value = mode === 'percentage'
+                    ? (entered / base * 100).toFixed(2)
+                    : financeAllocationMoney(base * entered / 100).toFixed(2);
+            } else input.value = '';
+        }
+        input.dataset.mode = mode;
+        input.max = mode === 'percentage' ? '1000000' : '1000000000000';
+        document.getElementById('allocValueLabel').textContent = mode === 'percentage' ? 'Percentage of average pay (%)' : 'Amount per paycheck ($)';
+        input.placeholder = mode === 'percentage' ? 'e.g. 20' : 'e.g. 200.00';
+        financeAllocationPreview();
+    }
+    function financeAllocationPreview() {
+        const mode = document.getElementById('allocTypeInput').value;
+        const input = document.getElementById('allocAmountInput');
+        const output = document.getElementById('allocPreview');
+        const data = getStoredData();
+        const base = financeAllocationBasePay(data, financeAllocationPerson(data));
+        if (input.value === '') {
+            output.textContent = mode === 'percentage'
+                ? 'A percentage follows the average paycheck for the selected month.'
+                : 'Enter a dollar amount or choose Percentage of pay.';
+            return;
+        }
+        const value = Number(input.value);
+        if (!Number.isFinite(value) || value < 0 || value > Number(input.max) || (mode === 'percentage' && base * value / 100 > 1e12)) {
+            output.textContent = 'Enter a valid nonnegative amount or percentage within the allowed limit.'; return;
+        }
+        if (base <= 0) {
+            output.textContent = mode === 'percentage'
+                ? 'Add a paycheck in the selected month to calculate the dollar amount.'
+                : 'Add a paycheck in the selected month to calculate the percentage.';
+        } else if (mode === 'percentage') {
+            output.textContent = `${financeAllocationPercent(value)}% of $${base.toFixed(2)} average pay = $${financeAllocationMoney(base * value / 100).toFixed(2)} per paycheck.`;
+        } else {
+            output.textContent = `$${value.toFixed(2)} is ${financeAllocationPercent(value / base * 100)}% of $${base.toFixed(2)} average pay.`;
+        }
+    }
+    function financeCancelAllocationEdit() {
+        financeAllocationEdit = null;
+        document.getElementById('allocForm').reset();
+        document.getElementById('allocAmountInput').dataset.mode = 'amount';
+        document.getElementById('allocSubmitButton').textContent = 'Add Allocation';
+        document.getElementById('allocCancelEdit').hidden = true;
+        financeAllocationModeChanged(false);
+    }
+    function financeEditAllocation(id) {
+        const data = getStoredData();
+        const person = financeAllocationPerson(data);
+        const bucket = (data.allocations?.[person] || []).find(item => item.id === id);
+        if (!bucket) return;
+        financeAllocationEdit = {id, context:financeAllocationContext(person)};
+        document.getElementById('allocNameInput').value = bucket.name || '';
+        const mode = bucket.allocationType === 'percentage' && Number.isFinite(Number(bucket.percentage)) ? 'percentage' : 'amount';
+        document.getElementById('allocTypeInput').value = mode;
+        const input = document.getElementById('allocAmountInput');
+        input.dataset.mode = mode;
+        input.value = mode === 'percentage' ? Number(bucket.percentage) : Number(bucket.amount) || 0;
+        document.getElementById('allocSubmitButton').textContent = 'Save Changes';
+        document.getElementById('allocCancelEdit').hidden = false;
+        financeAllocationModeChanged(false);
+        document.getElementById('allocForm').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+        document.getElementById('allocNameInput').focus();
+    }
     function handleAllocSubmit(e) {
         e.preventDefault();
         const data = getStoredData();
-        const activePerson = sessionStorage.getItem(FINANCE_TAB_ALLOC_KEY) || data.activeAllocPerson || 'his';
-        
-        if (!data.allocations) data.allocations = { his: [], her: [] };
-        if (!data.allocations[activePerson]) data.allocations[activePerson] = [];
-
+        const activePerson = financeAllocationPerson(data);
+        if (financeAllocationEdit && financeAllocationEdit.context !== financeAllocationContext(activePerson)) {
+            financeCancelAllocationEdit();
+            document.getElementById('allocPreview').textContent = 'The selected profile or person changed. Please select the allocation again.';
+            return;
+        }
         const name = autoCapitalizeWords(document.getElementById('allocNameInput').value.trim());
-        const amount = parseFloat(document.getElementById('allocAmountInput').value);
-
-        data.allocations[activePerson].push({
-            id: `alloc_${Date.now()}_${Math.random().toString(36).substring(2,7)}`,
-            name,
-            amount
-        });
-
+        const input = document.getElementById('allocAmountInput');
+        const value = Number(input.value);
+        if (!name || input.value === '' || !Number.isFinite(value) || value < 0 || value > Number(input.max)) {
+            document.getElementById('allocPreview').textContent = 'Enter a name and a valid nonnegative amount or percentage.';
+            return;
+        }
+        if (!data.allocations) data.allocations = {his:[],her:[]};
+        if (!data.allocations[activePerson]) data.allocations[activePerson] = [];
+        const buckets = data.allocations[activePerson];
+        const index = financeAllocationEdit ? buckets.findIndex(item => item.id === financeAllocationEdit.id) : -1;
+        if (financeAllocationEdit && index < 0) {
+            document.getElementById('allocPreview').textContent = 'This allocation no longer exists. Cancel editing and try again.';
+            return;
+        }
+        const mode = document.getElementById('allocTypeInput').value;
+        const base = financeAllocationBasePay(data, activePerson);
+        if (mode === 'percentage' && base * value / 100 > 1e12) {
+            document.getElementById('allocPreview').textContent = 'The calculated allocation exceeds the allowed dollar limit.';
+            return;
+        }
+        const entry = index >= 0 ? {...buckets[index]} : {id:`alloc_${Date.now()}_${Math.random().toString(36).substring(2,7)}`};
+        entry.name = name;
+        entry.amount = mode === 'percentage' ? financeAllocationMoney(base * value / 100) : financeAllocationMoney(value);
+        if (mode === 'percentage') { entry.allocationType = 'percentage'; entry.percentage = value; }
+        else { delete entry.allocationType; delete entry.percentage; }
+        if (index >= 0) buckets[index] = entry; else buckets.push(entry);
         saveData(data);
-        e.target.reset();
+        financeCancelAllocationEdit();
         renderAllocationView();
     }
-
     function deleteAllocBucket(id) {
         const data = getStoredData();
-        const activePerson = sessionStorage.getItem(FINANCE_TAB_ALLOC_KEY) || data.activeAllocPerson || 'his';
-
-        if (data.allocations && data.allocations[activePerson]) {
+        const activePerson = financeAllocationPerson(data);
+        if (data.allocations && data.allocations[activePerson])
             data.allocations[activePerson] = data.allocations[activePerson].filter(b => b.id !== id);
-        }
-
+        if (financeAllocationEdit?.id === id && financeAllocationEdit.context === financeAllocationContext(activePerson)) financeCancelAllocationEdit();
         saveData(data);
         renderAllocationView();
     }
-
     function applyAllocPreset(type) {
         const data = getStoredData();
-        const activePerson = sessionStorage.getItem(FINANCE_TAB_ALLOC_KEY) || data.activeAllocPerson || 'his';
-        const monthData = getMonthData(data, monthPicker.value);
-        const paychecks = monthData[`${activePerson}Pay`] || [];
-        const paycheckSum = paychecks.reduce((sum, p) => sum + p.amount, 0);
-
-        let basePay = paycheckSum;
-        if (paychecks.length > 0) {
-            basePay = paycheckSum / paychecks.length;
-        }
-
+        const activePerson = financeAllocationPerson(data);
+        const basePay = financeAllocationBasePay(data, activePerson);
         if (basePay <= 0) {
             alert('Please log at least one paycheck for ' + (activePerson === 'his' ? 'him' : 'her') + ' first to calculate preset buckets.');
             return;
         }
-
         let newBuckets = [];
         if (type === '50/30/20') {
             newBuckets = [
@@ -5485,69 +5620,71 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 { id: `alloc_3`, name: 'Financial Goals & Debt (20%)', amount: basePay * 0.20 }
             ];
         }
-
         if (!data.allocations) data.allocations = { his: [], her: [] };
         data.allocations[activePerson] = newBuckets;
-
+        if (financeAllocationEdit) financeCancelAllocationEdit();
         saveData(data);
         renderAllocationView();
         triggerSaveIndicator('✓ Preset Applied');
     }
-
     function renderAllocationView() {
         const data = getStoredData();
-        const activePerson = sessionStorage.getItem(FINANCE_TAB_ALLOC_KEY) || data.activeAllocPerson || 'his';
-        const monthData = getMonthData(data, monthPicker.value);
-
+        const activePerson = financeAllocationPerson(data);
+        if (financeAllocationEdit && financeAllocationEdit.context !== financeAllocationContext(activePerson)) financeCancelAllocationEdit();
         const isHis = activePerson === 'his';
-        const paychecks = monthData[`${activePerson}Pay`] || [];
-        const paycheckSum = paychecks.reduce((sum, p) => sum + p.amount, 0);
-
-        let basePay = paycheckSum;
-        if (paychecks.length > 0) {
-            basePay = paycheckSum / paychecks.length;
-        }
-
-        const frequencyLabel = isHis ? 'Weekly Pay (Avg)' : 'Bi-Weekly Pay (Avg)';
+        const basePay = financeAllocationBasePay(data, activePerson);
         const accentColor = isHis ? 'var(--accent-his)' : 'var(--accent-hers)';
-
-        document.getElementById('allocBaseIncomeLabel').textContent = `${isHis ? 'His' : 'Her'} ${frequencyLabel}`;
+        document.getElementById('allocBaseIncomeLabel').textContent = isHis ? 'His Weekly Pay (Avg)' : 'Her Bi-Weekly Pay (Avg)';
         document.getElementById('allocBaseIncome').textContent = `$${basePay.toFixed(2)}`;
         document.getElementById('allocBaseIncome').style.color = accentColor;
-        document.getElementById('allocFormHeaderTitle').textContent = `Add Allocation (${isHis ? 'His Weekly' : 'Her Bi-Weekly'})`;
-
+        document.getElementById('allocFormHeaderTitle').textContent = `Add or Edit Allocation (${isHis ? 'His Weekly' : 'Her Bi-Weekly'})`;
         const buckets = (data.allocations && data.allocations[activePerson]) ? data.allocations[activePerson] : [];
-        const totalAllocated = buckets.reduce((sum, b) => sum + b.amount, 0);
+        const totalAllocated = buckets.reduce((sum,b) => sum + financeAllocationValue(b,basePay),0);
         const unallocated = basePay - totalAllocated;
-
         document.getElementById('allocTotalAllocated').textContent = `$${totalAllocated.toFixed(2)}`;
+        document.getElementById('allocTotalPercent').textContent = basePay > 0 ? `${financeAllocationPercent(totalAllocated / basePay * 100)}% of average pay` : 'Add a paycheck to see percentage';
         const remEl = document.getElementById('allocRemaining');
         remEl.textContent = `$${unallocated.toFixed(2)}`;
         remEl.style.color = unallocated >= 0 ? 'var(--savings)' : 'var(--urgent)';
-
+        document.getElementById('allocRemainingPercent').textContent = basePay > 0 ? `${financeAllocationPercent(unallocated / basePay * 100)}% of average pay remaining` : 'Add a paycheck to see percentage';
+        financeAllocationPreview();
         const listEl = document.getElementById('allocBucketsList');
-        if (buckets.length === 0) {
-            listEl.innerHTML = `<span style="color:var(--text-muted); font-size:0.9rem;">No allocation buckets defined for ${isHis ? 'him' : 'her'}.</span>`;
+        listEl.replaceChildren();
+        if (!buckets.length) {
+            const empty = document.createElement('span');
+            empty.style.cssText = 'color:var(--text-muted);font-size:.9rem';
+            empty.textContent = `No allocation buckets defined for ${isHis ? 'him' : 'her'}.`;
+            listEl.append(empty);
             return;
         }
-
-        listEl.innerHTML = buckets.map(b => {
-            const pct = basePay > 0 ? Math.min(100, Math.round((b.amount / basePay) * 100)) : 0;
-            return `
-                <div class="alloc-bucket-row">
-                    <div style="flex-grow:1; padding-right:10px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${b.name}</strong>
-                            <strong style="color:${accentColor}">$${b.amount.toFixed(2)} (${pct}%)</strong>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" style="width: ${pct}%; background-color: ${accentColor};"></div>
-                        </div>
-                    </div>
-                    <button class="delete-btn" onclick="deleteAllocBucket('${b.id}')">&times;</button>
-                </div>
-            `;
-        }).join('');
+        for (const bucket of buckets) {
+            const amount = financeAllocationValue(bucket, basePay);
+            const percentageMode = bucket.allocationType === 'percentage' && Number.isFinite(Number(bucket.percentage)) && Number(bucket.percentage) >= 0;
+            const percentage = basePay > 0 ? amount / basePay * 100 : (percentageMode ? Number(bucket.percentage) : null);
+            const progress = percentage === null ? 0 : Math.min(100, Math.max(0, percentage));
+            const row = document.createElement('div'); row.className = 'alloc-bucket-row';
+            const info = document.createElement('div'); info.className = 'finance-allocation-info';
+            const line = document.createElement('div'); line.className = 'finance-allocation-line';
+            const name = document.createElement('strong'); name.textContent = bucket.name || 'Allocation';
+            const amountEl = document.createElement('strong'); amountEl.style.color = accentColor;
+            amountEl.textContent = `$${amount.toFixed(2)} (${percentage === null ? 'no pay yet' : financeAllocationPercent(percentage) + '%'})`;
+            line.append(name,amountEl);info.append(line);
+            if (percentageMode) {
+                const note = document.createElement('small'); note.className = 'finance-allocation-note';
+                note.textContent = `${financeAllocationPercent(Number(bucket.percentage))}% of average pay${basePay <= 0 ? ' · add a paycheck to calculate the amount' : ' · updates with pay'}`;
+                info.append(note);
+            }
+            const track = document.createElement('div'); track.className = 'progress-bar-bg';
+            const fill = document.createElement('div'); fill.className = 'progress-bar-fill'; fill.style.width = `${progress}%`; fill.style.backgroundColor = accentColor;
+            track.append(fill);info.append(track);
+            const actions = document.createElement('div'); actions.className = 'finance-allocation-actions';
+            const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'btn-secondary finance-allocation-edit';
+            edit.textContent = 'Edit'; edit.setAttribute('aria-label', `Edit ${bucket.name || 'allocation'}`); edit.onclick = () => financeEditAllocation(bucket.id);
+            const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'delete-btn';
+            remove.textContent = '×'; remove.setAttribute('aria-label', `Delete ${bucket.name || 'allocation'}`); remove.onclick = () => deleteAllocBucket(bucket.id);
+            actions.append(edit,remove);row.append(info,actions);listEl.append(row);
+        }
+        queueMicrotask(financeApplySharingPermissions);
     }
 
     function formatDueDateDisplay(dateStr, isPaid) {
