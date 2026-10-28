@@ -5459,7 +5459,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     const financeAllocationContext = person => (financeAuthUser?.id || 'locked') + '|' +
         (localStorage.getItem(financeProfileKey()) || 'default') + '|' + person;
     function financeAllocationBasePay(data, person) {
-        const paychecks = getMonthData(data, monthPicker.value)[`${person}Pay`] || [];
+        const recorded = data.months?.[monthPicker.value]?.[`${person}Pay`];
+        const paychecks = Array.isArray(recorded) ? recorded : [];
         if (!paychecks.length) return 0;
         const total = paychecks.reduce((sum, pay) => sum + (Number.isFinite(Number(pay.amount)) ? Number(pay.amount) : 0), 0);
         return Math.max(0, total / paychecks.length);
