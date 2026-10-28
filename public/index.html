@@ -1284,6 +1284,22 @@
     .finance-expense-file-list{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:8px 0}
     .finance-expense-file-list button{min-height:34px;width:auto;max-width:240px;font-size:.78rem;overflow-wrap:anywhere;padding:7px}
     .finance-expense-file-pill{font-size:.77rem;padding:5px 9px;border:1px solid var(--card-border);border-radius:9px;background:rgba(148,163,184,.1)}
+
+    /* Household expense payment-source manager */
+    .expense-payment-source-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .expense-payment-source-actions select{flex:1;min-width:140px}
+    .expense-payment-source-actions button{width:auto;min-height:42px}
+    .expense-source-manager[hidden]{display:none!important}
+    .expense-source-list{display:grid;gap:9px;margin-top:13px}
+    .expense-source-line{display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:10px 12px;border:1px solid var(--card-border);border-radius:11px}
+    .expense-source-line[aria-disabled="true"]{opacity:.64}
+    .expense-source-line .expense-source-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+    .expense-source-line button{width:auto;min-height:35px;padding:6px 10px;font-size:.78rem}
+    .expense-source-form{display:flex;flex-wrap:wrap;gap:9px;align-items:flex-end}
+    .expense-source-form .expense-field{flex:1;min-width:180px}
+    .expense-source-form button{min-height:42px;width:auto}
+    .expense-source-form input{width:100%}
     </style>
     <script>
         // Detect an installed app before the first paint (avoids an Install-button flash).
@@ -1564,19 +1580,23 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
      aria-labelledby="financeReleaseTitle" aria-describedby="financeReleaseIntro" hidden>
   <div class="finance-guide-panel" style="max-width:610px">
     <div class="finance-guide-top">
-      <span class="finance-guide-kicker">Latest Update · October 27, 2026</span>
+      <span class="finance-guide-kicker">Latest Update · October 28, 2026</span>
       <h2 id="financeReleaseTitle">✨ Latest Finance Updates</h2>
-      <p id="financeReleaseIntro">What's new in this release. Earlier changes are in Settings → Recent Updates.</p>
+      <p id="financeReleaseIntro">You can now choose how each expense was paid and manage your household's payment methods. Earlier updates remain in Settings → Recent Updates.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📎</span><div>
-          <h3>Expense PDF &amp; Image Receipts</h3>
-          <p>Attach PDFs or images to monthly expenses to keep invoices, receipts and proof of payment with each entry.</p>
-        </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💳</span><div>
-          <h3>What I Owe: Payment Updates</h3>
-          <p>Record partial payments or pay in full, with a payment confirmation popup, remaining balance and payment history.</p>
+          <h3>Choose How You Paid</h3>
+          <p>Each monthly expense now records a payment method—such as Cash App, Chase Debit Card, cash, Zelle, or another card you add.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">⚙️</span><div>
+          <h3>Manage Payment Methods</h3>
+          <p>Add, rename, remove, or restore household payment sources. Removing one keeps its label on older expense records.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📊</span><div>
+          <h3>Payment Method Reports</h3>
+          <p>Filter monthly expenses by payment method, compare spending by source, and see the payment method in exported CSV reports.</p>
         </div></article>
       </div>
       <p class="finance-guide-privacy">For every earlier change, open <strong>Settings → Recent Updates</strong>.</p>
@@ -1705,6 +1725,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         <input type="month" id="expenseMonth" onchange="financeRenderExpenses()">
         <label for="expenseCategoryFilter">Category</label>
         <select id="expenseCategoryFilter" onchange="financeRenderExpenses()"><option value="">All categories</option></select>
+        <label for="expensePaymentSourceFilter">Paid with</label>
+        <select id="expensePaymentSourceFilter" onchange="financeRenderExpenses()"><option value="">All payment methods</option></select>
         <button class="btn-secondary" type="button" onclick="financeExportExpensesCsv()">↓ Export Month CSV</button>
       </div>
       <div class="expense-stats" aria-label="Select spending view">
@@ -1732,6 +1754,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             </select></div>
           <div class="expense-field"><label for="expenseCategory">Category *</label>
             <select id="expenseCategory" onchange="financeToggleCustomExpenseCategory()" required></select></div>
+          <div class="expense-field expense-full"><label for="expensePaymentSource">Payment Method *</label>
+            <div class="expense-payment-source-actions">
+              <select id="expensePaymentSource" required aria-label="Payment method used"></select>
+              <button type="button" class="btn-secondary" onclick="financeOpenPaymentSources()">＋ Add / Manage Methods</button>
+            </div>
+            <p class="expense-intro" style="margin:3px 0 0">Choose what you paid with (for example Cash App, Chase Debit Card or cash). The household manages this shared list.</p>
+          </div>
           <div class="expense-field" id="expenseCustomCategoryWrap" hidden><label for="expenseCustomCategory">Custom category *</label>
             <input id="expenseCustomCategory" maxlength="45" placeholder="e.g. School expenses"></div>
           <div class="expense-field expense-full"><label for="expenseNote">Optional note</label>
@@ -1751,10 +1780,31 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           </div>
         </form>
       </div>
+      <div class="expense-panel expense-source-manager" id="expensePaymentSourceManager" hidden>
+        <h3>💳 Manage Payment Methods</h3>
+        <p class="expense-intro">Add or rename the cash, cards and apps you use. Removing a method hides it from future expenses, but keeps the label on previous purchases.</p>
+        <form class="expense-source-form" id="expensePaymentSourceForm" onsubmit="financeSavePaymentSource(event)">
+          <input type="hidden" id="expensePaymentSourceEditId">
+          <div class="expense-field">
+            <label for="expensePaymentSourceName">Payment method name</label>
+            <input id="expensePaymentSourceName" type="text" maxlength="70" required placeholder="e.g. Chase Debit Card">
+          </div>
+          <button type="submit" class="btn-add" id="expensePaymentSourceSave">＋ Add Method</button>
+          <button type="button" class="btn-secondary" onclick="financeResetPaymentSourceForm()">Cancel Edit</button>
+          <button type="button" class="btn-secondary" onclick="financeClosePaymentSources()">Close</button>
+        </form>
+        <p id="expensePaymentSourceMessage" class="expense-intro" role="status" aria-live="polite"></p>
+        <div id="expensePaymentSourceList" class="expense-source-list"></div>
+      </div>
       <div class="expense-panel">
         <h3 id="expenseListTitle">His Expenses</h3>
         <p class="expense-intro" id="expenseListSubheading">Monthly purchase details</p>
         <div id="expenseEntries" aria-live="polite"></div>
+      </div>
+      <div class="expense-panel">
+        <h3>Spending by Payment Method</h3>
+        <p class="expense-intro">See which card, app or cash source was used for this month's selected expenses.</p>
+        <div id="expensePaymentSourceSummary" class="expense-cats"></div>
       </div>
       <div class="expense-panel">
         <h3>Spending by Category</h3>
@@ -1878,7 +1928,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             <button type="button" class="btn-secondary" onclick="financeExpandUpdateHistory()">📚 View Complete Update History</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 27, 2026 — Latest Updates Popup</strong></summary>
+            <details open><summary><strong>October 28, 2026 — Expense Payment Methods</strong></summary>
+              <p class="settings-muted-note">You can now select how an expense was paid (Cash App, Chase Debit Card, Cash, etc.), create your own sources, rename/remove/restore them, filter and compare spending by method, and include methods in CSV exports. Older expenses retain their recorded source even after it is removed from new choices.</p></details>
+            <details><summary><strong>October 27, 2026 — Latest Updates Popup</strong></summary>
               <p class="settings-muted-note">The Home popup now shows only the most recent release changes instead of the full feature list. After pressing OK, Got It, that release stays acknowledged. All earlier changes remain in this complete Settings history, and the full Feature Guide is available separately on demand.</p></details>
             <details><summary><strong>October 27, 2026 — Expense Receipts &amp; Payment Confirmation</strong></summary>
               <p class="settings-muted-note">Attach PDF or image receipts to expenses (up to eight, 10 MB each). What I Owe now supports partial payments and paid-in-full confirmations, automatic remaining-balance updates and private payment history. Every payment has an OK acknowledgement popup.</p></details>
@@ -3920,7 +3972,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         section.querySelectorAll('details').forEach(item=>item.open=true);
         section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
     }
-    const financeLatestUpdateId='2026-10-27-latest-only-popup-08';
+    const financeLatestUpdateId='2026-10-28-expense-payment-sources-09';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -6301,6 +6353,184 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const el=document.getElementById('expenseMonth');
         return el?.value || (document.getElementById('monthPicker')?.value||new Date().toISOString().slice(0,7));
     }
+
+    // These methods live in the versioned, shared household document alongside
+    // monthlyExpenses. Archived methods never erase historical expense labels.
+    const financePresetPaymentSources=[
+        {id:'cash',name:'Cash',active:true},
+        {id:'cash_app',name:'Cash App',active:true},
+        {id:'chase_debit',name:'Chase Debit Card',active:true},
+        {id:'debit_card',name:'Debit Card',active:true},
+        {id:'credit_card',name:'Credit Card',active:true},
+        {id:'zelle',name:'Zelle',active:true},
+        {id:'apple_pay',name:'Apple Pay',active:true},
+        {id:'paypal',name:'PayPal',active:true},
+        {id:'bank_transfer',name:'Bank Transfer',active:true},
+        {id:'other',name:'Other',active:true}
+    ];
+    function financePaymentSources(data){
+        return Array.isArray(data?.expensePaymentSources)
+            ?data.expensePaymentSources:financePresetPaymentSources;
+    }
+    function financeEnsurePaymentSources(data){
+        if(!Array.isArray(data.expensePaymentSources))
+            data.expensePaymentSources=financePresetPaymentSources.map(p=>({...p}));
+        return data.expensePaymentSources;
+    }
+    function financeExpenseSourceLabel(entry,data){
+        const method=financePaymentSources(data).find(p=>p.id===entry?.paymentSourceId);
+        return String(method?.name || entry?.paymentSourceName || 'Not specified');
+    }
+    function financePaymentSourceStatus(message){
+        const element=document.getElementById('expensePaymentSourceMessage');
+        if(element)element.textContent=message;
+    }
+    function financeRefreshPaymentSourceUi(data,preferredId){
+        const state=data||getPrivateAccountData();
+        const sources=financePaymentSources(state);
+        const active=sources.filter(p=>p?.active!==false);
+        const selector=document.getElementById('expensePaymentSource');
+        const chosen=preferredId!==undefined?preferredId:(selector?.value||'');
+        if(selector){
+            selector.replaceChildren();
+            selector.add(new Option('Select a payment method…',''));
+            for(const source of active)selector.add(new Option(String(source.name),String(source.id)));
+            const editingId=document.getElementById('expenseEditId')?.value;
+            const existing=editingId?financeExpenseItems(state).find(e=>e.id===editingId):null;
+            const missing=existing?.paymentSourceId && !sources.some(p=>p.id===existing.paymentSourceId && p.active!==false);
+            if(missing)selector.add(new Option('Previously used: '+financeExpenseSourceLabel(existing,state),existing.paymentSourceId));
+            // Historical entries without a source may be edited without forcing an
+            // invented payment method. New expenses always require an actual choice.
+            if(editingId && !existing?.paymentSourceId)
+                selector.add(new Option('Not specified (older expense)','legacy_unspecified'));
+            selector.value=Array.from(selector.options).some(o=>o.value===chosen)?chosen:
+                existing?.paymentSourceId|| (editingId?'legacy_unspecified':'');
+        }
+        const filter=document.getElementById('expensePaymentSourceFilter');
+        if(filter){
+            const old=filter.value;
+            filter.replaceChildren();
+            filter.add(new Option('All payment methods',''));
+            const all=financeExpenseItems(state);
+            const names=new Map(sources.map(p=>[p.id,p.name]));
+            for(const entry of all){
+                if(entry?.paymentSourceId && !names.has(entry.paymentSourceId))
+                    names.set(entry.paymentSourceId,entry.paymentSourceName||'Previous payment method');
+            }
+            for(const [id,name] of names)filter.add(new Option(name,id));
+            filter.add(new Option('Not specified (older expenses)','legacy_unspecified'));
+            filter.value=Array.from(filter.options).some(o=>o.value===old)?old:'';
+        }
+    }
+    function financeOpenPaymentSources(){
+        const card=document.getElementById('expensePaymentSourceManager');
+        card.hidden=false;
+        financeRenderPaymentSources();
+        card.scrollIntoView({behavior:'smooth',block:'nearest'});
+        document.getElementById('expensePaymentSourceName')?.focus();
+    }
+    function financeClosePaymentSources(){
+        document.getElementById('expensePaymentSourceManager').hidden=true;
+        financeResetPaymentSourceForm();
+    }
+    function financeResetPaymentSourceForm(){
+        document.getElementById('expensePaymentSourceEditId').value='';
+        document.getElementById('expensePaymentSourceName').value='';
+        document.getElementById('expensePaymentSourceSave').textContent='＋ Add Method';
+    }
+    function financeEditPaymentSource(id){
+        const item=financePaymentSources(getPrivateAccountData()).find(p=>p.id===id);
+        if(!item)return;
+        financeOpenPaymentSources();
+        document.getElementById('expensePaymentSourceEditId').value=id;
+        document.getElementById('expensePaymentSourceName').value=item.name;
+        document.getElementById('expensePaymentSourceSave').textContent='✓ Save Name';
+    }
+    async function financeSavePaymentSource(event){
+        event.preventDefault();
+        if(!financeAuthUser)return;
+        const name=document.getElementById('expensePaymentSourceName').value.trim().replace(/\s+/g,' ');
+        if(!name||name.length>70){financePaymentSourceStatus('Enter a method name up to 70 characters.');return;}
+        const editId=document.getElementById('expensePaymentSourceEditId').value;
+        const state=getPrivateAccountData(),sources=financeEnsurePaymentSources(state);
+        if(sources.some(p=>p.id!==editId && p.active!==false && p.name.toLowerCase()===name.toLowerCase())){
+            financePaymentSourceStatus('This payment method already exists.');return;
+        }
+        let addedId=editId;
+        if(editId){
+            const existing=sources.find(p=>p.id===editId);
+            if(!existing){financePaymentSourceStatus('Method not found. Refresh the page.');return;}
+            existing.name=name;
+            existing.active=true;
+        }else{
+            addedId='source_'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'_'+Math.random().toString(36).slice(2));
+            sources.push({id:addedId,name,active:true,createdAt:new Date().toISOString()});
+        }
+        const button=document.getElementById('expensePaymentSourceSave');
+        button.disabled=true;
+        try{
+            const synced=await saveData(state,true);
+            financeRefreshPaymentSourceUi(undefined,addedId);
+            financeRenderPaymentSources();
+            financeResetPaymentSourceForm();
+            financeRenderExpenses();
+            financePaymentSourceStatus(synced?'✓ Payment method saved to household cloud.':'Saved on device; cloud sync needs attention.');
+        }catch(err){financePaymentSourceStatus('Could not save method: '+(err?.message||'Connection error'));}
+        finally{button.disabled=false;}
+    }
+    async function financeRemovePaymentSource(id){
+        const state=getPrivateAccountData();
+        const sources=financeEnsurePaymentSources(state);
+        const item=sources.find(x=>x.id===id);
+        if(!item || item.active===false)return;
+        if(!confirm('Remove "'+item.name+'" from new expense choices? Existing expenses will retain their payment method.'))return;
+        item.active=false;
+        const ok=await saveData(state,true);
+        financeRefreshPaymentSourceUi();
+        financeRenderPaymentSources();
+        financeRenderExpenses();
+        financePaymentSourceStatus(ok?'Method removed from new expense choices. Previous purchases are unchanged.':
+            'Removed on device, but household cloud sync needs attention.');
+    }
+    function financeRenderPaymentSources(){
+        const parent=document.getElementById('expensePaymentSourceList');
+        if(!parent)return;
+        parent.replaceChildren();
+        for(const item of financePaymentSources(getPrivateAccountData())){
+            const line=document.createElement('div');
+            line.className='expense-source-line';
+            if(item.active===false)line.setAttribute('aria-disabled','true');
+            const name=document.createElement('span');
+            name.textContent=item.name+(item.active===false?' · Removed':'');
+            const actions=document.createElement('div');actions.className='expense-source-actions';
+            function button(text,callback){
+                const btn=document.createElement('button');btn.type='button';btn.className='btn-secondary';
+                btn.textContent=text;btn.onclick=callback;actions.append(btn);
+            }
+            if(item.active!==false){
+                button('Rename',()=>financeEditPaymentSource(item.id));
+                button('Remove',()=>financeRemovePaymentSource(item.id));
+            }else{
+                button('Restore',async()=>{
+                    const d=getPrivateAccountData(),sources=financeEnsurePaymentSources(d);
+                    const chosen=sources.find(p=>p.id===item.id);
+                    if(!chosen)return;
+                    if(sources.some(p=>p.id!==chosen.id && p.active!==false &&
+                        p.name.toLowerCase()===chosen.name.toLowerCase())){
+                        financePaymentSourceStatus('A method with this name is already active. Rename it before restoring.');
+                        return;
+                    }
+                    chosen.active=true;
+                    const ok=await saveData(d,true);
+                    financeRefreshPaymentSourceUi();
+                    financeRenderPaymentSources();
+                    financePaymentSourceStatus(ok?'Payment method restored.':'Restored on device; cloud sync needs attention.');
+                });
+            }
+            line.append(name,actions);parent.append(line);
+        }
+    }
+
     function financeEnsureExpenseMonth(){
         const el=document.getElementById('expenseMonth');
         if(el&&!el.value)el.value=document.getElementById('monthPicker')?.value||new Date().toISOString().slice(0,7);
@@ -6313,6 +6543,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         if(filter&&filter.options.length===1){
             for(const name of financeExpenseCategories)filter.add(new Option(name,name));
         }
+        financeRefreshPaymentSourceUi();
         if(!document.getElementById('expenseDate').value){
             const current=financeExpenseToday();
             const month=financeExpenseMonthKey();
@@ -6359,8 +6590,10 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const title=financeExpenseView==='his'?'His Expenses':financeExpenseView==='her'?'Her Expenses':'Combined Spending';
         document.getElementById('expenseListTitle').textContent=title;
         const category=document.getElementById('expenseCategoryFilter').value;
+        const sourceFilter=document.getElementById('expensePaymentSourceFilter').value;
         const filtered=all.filter(x=>(financeExpenseView==='combined'||x.owner===financeExpenseView) &&
-            (!category||x.category===category))
+            (!category||x.category===category) &&
+            (!sourceFilter||(sourceFilter==='legacy_unspecified'?!x.paymentSourceId:x.paymentSourceId===sourceFilter)))
             .sort((a,b)=>String(b.date).localeCompare(String(a.date))||
                 String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
         document.getElementById('expenseListSubheading').textContent=filtered.length+
@@ -6381,7 +6614,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             who.textContent=item.owner==='his'?'His':item.owner==='her'?'Hers':'Together';
             name.append(who);
             const detail=document.createElement('p');detail.className='expense-row-note';
-            detail.textContent=[item.date,item.category,item.note].filter(Boolean).join(' · ');
+            detail.textContent=[item.date,item.category,'Paid with: '+financeExpenseSourceLabel(item,state),item.note].filter(Boolean).join(' · ');
             left.append(name,detail);
             const receipts=Array.isArray(item.attachments)?item.attachments:[];
             if(receipts.length){
@@ -6411,7 +6644,27 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         }
         const totals=new Map();
         const categoryItems=all.filter(x=>(financeExpenseView==='combined'||x.owner===financeExpenseView)
-            &&(!category||x.category===category));
+            &&(!category||x.category===category)
+            &&(!sourceFilter||(sourceFilter==='legacy_unspecified'?!x.paymentSourceId:x.paymentSourceId===sourceFilter)));
+        const sourceTotals=new Map();
+        for(const item of categoryItems){
+            const label=financeExpenseSourceLabel(item,state);
+            sourceTotals.set(label,(sourceTotals.get(label)||0)+Number(item.amountCents||0));
+        }
+        const methodSummary=document.getElementById('expensePaymentSourceSummary');
+        methodSummary.replaceChildren();
+        if(!sourceTotals.size){const msg=document.createElement('p');msg.className='expense-empty';
+            msg.textContent='No payment methods recorded for this selection.';methodSummary.append(msg);}
+        const highest=Math.max(1,...sourceTotals.values());
+        for(const [label,cents] of Array.from(sourceTotals).sort((a,b)=>b[1]-a[1])){
+            const line=document.createElement('div');line.className='expense-cat-row';
+            const name=document.createElement('span');name.textContent=label;
+            const track=document.createElement('div');track.className='expense-cat-track';
+            const fill=document.createElement('div');fill.className='expense-cat-fill';
+            fill.style.width=(100*cents/highest).toFixed(2)+'%';track.append(fill);
+            const amount=document.createElement('strong');amount.textContent=financeExpenseMoney(cents);
+            line.append(name,track,amount);methodSummary.append(line);
+        }
         for(const e of categoryItems){
             const key=String(e.category||'Other');
             totals.set(key,(totals.get(key)||0)+Number(e.amountCents||0));
@@ -6449,6 +6702,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('expenseDate').value=now.startsWith(month)?now:month+'-01';
         document.getElementById('expenseOwner').value=financeExpenseView==='combined'?'together':financeExpenseView;
         financeToggleCustomExpenseCategory();
+        financeRefreshPaymentSourceUi(undefined,'');
     }
 
     const financeReceiptBucket='finance-household-receipts';
@@ -6526,8 +6780,17 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         if(!category||category.length>45){alert('Choose a valid spending category.');return;}
         const owner=document.getElementById('expenseOwner').value;
         if(!['his','her','together'].includes(owner))return;
+        const selectedMethod=document.getElementById('expensePaymentSource').value;
         const editId=document.getElementById('expenseEditId').value;
         const data=getPrivateAccountData();
+        const sources=financeEnsurePaymentSources(data);
+        const chosenMethod=sources.find(x=>x.id===selectedMethod);
+        if(!chosenMethod && !(editId&&selectedMethod==='legacy_unspecified')){
+            alert('Select a payment method, or use Add / Manage Methods to create one.');return;
+        }
+        if(chosenMethod?.active===false && !editId){
+            alert('This payment method was removed. Choose an active method.');return;
+        }
         if(!Array.isArray(data.monthlyExpenses))data.monthlyExpenses=[];
         const existing=editId?data.monthlyExpenses.find(x=>x.id===editId):null;
         if(editId&&!existing){alert('That expense was changed on another device. Refresh and try again.');return;}
@@ -6535,6 +6798,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             id:editId||('expense_'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'_'+Math.random().toString(36).slice(2))),
             date,owner,description:description.slice(0,130),category,
             amountCents,note:document.getElementById('expenseNote').value.trim().slice(0,400),
+            paymentSourceId:chosenMethod?.id || null,
+            paymentSourceName:chosenMethod?.name || existing?.paymentSourceName || '',
             createdAt:existing?.createdAt||new Date().toISOString(),
             updatedAt:new Date().toISOString(),
             attachments:Array.isArray(existing?.attachments)?[...existing.attachments]:[]
@@ -6578,6 +6843,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('expenseDate').value=entry.date;
         document.getElementById('expenseOwner').value=entry.owner;
         document.getElementById('expenseNote').value=entry.note||'';
+        financeRefreshPaymentSourceUi(undefined,entry.paymentSourceId||'legacy_unspecified');
         const select=document.getElementById('expenseCategory');
         const option=Array.from(select.options).find(o=>o.value===entry.category);
         select.value=option?entry.category:'__custom__';
@@ -6611,9 +6877,10 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const items=financeExpenseItems(getPrivateAccountData()).filter(x=>x?.date?.slice(0,7)===month)
           .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
         const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-        const rows=[['Date','Spending','Category','Description','Amount USD','Notes'],
+        const state=getPrivateAccountData();
+        const rows=[['Date','Spending','Category','Description','Amount USD','Payment Method','Notes'],
             ...items.map(x=>[x.date,x.owner==='together'?'Together':x.owner==='her'?'Hers':'His',
-                x.category,x.description,(Number(x.amountCents)/100).toFixed(2),x.note])];
+                x.category,x.description,(Number(x.amountCents)/100).toFixed(2),financeExpenseSourceLabel(x,state),x.note])];
         const csv='\ufeff'+rows.map(row=>row.map(esc).join(',')).join('\r\n');
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
         const url=URL.createObjectURL(blob),a=document.createElement('a');
