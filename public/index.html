@@ -1559,68 +1559,31 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     </div>
   </div>
 </div>
-<!-- Each release is announced once per account/browser until acknowledged. -->
+<!-- Home announces only the latest release; full history stays in Settings. -->
 <div id="financeReleaseUpdates" class="finance-guide-overlay" role="dialog" aria-modal="true"
      aria-labelledby="financeReleaseTitle" aria-describedby="financeReleaseIntro" hidden>
-  <div class="finance-guide-panel" style="max-width:630px">
+  <div class="finance-guide-panel" style="max-width:610px">
     <div class="finance-guide-top">
-      <span class="finance-guide-kicker">New Update · October 27, 2026</span>
-      <h2 id="financeReleaseTitle">🎉 What's New in Household Finance</h2>
-      <p id="financeReleaseIntro">You can now keep PDF and image receipts with expenses, and make partial or full payments against What I Owe with a clear confirmation and payment history.</p>
+      <span class="finance-guide-kicker">Latest Update · October 27, 2026</span>
+      <h2 id="financeReleaseTitle">✨ Latest Finance Updates</h2>
+      <p id="financeReleaseIntro">What's new in this release. Earlier changes are in Settings → Recent Updates.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📎</span><div>
-          <h3>PDF &amp; Image Receipts for Expenses</h3>
-          <p>Attach receipts, confirmations and invoices in PDF, JPG, PNG or WebP format to monthly expenses. Open or remove them later; files are securely stored in your shared household.</p>
+          <h3>Expense PDF &amp; Image Receipts</h3>
+          <p>Attach PDFs or images to monthly expenses to keep invoices, receipts and proof of payment with each entry.</p>
         </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">✅</span><div>
-          <h3>Paid in Full &amp; Partial Payments</h3>
-          <p>What I Owe now has separate payment buttons, a confirmation popup, updated balances and a private payment history. Acknowledging a payment closes its confirmation.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">✨</span><div>
-          <h3>A Fresh Opening</h3>
-          <p>A brief welcome animation introduces the app when you open it. It respects your device’s reduced-motion setting.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">➕</span><div>
-          <h3>Cleaner Add-Entry Buttons</h3>
-          <p>My To-Do and What I Owe now show Add buttons instead of open information forms. Tap to enter details, then Save or Close. Existing entries stay intact.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💸</span><div>
-          <h3>New: What I Owe</h3>
-          <p>Record who you owe, the full amount, due date and payments. Track remaining balances, mark entries paid, and get a Home reminder only for new outstanding entries.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🔐</span><div>
-          <h3>Username Sign-In Improvements</h3>
-          <p>Updated Supabase's sign-in function to handle browser requests reliably, with clearer messages for invalid credentials, connection issues, and temporary server errors.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📱</span><div>
-          <h3>Cleaner Installed App</h3>
-          <p>The website now hides its Install icon, installation prompts, and APK download card when opened inside the installed PWA or Android APK. Install options remain in the regular browser.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🧾</span><div>
-          <h3>Monthly Expense Tracker</h3>
-          <p>Track His, Hers, and Combined Spending. Add joint purchases under Together so they count just once toward the combined total.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🛒</span><div>
-          <h3>Spending Categories</h3>
-          <p>Organize groceries, shopping, dining, gas, bills and more. Filter by month, edit purchases, compare categories and export CSV.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🔔</span><div>
-          <h3>Recent Updates</h3>
-          <p>New release announcements now appear once. Visit Settings → Recent Updates to review changes later.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🤖</span><div>
-          <h3>Android APK Project</h3>
-          <p>The Android app source and APK build workflow are available in your GitHub repository.</p>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💳</span><div>
+          <h3>What I Owe: Payment Updates</h3>
+          <p>Record partial payments or pay in full, with a payment confirmation popup, remaining balance and payment history.</p>
         </div></article>
       </div>
-      <p class="finance-guide-privacy">All registered and email-confirmed Finance accounts share and edit the same household finances, including the new expense tracker.</p>
+      <p class="finance-guide-privacy">For every earlier change, open <strong>Settings → Recent Updates</strong>.</p>
     </div>
     <div class="finance-guide-footer">
-      <span style="color:var(--text-muted);font-size:.84rem">Acknowledging keeps this release popup hidden when you reopen or refresh the app.</span>
-      <button type="button" class="finance-guide-done" id="financeReleaseOkay"
-              onclick="financeAcknowledgeUpdate()">OK, Got It</button>
+      <span style="color:var(--text-muted);font-size:.84rem">After acknowledgement, this release won't pop up again for your login on this device.</span>
+      <button type="button" class="finance-guide-done" id="financeReleaseOkay" onclick="financeAcknowledgeUpdate()">OK, Got It</button>
     </div>
   </div>
 </div>
@@ -1907,14 +1870,17 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
         <div class="settings-card" id="financeRecentUpdatesSettings">
           <div class="settings-card-heading">
-            <h3>📣 Recent Updates</h3>
-            <p>Release notes for the Finance Dashboard. Each new update appears automatically only until you acknowledge it.</p>
+            <h3>📣 Recent Updates &amp; Complete History</h3>
+            <p>The opening popup shows just the latest release, once per login on this device. The complete change history is available below, newest first.</p>
           </div>
           <div class="settings-button-row">
             <button type="button" class="btn-secondary" onclick="financeOpenReleaseUpdates(true)">✨ View Latest Update</button>
+            <button type="button" class="btn-secondary" onclick="financeExpandUpdateHistory()">📚 View Complete Update History</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 27, 2026 — Expense Receipts &amp; Payment Confirmation</strong></summary>
+            <details open><summary><strong>October 27, 2026 — Latest Updates Popup</strong></summary>
+              <p class="settings-muted-note">The Home popup now shows only the most recent release changes instead of the full feature list. After pressing OK, Got It, that release stays acknowledged. All earlier changes remain in this complete Settings history, and the full Feature Guide is available separately on demand.</p></details>
+            <details><summary><strong>October 27, 2026 — Expense Receipts &amp; Payment Confirmation</strong></summary>
               <p class="settings-muted-note">Attach PDF or image receipts to expenses (up to eight, 10 MB each). What I Owe now supports partial payments and paid-in-full confirmations, automatic remaining-balance updates and private payment history. Every payment has an OK acknowledgement popup.</p></details>
             <details><summary><strong>October 26, 2026 — Add-Entry Buttons and Update Popup</strong></summary>
               <p class="settings-muted-note">To-Do and What I Owe information forms are now opened through Add buttons. The What's New popup announces this release once per signed-in account and browser, and older updates remain available here.</p></details>
@@ -3947,7 +3913,14 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('financeGuideConfirmBtn').focus();
     }
 
-    const financeLatestUpdateId='2026-10-27-expense-receipts-owed-payments-07';
+    function financeExpandUpdateHistory(){
+        switchMainPage('settings');
+        const section=document.getElementById('financeRecentUpdatesSettings');
+        if(!section)return;
+        section.querySelectorAll('details').forEach(item=>item.open=true);
+        section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+    }
+    const financeLatestUpdateId='2026-10-27-latest-only-popup-08';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -3983,7 +3956,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const prior=financeReleasePreviousFocus;
         financeReleasePreviousFocus=null;
         if(prior?.isConnected&&typeof prior.focus==='function')prior.focus();
-        queueMicrotask(()=>{financeMaybeShowFeatureGuide();financeMaybeShowTodoReminder();financeMaybeShowOwedReminder();});
+        queueMicrotask(()=>{financeMaybeShowTodoReminder();financeMaybeShowOwedReminder();});
     }
     document.addEventListener('keydown',event=>{
         const modal=document.getElementById('financeReleaseUpdates');
@@ -3998,14 +3971,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     });
 
     function financeMaybeShowFeatureGuide(){
-        if(financeHasUnreadUpdate()){financeMaybeShowUpdates();return;}
-        if(financeGuideShownThisLogin||!financeAuthUser)return;
-        if(!document.body.classList.contains('finance-authenticated'))return;
-        const dashboard=document.getElementById('mainDashboardView');
-        if(!dashboard||dashboard.style.display!=='block')return;
-        const key=financeGuidePreferenceKey();
-        if(key&&localStorage.getItem(key)==='1')return;
-        financeOpenFeatureGuide();
+        // On Home only new release notes are automatic. Full walkthrough is
+        // explicitly available from Settings.
+        financeMaybeShowUpdates();
     }
     function financeConfirmFeatureGuide(){
         const modal=document.getElementById('financeFeatureGuide');

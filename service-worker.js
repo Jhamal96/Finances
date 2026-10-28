@@ -1,7 +1,7 @@
 /* Household Finance PWA: service worker for app shell and real Web Push reception.
    Background reminders require a separately configured web-push sender.
 */
-const CACHE_NAME = 'household-finance-pwa-v18-expense-receipts-owed-payments';
+const CACHE_NAME = 'household-finance-pwa-v19-latest-release-only';
 const APP_HOME = new URL('index.html', self.registration.scope).toString();
 
 self.addEventListener('install', event => {
