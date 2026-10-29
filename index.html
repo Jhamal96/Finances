@@ -1314,6 +1314,20 @@
     .finance-allocation-actions {display:flex;align-items:center;gap:6px;flex-shrink:0}
     .finance-allocation-edit {width:auto;min-height:38px;padding:7px 10px;font-size:.8rem}
     @media(max-width:480px) {.alloc-bucket-row {align-items:flex-start;flex-wrap:wrap}.finance-allocation-info {flex-basis:100%}.finance-allocation-actions {margin-left:auto}}
+
+    .expense-payment-split-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;
+      padding:14px;border-radius:13px;border:1px solid var(--card-border);background:rgba(148,163,184,.05)}
+    .expense-split-check{font-size:.82rem;margin:10px 0 0;color:var(--text-muted);font-weight:700}
+    .expense-split-check[data-valid="true"]{color:#34d399}
+    .expense-split-check[data-valid="false"]{color:#fbbf24}
+    .expense-pay-mode.active{box-shadow:inset 0 -2px 0 #38bdf8,0 0 0 1px rgba(56,189,248,.6)!important;
+      border-color:#38bdf8!important;background:rgba(56,189,248,.14)}
+    .expense-payment-type-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+    .expense-payment-type-card{border:1px solid var(--card-border);background:rgba(148,163,184,.06);border-radius:12px;padding:13px;min-width:0}
+    .expense-payment-type-card strong{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;margin:6px 0;overflow-wrap:anywhere}
+    .expense-payment-type-card span{font-size:.82rem;color:var(--text-muted)}
+    @media(max-width:480px){.expense-payment-split-grid{grid-template-columns:1fr}
+      .expense-payment-type-summary{grid-template-columns:1fr}}
     </style>
     <script>
         // Detect an installed app before the first paint (avoids an Install-button flash).
@@ -1699,22 +1713,22 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
   <div class="finance-guide-panel" style="max-width:610px">
     <div class="finance-guide-top">
       <span class="finance-guide-kicker">Latest Update · October 28, 2026</span>
-      <h2 id="financeReleaseTitle">💰 Allocation by Percentage</h2>
-      <p id="financeReleaseIntro">You can now allocate a percentage of your average paycheck and see the percentage allocated and remaining.</p>
+      <h2 id="financeReleaseTitle">💳 Split Card &amp; Cash Payments</h2>
+      <p id="financeReleaseIntro">Monthly Expenses now lets you split a purchase between card and cash and see separate payment-type totals.</p>
     </div>
     <div class="finance-guide-scroll">
       <div class="finance-guide-grid">
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💳</span><div>
+          <h3>Split Card &amp; Cash Expenses</h3>
+          <p>Choose Split Payment and enter the amount paid by each method. Both portions must equal the purchase total.</p>
+        </div></article>
+        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💵</span><div>
+          <h3>Separate Card &amp; Cash Totals</h3>
+          <p>See card, cash and digital spending separately, along with named payment methods. Joint and personal spending still counts only once.</p>
+        </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📊</span><div>
-          <h3>Choose Dollars or Percentage</h3>
-          <p>Add or edit an envelope using a fixed dollar amount or a percentage of the selected month’s average paycheck.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🔄</span><div>
-          <h3>Updates With Pay</h3>
-          <p>Percentage-based amounts change when your average paycheck changes. Fixed-dollar amounts stay fixed.</p>
-        </div></article>
-        <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">✅</span><div>
-          <h3>See Your Totals</h3>
-          <p>See how much of your average pay is allocated and what percentage is left, for His and Hers.</p>
+          <h3>Filters &amp; CSV Exports</h3>
+          <p>Filter by payment method, edit a split purchase, and export card and cash amounts in separate CSV columns.</p>
         </div></article>
       </div>
       <p class="finance-guide-privacy">For every earlier change, open <strong>Settings → Recent Updates</strong>.</p>
@@ -1863,7 +1877,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           <div class="expense-field"><label for="expenseDescription">What was purchased? *</label>
             <input id="expenseDescription" type="text" placeholder="e.g. Weekly groceries" maxlength="130" required></div>
           <div class="expense-field"><label for="expenseAmount">Amount ($) *</label>
-            <input id="expenseAmount" type="number" min="0.01" max="9999999" step="0.01" placeholder="0.00" required></div>
+            <input id="expenseAmount" type="number" min="0.01" max="9999999" step="0.01" placeholder="0.00" oninput="financeUpdateSplitRemainder()" required></div>
           <div class="expense-field"><label for="expenseDate">Purchase date *</label>
             <input id="expenseDate" type="date" required></div>
           <div class="expense-field"><label for="expenseOwner">Who spent it? *</label>
@@ -1872,12 +1886,34 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             </select></div>
           <div class="expense-field"><label for="expenseCategory">Category *</label>
             <select id="expenseCategory" onchange="financeToggleCustomExpenseCategory()" required></select></div>
-          <div class="expense-field expense-full"><label for="expensePaymentSource">Payment Method *</label>
+          <div class="expense-field expense-full" id="expenseSingleMethodWrap"><label for="expensePaymentSource">Payment Method *</label>
             <div class="expense-payment-source-actions">
               <select id="expensePaymentSource" required aria-label="Payment method used"></select>
               <button type="button" class="btn-secondary" onclick="financeOpenPaymentSources()">＋ Add / Manage Methods</button>
             </div>
             <p class="expense-intro" style="margin:3px 0 0">Choose what you paid with (for example Cash App, Chase Debit Card or cash). The household manages this shared list.</p>
+          </div>
+
+          <div class="expense-field expense-full">
+            <label>How was this purchase paid?</label>
+            <div class="expense-form-actions" role="group" aria-label="Single or split payment">
+              <button type="button" id="expensePaySingleBtn" class="btn-secondary expense-pay-mode active" aria-pressed="true" onclick="financeSetExpensePaymentMode('single')">💳 Single Payment</button>
+              <button type="button" id="expensePaySplitBtn" class="btn-secondary expense-pay-mode" aria-pressed="false" onclick="financeSetExpensePaymentMode('split')">💵 Split Card / Cash</button>
+            </div>
+            <p class="expense-intro" style="margin:3px 0 0">Use Split for a purchase paid partly by card and partly in cash. Both portions stay under one expense.</p>
+          </div>
+          <div class="expense-field expense-full" id="expenseSplitSection" hidden>
+            <div class="expense-payment-split-grid">
+              <div class="expense-field"><label for="expenseSplitCardMethod">Card / payment source</label>
+                <select id="expenseSplitCardMethod" aria-label="Card or digital payment source"></select></div>
+              <div class="expense-field"><label for="expenseSplitCardAmount">Card portion ($)</label>
+                <input id="expenseSplitCardAmount" type="number" min="0.01" step="0.01" max="9999999" placeholder="0.00" oninput="financeUpdateSplitRemainder()"></div>
+              <div class="expense-field"><label for="expenseSplitCashMethod">Cash / second source</label>
+                <select id="expenseSplitCashMethod" aria-label="Cash or second source"></select></div>
+              <div class="expense-field"><label for="expenseSplitCashAmount">Cash portion ($)</label>
+                <input id="expenseSplitCashAmount" type="number" min="0.01" step="0.01" max="9999999" placeholder="0.00" oninput="financeUpdateSplitRemainder()"></div>
+            </div>
+            <p class="expense-split-check" id="expenseSplitCheck" role="status" aria-live="polite">The two portions must add up to the purchase total.</p>
           </div>
           <div class="expense-field" id="expenseCustomCategoryWrap" hidden><label for="expenseCustomCategory">Custom category *</label>
             <input id="expenseCustomCategory" maxlength="45" placeholder="e.g. School expenses"></div>
@@ -1918,6 +1954,11 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         <h3 id="expenseListTitle">His Expenses</h3>
         <p class="expense-intro" id="expenseListSubheading">Monthly purchase details</p>
         <div id="expenseEntries" aria-live="polite"></div>
+      </div>
+      <div class="expense-panel">
+        <h3>Spending by Payment Type</h3>
+        <p class="expense-intro">Card, cash, and other methods counted separately. Split payments are allocated to each method without double counting.</p>
+        <div id="expensePaymentTypeSummary" class="expense-payment-type-summary" aria-live="polite"></div>
       </div>
       <div class="expense-panel">
         <h3>Spending by Payment Method</h3>
@@ -2046,7 +2087,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             <button type="button" class="btn-secondary" onclick="financeExpandUpdateHistory()">📚 View Complete Update History</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 28, 2026 — Allocation by Percentage</strong></summary>
+            <details open><summary><strong>October 28, 2026 — Split Card &amp; Cash Expenses</strong></summary>
+              <p class="settings-muted-note">In Monthly Expenses, switch between Single Payment and Split Card / Cash. Enter separate card and cash amounts that add up to the expense total. The purchase counts only once in His, Hers, or Combined Spending. Separate Card/Cash/Digital totals, payment-method filters, editing, and CSV exports include the split amounts.</p></details>
+            <details><summary><strong>October 28, 2026 — Allocation by Percentage</strong></summary>
               <p class="settings-muted-note">Create or edit an allocation as a percentage of the selected month’s average paycheck, with dollar amounts that update as pay changes. Totals also show the allocated and remaining percentages.</p></details>
             <details><summary><strong>October 28, 2026 — Liquid Glass Appearance</strong></summary>
               <p class="settings-muted-note">A glass-inspired look adds translucent navigation and controls. Turn it on or off in Settings on each device; your financial data and cloud sync stay the same.</p></details>
@@ -4110,7 +4153,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         section.querySelectorAll('details').forEach(item=>item.open=true);
         section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
     }
-    const financeLatestUpdateId='2026-10-28-allocation-percent-11';
+    const financeLatestUpdateId='2026-10-28-expense-card-cash-split-12';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -6625,6 +6668,114 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const method=financePaymentSources(data).find(p=>p.id===entry?.paymentSourceId);
         return String(method?.name || entry?.paymentSourceName || 'Not specified');
     }
+
+    // Preserve legacy single-method expenses, while allocating split purchases
+    // in cents across exactly two selected methods (no double-counted spending).
+    let financeExpensePaymentMode='single';
+    function financeExpenseParts(entry){
+        if(Array.isArray(entry?.paymentParts)&&entry.paymentParts.length>=2)
+            return entry.paymentParts.filter(p=>p && Number.isSafeInteger(Number(p.amountCents)) && Number(p.amountCents)>0);
+        return [{
+            paymentSourceId:entry?.paymentSourceId||'legacy_unspecified',
+            paymentSourceName:entry?.paymentSourceName||'Not specified',
+            amountCents:Number(entry?.amountCents)||0
+        }];
+    }
+    function financeExpensePartName(part,data){
+        const source=financePaymentSources(data).find(p=>p.id===part.paymentSourceId);
+        return String(source?.name||part.paymentSourceName||'Not specified');
+    }
+    function financeExpensePaymentType(part,data){
+        const id=String(part?.paymentSourceId||'').toLowerCase();
+        const name=financeExpensePartName(part,data).toLowerCase();
+        if(id==='cash'||/^cash$/.test(name)||/^cash payment$/.test(name))return 'Cash';
+        if(/(credit|debit|card|visa|mastercard|amex|discover)/.test(id+' '+name))return 'Card';
+        return 'Digital / Other';
+    }
+    function financeExpenseAmountForMethod(entry,methodId){
+        const total=Number(entry?.amountCents)||0;
+        if(!methodId)return total;
+        return financeExpenseParts(entry).reduce((sum,part)=>
+            sum+(String(part.paymentSourceId||'legacy_unspecified')===methodId?Number(part.amountCents)||0:0),0);
+    }
+    function financePopulateExpenseSplitSources(data){
+        const state=data||getPrivateAccountData();
+        const sources=financePaymentSources(state);
+        const selectIds=['expenseSplitCardMethod','expenseSplitCashMethod'];
+        const editingId=document.getElementById('expenseEditId')?.value;
+        const existing=editingId?financeExpenseItems(state).find(e=>e.id===editingId):null;
+        for(let i=0;i<2;i++){
+            const select=document.getElementById(selectIds[i]);if(!select)return;
+            const previously=select.value;
+            select.replaceChildren();
+            select.add(new Option('Choose payment method…',''));
+            for(const item of sources.filter(p=>p.active!==false))
+                select.add(new Option(String(item.name),String(item.id)));
+            const oldPart=financeExpenseParts(existing)[i];
+            if(existing&&oldPart && !Array.from(select.options).some(o=>o.value===oldPart.paymentSourceId))
+                select.add(new Option(financeExpensePartName(oldPart,state)+' (previous)',oldPart.paymentSourceId));
+            const defaultMethod=i===0
+                ?(sources.find(p=>p.active!==false&&/(card|debit|credit)/i.test(p.id+' '+p.name))?.id||'')
+                :(sources.find(p=>p.active!==false&&p.id==='cash')?.id||'');
+            const desired=previously || (existing?.paymentParts?.[i]?.paymentSourceId) || defaultMethod;
+            select.value=Array.from(select.options).some(o=>o.value===desired)?desired:'';
+        }
+    }
+    function financeSetExpensePaymentMode(mode){
+        financeExpensePaymentMode=mode==='split'?'split':'single';
+        const split=financeExpensePaymentMode==='split';
+        const splitSection=document.getElementById('expenseSplitSection');
+        const single=document.getElementById('expenseSingleMethodWrap');
+        if(splitSection)splitSection.hidden=!split;
+        if(single)single.hidden=split;
+        for(const [value,id] of [['single','expensePaySingleBtn'],['split','expensePaySplitBtn']]){
+            const button=document.getElementById(id);if(!button)continue;
+            const active=value===financeExpensePaymentMode;
+            button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
+        }
+        const singleMethod=document.getElementById('expensePaymentSource');
+        if(singleMethod)singleMethod.required=!split;
+        for(const id of ['expenseSplitCardMethod','expenseSplitCashMethod',
+                         'expenseSplitCardAmount','expenseSplitCashAmount']){
+            const input=document.getElementById(id);
+            if(input)input.required=split;
+        }
+        if(split)financePopulateExpenseSplitSources();
+        financeUpdateSplitRemainder();
+    }
+    function financeUpdateSplitRemainder(){
+        const status=document.getElementById('expenseSplitCheck');if(!status)return;
+        const totalValue=Number(document.getElementById('expenseAmount')?.value||0);
+        const card=Number(document.getElementById('expenseSplitCardAmount')?.value||0);
+        const cash=Number(document.getElementById('expenseSplitCashAmount')?.value||0);
+        const total=Math.round(totalValue*100),paid=Math.round(card*100)+Math.round(cash*100);
+        const valid=total>0&&card>0&&cash>0&&paid===total;
+        status.dataset.valid=String(valid);
+        status.textContent=valid
+          ?'✓ Card '+financeExpenseMoney(Math.round(card*100))+' + Cash '+financeExpenseMoney(Math.round(cash*100))+' = '+financeExpenseMoney(total)
+          : 'Card + Cash must equal '+financeExpenseMoney(total)+
+            ' · '+(paid>total?'Over by ':'Remaining ')+financeExpenseMoney(Math.abs(total-paid));
+    }
+    function financeExpenseSplitFromForm(totalCents,sources,previous){
+        const read=id=>document.getElementById(id)?.value||'';
+        const id1=read('expenseSplitCardMethod'),id2=read('expenseSplitCashMethod');
+        if(!id1||!id2||id1===id2)throw new Error('Choose two different payment methods, such as a card and cash.');
+        const amounts=[read('expenseSplitCardAmount'),read('expenseSplitCashAmount')].map(x=>Number(x));
+        if(amounts.some(x=>!Number.isFinite(x)||x<=0||x>9999999))
+            throw new Error('Enter a positive amount for both card and cash.');
+        const cents=amounts.map(x=>Math.round(x*100));
+        if(cents.some(x=>!Number.isSafeInteger(x)||x<1)||cents[0]+cents[1]!==totalCents)
+            throw new Error('The split amounts must exactly equal the expense total.');
+        const parts=[id1,id2].map((id,i)=>{
+            const source=sources.find(x=>x.id===id);
+            const old=financeExpenseParts(previous).find(x=>x.paymentSourceId===id);
+            if(!source&&!old)throw new Error('One payment method is unavailable. Please select another.');
+            if(source?.active===false&&!old)throw new Error('A removed payment method cannot be used for a new split.');
+            return {paymentSourceId:id,paymentSourceName:source?.name||old?.paymentSourceName||'Previous method',amountCents:cents[i]};
+        });
+        return parts;
+    }
+
     function financePaymentSourceStatus(message){
         const element=document.getElementById('expensePaymentSourceMessage');
         if(element)element.textContent=message;
@@ -6650,6 +6801,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             selector.value=Array.from(selector.options).some(o=>o.value===chosen)?chosen:
                 existing?.paymentSourceId|| (editingId?'legacy_unspecified':'');
         }
+        financePopulateExpenseSplitSources(state);
         const filter=document.getElementById('expensePaymentSourceFilter');
         if(filter){
             const old=filter.value;
@@ -6658,8 +6810,10 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             const all=financeExpenseItems(state);
             const names=new Map(sources.map(p=>[p.id,p.name]));
             for(const entry of all){
-                if(entry?.paymentSourceId && !names.has(entry.paymentSourceId))
-                    names.set(entry.paymentSourceId,entry.paymentSourceName||'Previous payment method');
+                for(const part of financeExpenseParts(entry)){
+                    if(part?.paymentSourceId && !names.has(part.paymentSourceId))
+                        names.set(part.paymentSourceId,part.paymentSourceName||'Previous payment method');
+                }
             }
             for(const [id,name] of names)filter.add(new Option(name,id));
             filter.add(new Option('Not specified (older expenses)','legacy_unspecified'));
@@ -6837,7 +6991,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const sourceFilter=document.getElementById('expensePaymentSourceFilter').value;
         const filtered=all.filter(x=>(financeExpenseView==='combined'||x.owner===financeExpenseView) &&
             (!category||x.category===category) &&
-            (!sourceFilter||(sourceFilter==='legacy_unspecified'?!x.paymentSourceId:x.paymentSourceId===sourceFilter)))
+            (!sourceFilter||financeExpenseAmountForMethod(x,sourceFilter)>0))
             .sort((a,b)=>String(b.date).localeCompare(String(a.date))||
                 String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
         document.getElementById('expenseListSubheading').textContent=filtered.length+
@@ -6858,7 +7012,10 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             who.textContent=item.owner==='his'?'His':item.owner==='her'?'Hers':'Together';
             name.append(who);
             const detail=document.createElement('p');detail.className='expense-row-note';
-            detail.textContent=[item.date,item.category,'Paid with: '+financeExpenseSourceLabel(item,state),item.note].filter(Boolean).join(' · ');
+            const parts=financeExpenseParts(item);
+            const paidWith=parts.map(p=>financeExpensePartName(p,state)+
+                (parts.length>1?' '+financeExpenseMoney(p.amountCents):'')).join(' + ');
+            detail.textContent=[item.date,item.category,'Paid with: '+paidWith,item.note].filter(Boolean).join(' · ');
             left.append(name,detail);
             const receipts=Array.isArray(item.attachments)?item.attachments:[];
             if(receipts.length){
@@ -6878,7 +7035,14 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             }
             const right=document.createElement('div');right.className='expense-row-right';
             const amount=document.createElement('strong');amount.className='expense-row-amount';
-            amount.textContent=financeExpenseMoney(item.amountCents);
+            const allocated=financeExpenseAmountForMethod(item,sourceFilter);
+            amount.textContent=financeExpenseMoney(sourceFilter?allocated:item.amountCents);
+            if(sourceFilter && allocated!==Number(item.amountCents)){
+                const full=document.createElement('small');
+                full.style.cssText='font-size:.71rem;color:var(--text-muted);font-weight:500';
+                full.textContent='of '+financeExpenseMoney(item.amountCents)+' total';
+                right.append(full);
+            }
             const buttons=document.createElement('div');buttons.className='expense-row-actions';
             const edit=document.createElement('button');edit.className='btn-secondary';edit.type='button';
             edit.textContent='Edit';edit.onclick=()=>financeEditExpense(item.id);
@@ -6889,11 +7053,29 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const totals=new Map();
         const categoryItems=all.filter(x=>(financeExpenseView==='combined'||x.owner===financeExpenseView)
             &&(!category||x.category===category)
-            &&(!sourceFilter||(sourceFilter==='legacy_unspecified'?!x.paymentSourceId:x.paymentSourceId===sourceFilter)));
-        const sourceTotals=new Map();
+            &&(!sourceFilter||financeExpenseAmountForMethod(x,sourceFilter)>0));
+        const sourceTotals=new Map(),typeTotals=new Map([['Card',0],['Cash',0],['Digital / Other',0]]);
         for(const item of categoryItems){
-            const label=financeExpenseSourceLabel(item,state);
-            sourceTotals.set(label,(sourceTotals.get(label)||0)+Number(item.amountCents||0));
+            for(const part of financeExpenseParts(item)){
+                if(sourceFilter && part.paymentSourceId!==sourceFilter)continue;
+                const label=financeExpensePartName(part,state);
+                const value=Number(part.amountCents)||0;
+                sourceTotals.set(label,(sourceTotals.get(label)||0)+value);
+                const type=financeExpensePaymentType(part,state);
+                typeTotals.set(type,(typeTotals.get(type)||0)+value);
+            }
+        }
+        const typeSummary=document.getElementById('expensePaymentTypeSummary');
+        if(typeSummary){
+            typeSummary.replaceChildren();
+            for(const [type,value] of typeTotals){
+                const card=document.createElement('div');card.className='expense-payment-type-card';
+                const label=document.createElement('span');
+                label.textContent=type==='Card'?'💳 Card':type==='Cash'?'💵 Cash':'📱 Digital / Other';
+                const amount=document.createElement('strong');amount.textContent=financeExpenseMoney(value);
+                const note=document.createElement('span');note.textContent=type==='Card'?'Debit and credit cards':type==='Cash'?'Physical cash':'Apps, transfers and other';
+                card.append(label,amount,note);typeSummary.append(card);
+            }
         }
         const methodSummary=document.getElementById('expensePaymentSourceSummary');
         methodSummary.replaceChildren();
@@ -6911,7 +7093,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         }
         for(const e of categoryItems){
             const key=String(e.category||'Other');
-            totals.set(key,(totals.get(key)||0)+Number(e.amountCents||0));
+            totals.set(key,(totals.get(key)||0)+financeExpenseAmountForMethod(e,sourceFilter));
         }
         const cats=document.getElementById('expenseCategorySummary');cats.replaceChildren();
         const sorted=Array.from(totals.entries()).sort((a,b)=>b[1]-a[1]);
@@ -6946,6 +7128,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('expenseDate').value=now.startsWith(month)?now:month+'-01';
         document.getElementById('expenseOwner').value=financeExpenseView==='combined'?'together':financeExpenseView;
         financeToggleCustomExpenseCategory();
+        financeSetExpensePaymentMode('single');
+        document.getElementById('expenseSplitCardAmount').value='';
+        document.getElementById('expenseSplitCashAmount').value='';
         financeRefreshPaymentSourceUi(undefined,'');
     }
 
@@ -7029,21 +7214,35 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const data=getPrivateAccountData();
         const sources=financeEnsurePaymentSources(data);
         const chosenMethod=sources.find(x=>x.id===selectedMethod);
-        if(!chosenMethod && !(editId&&selectedMethod==='legacy_unspecified')){
-            alert('Select a payment method, or use Add / Manage Methods to create one.');return;
-        }
-        if(chosenMethod?.active===false && !editId){
-            alert('This payment method was removed. Choose an active method.');return;
-        }
         if(!Array.isArray(data.monthlyExpenses))data.monthlyExpenses=[];
         const existing=editId?data.monthlyExpenses.find(x=>x.id===editId):null;
         if(editId&&!existing){alert('That expense was changed on another device. Refresh and try again.');return;}
+        if(financeExpensePaymentMode!=='split'){
+            if(!chosenMethod && !(editId&&selectedMethod==='legacy_unspecified')){
+                alert('Select a payment method, or use Add / Manage Methods to create one.');return;
+            }
+            if(chosenMethod?.active===false && !editId){
+                alert('This payment method was removed. Choose an active method.');return;
+            }
+        }
+        let paymentParts;
+        if(financeExpensePaymentMode==='split'){
+            try{paymentParts=financeExpenseSplitFromForm(amountCents,sources,existing);}
+            catch(error){alert(error.message);return;}
+        }else{
+            paymentParts=[{
+                paymentSourceId:chosenMethod?.id||'legacy_unspecified',
+                paymentSourceName:chosenMethod?.name||existing?.paymentSourceName||'Not specified',
+                amountCents
+            }];
+        }
         const entry={
             id:editId||('expense_'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'_'+Math.random().toString(36).slice(2))),
             date,owner,description:description.slice(0,130),category,
             amountCents,note:document.getElementById('expenseNote').value.trim().slice(0,400),
-            paymentSourceId:chosenMethod?.id || null,
-            paymentSourceName:chosenMethod?.name || existing?.paymentSourceName || '',
+            paymentSourceId:financeExpensePaymentMode==='split'?null:(chosenMethod?.id || null),
+            paymentSourceName:financeExpensePaymentMode==='split'?'Split payment':(chosenMethod?.name || existing?.paymentSourceName || ''),
+            paymentParts,
             createdAt:existing?.createdAt||new Date().toISOString(),
             updatedAt:new Date().toISOString(),
             attachments:Array.isArray(existing?.attachments)?[...existing.attachments]:[]
@@ -7088,6 +7287,16 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('expenseOwner').value=entry.owner;
         document.getElementById('expenseNote').value=entry.note||'';
         financeRefreshPaymentSourceUi(undefined,entry.paymentSourceId||'legacy_unspecified');
+        if(Array.isArray(entry.paymentParts)&&entry.paymentParts.length>=2){
+            financeSetExpensePaymentMode('split');
+            financePopulateExpenseSplitSources();
+            const amounts=entry.paymentParts;
+            document.getElementById('expenseSplitCardMethod').value=amounts[0].paymentSourceId;
+            document.getElementById('expenseSplitCardAmount').value=(amounts[0].amountCents/100).toFixed(2);
+            document.getElementById('expenseSplitCashMethod').value=amounts[1].paymentSourceId;
+            document.getElementById('expenseSplitCashAmount').value=(amounts[1].amountCents/100).toFixed(2);
+        }else financeSetExpensePaymentMode('single');
+        financeUpdateSplitRemainder();
         const select=document.getElementById('expenseCategory');
         const option=Array.from(select.options).find(o=>o.value===entry.category);
         select.value=option?entry.category:'__custom__';
@@ -7122,9 +7331,18 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
         const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
         const state=getPrivateAccountData();
-        const rows=[['Date','Spending','Category','Description','Amount USD','Payment Method','Notes'],
-            ...items.map(x=>[x.date,x.owner==='together'?'Together':x.owner==='her'?'Hers':'His',
-                x.category,x.description,(Number(x.amountCents)/100).toFixed(2),financeExpenseSourceLabel(x,state),x.note])];
+        const rows=[['Date','Spending','Category','Description','Amount USD','Payment Method','Card Paid USD','Cash Paid USD','Digital/Other Paid USD','Split Details','Notes'],
+            ...items.map(x=>{
+                const parts=financeExpenseParts(x);
+                const byType=type=>parts.filter(p=>financeExpensePaymentType(p,state)===type)
+                    .reduce((sum,p)=>sum+Number(p.amountCents||0),0);
+                return [x.date,x.owner==='together'?'Together':x.owner==='her'?'Hers':'His',
+                    x.category,x.description,(Number(x.amountCents)/100).toFixed(2),
+                    parts.map(p=>financeExpensePartName(p,state)).join(' + '),
+                    (byType('Card')/100).toFixed(2),(byType('Cash')/100).toFixed(2),
+                    (byType('Digital / Other')/100).toFixed(2),
+                    parts.map(p=>financeExpensePartName(p,state)+': '+financeExpenseMoney(p.amountCents)).join(' | '),x.note];
+            })];
         const csv='\ufeff'+rows.map(row=>row.map(esc).join(',')).join('\r\n');
         const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
         const url=URL.createObjectURL(blob),a=document.createElement('a');
