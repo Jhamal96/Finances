@@ -1212,6 +1212,19 @@
       border-radius:11px;background:var(--card-bg);font-size:1.5rem;line-height:1;cursor:pointer}
     .expense-dialog-close:focus-visible{outline:3px solid #7dd3fc;outline-offset:3px}
     .expense-dialog .expense-source-manager{margin-top:16px}
+    .finance-entry-modal{z-index:3500}
+    .finance-entry-modal[hidden]{display:none!important}
+    .finance-entry-modal .finance-guide-panel{width:min(100%,760px)}
+    .finance-entry-modal .finance-guide-scroll{min-height:0}
+    .finance-entry-modal .income-form-grid,.finance-entry-modal .form-grid{
+      grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr))!important}
+    .finance-entry-modal #purchaseForm{grid-template-columns:1fr!important}
+    .finance-entry-modal .custom-date-wrapper[role="button"]:focus-visible{outline:3px solid #7dd3fc;outline-offset:3px;border-radius:12px}
+    .finance-entry-open{width:auto;margin:10px 0}
+    .finance-entry-modal-footer{display:flex;justify-content:flex-end;margin-top:14px}
+    .finance-entry-modal-footer button{width:auto;min-width:110px}
+    body.finance-entry-dialog-open{overflow:hidden}
+    @media(max-width:480px){.finance-entry-open{width:100%}.finance-entry-modal-footer button{width:100%}}
     @media(max-width:480px){.expense-add-actions .btn-add{width:100%}}
     .expense-row{display:flex;gap:12px;justify-content:space-between;align-items:center;border-bottom:1px solid var(--card-border);padding:13px 0}
     .expense-row:last-child{border-bottom:0}
@@ -1915,14 +1928,14 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
      aria-labelledby="financeReleaseTitle" aria-describedby="financeReleaseIntro" hidden>
   <div class="finance-guide-panel" style="max-width:610px">
     <div class="finance-guide-top">
-      <span class="finance-guide-kicker">Latest Update · October 28, 2026</span>
-      <h2 id="financeReleaseTitle">✨ Adjustable Liquid Glass &amp; AMOLED</h2>
-      <p id="financeReleaseIntro">Personalize the look of Household Finance in Settings.</p>
+      <span class="finance-guide-kicker">Latest Update · October 30, 2026</span>
+      <h2 id="financeReleaseTitle">✨ Easier Add-Entry Pop-Ups</h2>
+      <p id="financeReleaseIntro">Open a form only when you are ready to add information.</p>
     </div>
     <div class="finance-guide-scroll"><div class="finance-guide-grid">
-      <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">◈</span><div><h3>Adjustable Glass</h3><p>Turn Liquid Glass on or off and use the live slider to move from clear to tinted.</p></div></article>
-      <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">⬛</span><div><h3>AMOLED Black</h3><p>Choose a true-black background independently from the glass effect.</p></div></article>
-      <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">📱</span><div><h3>Your Device, Your Choice</h3><p>Appearance preferences are saved in this browser on this device.</p></div></article>
+      <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">＋</span><div><h3>Add From a Button</h3><p>Open a pop-up to enter paychecks, bills, plans, purchases, allocations, tasks and amounts owed.</p></div></article>
+      <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🧾</span><div><h3>Monthly Expenses</h3><p>Use the Expenses shortcut at the top, then tap Add Monthly Expense to open its form.</p></div></article>
+      <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">✏️</span><div><h3>Edit and Save</h3><p>Existing entries can still be edited, with the same payment and receipt options.</p></div></article>
     </div><p class="finance-guide-privacy">For every earlier change, open <strong>Settings → Recent Updates</strong>.</p></div>
     <div class="finance-guide-footer"><span style="color:var(--text-muted);font-size:.84rem">After acknowledgement, this release won't pop up again for your login on this device.</span><button type="button" class="finance-guide-done" id="financeReleaseOkay" onclick="financeAcknowledgeUpdate()">OK, Got It</button></div>
   </div>
@@ -2016,15 +2029,31 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           <button class="btn-secondary" type="button" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button>
         </div>
         <h3>Create profile</h3>
-        <form class="finance-profile-action" onsubmit="financeCreateProfile(event)">
+        <button class="btn-add finance-entry-open" id="financeEntryOpen_profileCreate" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_profileCreate" aria-expanded="false" onclick="financeOpenEntryDialog('profileCreate')">＋ Create Profile</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_profileCreate" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_profileCreate" hidden onkeydown="financeEntryDialogKeydown(event,'profileCreate')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_profileCreate">Create Profile</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('profileCreate')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><p id="financeProfileCreateDialogStatus" class="finance-todo-note" role="status" aria-live="polite"></p><form id="financeEntryForm_profileCreate" class="finance-profile-action" onsubmit="financeCreateProfile(event)">
           <input id="financeNewProfileName" type="text" required maxlength="50" autocomplete="off" placeholder="Personal, Partner, Family, Side Business">
           <button class="btn-add" type="submit">+ Create Profile</button>
-        </form>
+        </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('profileCreate')">Cancel</button></div></div>
+        </div>
+      </div>
         <h3>Rename selected profile</h3>
-        <form class="finance-profile-action" onsubmit="financeRenameProfile(event)">
+        <button class="btn-add finance-entry-open" id="financeEntryOpen_profileRename" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_profileRename" aria-expanded="false" onclick="financeOpenEntryDialog('profileRename')">✎ Rename Profile</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_profileRename" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_profileRename" hidden onkeydown="financeEntryDialogKeydown(event,'profileRename')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_profileRename">Rename Profile</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('profileRename')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><p id="financeProfileRenameDialogStatus" class="finance-todo-note" role="status" aria-live="polite"></p><form id="financeEntryForm_profileRename" class="finance-profile-action" onsubmit="financeRenameProfile(event)">
           <input id="financeRenameProfileName" type="text" maxlength="50" required autocomplete="off" placeholder="New name">
           <button class="btn-secondary" type="submit">Save Name</button>
-        </form>
+        </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('profileRename')">Cancel</button></div></div>
+        </div>
+      </div>
         <p id="financeProfileMessage" role="status" aria-live="polite" class="finance-profile-help"></p>
       </div>
       <div id="financeProfilesList" class="finance-profile-list"></div>
@@ -2186,9 +2215,14 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           <span>Total: <strong id="financeTodoTotal">0</strong></span></div>
       </div>
       <div class="finance-todo-card">
-        <div class="finance-entry-toggle"><button type="button" class="btn-add" id="financeTodoOpenForm" aria-controls="financeTodoForm" aria-expanded="false" onclick="financeToggleEntryForm('todo')">＋ Add Task</button><span class="finance-todo-note">Select Add Task to enter information.</span></div>
-        <h3 id="financeTodoFormTitle" hidden>Add a Task</h3>
-        <form id="financeTodoForm" class="finance-todo-fields finance-entry-form" hidden onsubmit="financeSaveTodo(event)">
+        <div class="finance-entry-toggle"><button type="button" class="btn-add" id="financeTodoOpenForm" aria-controls="financeEntryDialog_todo" aria-haspopup="dialog" aria-expanded="false" onclick="financeToggleEntryForm('todo')">＋ Add Task</button><span class="finance-todo-note">Select Add Task to enter information.</span></div>
+        
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_todo" role="dialog" aria-modal="true" aria-labelledby="financeTodoFormTitle" hidden onkeydown="financeEntryDialogKeydown(event,'todo')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeTodoFormTitle" hidden>Add a Task</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('todo')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="financeTodoForm" class="finance-todo-fields finance-entry-form" hidden onsubmit="financeSaveTodo(event)">
           <input id="financeTodoEditId" type="hidden">
           <label class="finance-todo-full">Task *
             <input id="financeTodoText" required maxlength="180" placeholder="e.g. Review upcoming bills" autocomplete="off">
@@ -2203,10 +2237,12 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           </label>
           <div class="finance-todo-buttons finance-todo-full">
             <button id="financeTodoSaveBtn" class="btn-add" type="submit">+ Save Task</button>
-            <button class="btn-secondary" type="button" onclick="financeResetTodoForm()">Clear / Cancel</button>
+            <button class="btn-secondary" type="button" onclick="financeCancelEntryDialog('todo')">Cancel</button>
             <button class="btn-secondary" type="button" onclick="financeLoadTodos()">↻ Refresh</button>
           </div>
-        </form>
+        </form><p id="financeTodoDialogStatus" class="finance-todo-note" role="status" aria-live="polite"></p></div>
+        </div>
+      </div>
         <p class="finance-todo-note" id="financeTodoStatus" role="status" aria-live="polite"></p>
       </div>
       <div class="finance-todo-card">
@@ -2234,9 +2270,14 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         </div>
       </div>
       <div class="finance-todo-card">
-        <div class="finance-entry-toggle"><button type="button" class="btn-add" id="financeOwedOpenForm" aria-controls="financeOwedForm" aria-expanded="false" onclick="financeToggleEntryForm('owed')">＋ Add What I Owe</button><span class="finance-todo-note">Select Add What I Owe to enter information.</span></div>
-        <h3 id="financeOwedFormTitle" hidden>Add What I Owe</h3>
-        <form class="finance-todo-fields finance-entry-form" id="financeOwedForm" hidden onsubmit="financeSaveOwed(event)">
+        <div class="finance-entry-toggle"><button type="button" class="btn-add" id="financeOwedOpenForm" aria-controls="financeEntryDialog_owed" aria-haspopup="dialog" aria-expanded="false" onclick="financeToggleEntryForm('owed')">＋ Add What I Owe</button><span class="finance-todo-note">Select Add What I Owe to enter information.</span></div>
+        
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_owed" role="dialog" aria-modal="true" aria-labelledby="financeOwedFormTitle" hidden onkeydown="financeEntryDialogKeydown(event,'owed')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeOwedFormTitle" hidden>Add What I Owe</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('owed')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form class="finance-todo-fields finance-entry-form" id="financeOwedForm" hidden onsubmit="financeSaveOwed(event)">
           <input type="hidden" id="financeOwedEditId">
           <label>Who do you owe? *
             <input id="financeOwedCreditor" required maxlength="160" autocomplete="off" placeholder="Name, store, company or lender">
@@ -2258,10 +2299,12 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           </label>
           <div class="finance-todo-buttons finance-todo-full">
             <button id="financeOwedSaveBtn" class="btn-add" type="submit">+ Save What I Owe</button>
-            <button class="btn-secondary" type="button" onclick="financeResetOwedForm()">Clear / Cancel</button>
+            <button class="btn-secondary" type="button" onclick="financeCancelEntryDialog('owed')">Cancel</button>
             <button class="btn-secondary" type="button" onclick="financeLoadOwed()">↻ Refresh</button>
           </div>
-        </form>
+        </form><p id="financeOwedDialogStatus" class="finance-todo-note" role="status" aria-live="polite"></p></div>
+        </div>
+      </div>
         <p id="financeOwedStatus" class="finance-todo-note" role="status" aria-live="polite"></p>
       </div>
       <div class="finance-todo-card">
@@ -2289,7 +2332,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             <button type="button" class="btn-secondary" onclick="financeExpandUpdateHistory()">📚 View Complete Update History</button>
           </div>
           <div style="display:grid;gap:11px;margin-top:12px">
-            <details open><summary><strong>October 28, 2026 — Adjustable Liquid Glass &amp; AMOLED</strong></summary><p class="settings-muted-note">Choose a clear-to-tinted glass effect, turn it on or off, and optionally enable true-black AMOLED appearance in Settings. The choices stay on this browser and device.</p></details>
+            <details open><summary><strong>October 30, 2026 — Add-Entry Pop-Ups</strong></summary><p class="settings-muted-note">Add buttons open forms in pop-ups across Household Finance, including Monthly Expenses, paychecks, entries, allocations, ESSO, plans, purchases, profiles, to-dos and amounts owed. Existing editing and receipt options remain available.</p></details>
+            <details><summary><strong>October 28, 2026 — Adjustable Liquid Glass &amp; AMOLED</strong></summary><p class="settings-muted-note">Choose a clear-to-tinted glass effect, turn it on or off, and optionally enable true-black AMOLED appearance in Settings. The choices stay on this browser and device.</p></details>
             <details><summary><strong>October 28, 2026 — Split Card &amp; Cash Expenses</strong></summary>
               <p class="settings-muted-note">In Monthly Expenses, switch between Single Payment and Split Card / Cash. Enter separate card and cash amounts that add up to the expense total. The purchase counts only once in His, Hers, or Combined Spending. Separate Card/Cash/Digital totals, payment-method filters, editing, and CSV exports include the split amounts.</p></details>
             <details><summary><strong>October 28, 2026 — Allocation by Percentage</strong></summary>
@@ -2508,14 +2552,22 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
             <div class="income-card">
                 <h3>His Paycheck Log</h3>
-                <form class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'his')">
+                <button class="btn-add finance-entry-open" id="financeEntryOpen_hisPay" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_hisPay" aria-expanded="false" onclick="financeOpenEntryDialog('hisPay')">＋ Log Paycheck</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_hisPay" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_hisPay" hidden onkeydown="financeEntryDialogKeydown(event,'hisPay')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_hisPay">Log His Paycheck</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('hisPay')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="financeEntryForm_hisPay" class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'his')">
                     <input type="number" class="payAmount" step="0.01" min="0" placeholder="Paycheck Amount ($)" required>
                     <div class="custom-date-wrapper" onclick="openDateModal('hisPayDateInput')">
                         <div id="hisPayDateDisplay" class="custom-date-trigger">Select Date</div>
                         <input type="date" id="hisPayDateInput" class="payDate" required style="display:none;" onchange="updateDateDisplay('hisPayDateInput', 'hisPayDateDisplay')">
                     </div>
                     <button type="submit" class="btn-add">Log Paycheck</button>
-                </form>
+                </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('hisPay')">Cancel</button></div></div>
+        </div>
+      </div>
                 <ul class="paycheck-log-list" id="hisPaycheckList"></ul>
 
                 <div id="his503020Card" style="margin-top: 14px; background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 14px;">
@@ -2543,7 +2595,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             </div>
 
             <div class="form-card">
-                <form class="form-grid" onsubmit="handleFormSubmit(event, 'his')">
+                <button class="btn-add finance-entry-open" id="financeEntryOpen_hisEntry" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_hisEntry" aria-expanded="false" onclick="financeOpenEntryDialog('hisEntry')">＋ Add Entry</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_hisEntry" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_hisEntry" hidden onkeydown="financeEntryDialogKeydown(event,'hisEntry')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_hisEntry">Add His Entry</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('hisEntry')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="financeEntryForm_hisEntry" class="form-grid" onsubmit="handleFormSubmit(event, 'his')">
                     <input type="text" class="itemName auto-cap" placeholder="Item Name" required oninput="autoCategorize(this)">
                     <input type="number" class="itemAmount" step="0.01" min="0" placeholder="Amount ($)" required>
                     <div class="custom-date-wrapper" onclick="openDateModal('hisItemDueDateInput')">
@@ -2570,7 +2628,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                         <option value="Subscriptions">Subscriptions</option>
                     </select>
                     <button type="submit" class="btn-add">Add Entry</button>
-                </form>
+                </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('hisEntry')">Cancel</button></div></div>
+        </div>
+      </div>
             </div>
 
             <div class="search-bar-container">
@@ -2598,14 +2658,22 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
             <div class="income-card">
                 <h3>Her Paycheck Log</h3>
-                <form class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'her')">
+                <button class="btn-add finance-entry-open" id="financeEntryOpen_herPay" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_herPay" aria-expanded="false" onclick="financeOpenEntryDialog('herPay')">＋ Log Paycheck</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_herPay" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_herPay" hidden onkeydown="financeEntryDialogKeydown(event,'herPay')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_herPay">Log Her Paycheck</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('herPay')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="financeEntryForm_herPay" class="income-form-grid" onsubmit="handlePaycheckSubmit(event, 'her')">
                     <input type="number" class="payAmount" step="0.01" min="0" placeholder="Paycheck Amount ($)" required>
                     <div class="custom-date-wrapper" onclick="openDateModal('herPayDateInput')">
                         <div id="herPayDateDisplay" class="custom-date-trigger">Select Date</div>
                         <input type="date" id="herPayDateInput" class="payDate" required style="display:none;" onchange="updateDateDisplay('herPayDateInput', 'herPayDateDisplay')">
                     </div>
                     <button type="submit" class="btn-add">Log Paycheck</button>
-                </form>
+                </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('herPay')">Cancel</button></div></div>
+        </div>
+      </div>
                 <ul class="paycheck-log-list" id="herPaycheckList"></ul>
 
                 <div id="her503020Card" style="margin-top: 14px; background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 12px; padding: 14px;">
@@ -2633,7 +2701,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             </div>
 
             <div class="form-card">
-                <form class="form-grid" onsubmit="handleFormSubmit(event, 'her')">
+                <button class="btn-add finance-entry-open" id="financeEntryOpen_herEntry" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_herEntry" aria-expanded="false" onclick="financeOpenEntryDialog('herEntry')">＋ Add Entry</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_herEntry" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_herEntry" hidden onkeydown="financeEntryDialogKeydown(event,'herEntry')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_herEntry">Add Her Entry</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('herEntry')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="financeEntryForm_herEntry" class="form-grid" onsubmit="handleFormSubmit(event, 'her')">
                     <input type="text" class="itemName auto-cap" placeholder="Item Name" required oninput="autoCategorize(this)">
                     <input type="number" class="itemAmount" step="0.01" min="0" placeholder="Amount ($)" required>
                     <div class="custom-date-wrapper" onclick="openDateModal('herItemDueDateInput')">
@@ -2659,7 +2733,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                         <option value="Subscriptions">Subscriptions</option>
                     </select>
                     <button type="submit" class="btn-add">Add Entry</button>
-                </form>
+                </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('herEntry')">Cancel</button></div></div>
+        </div>
+      </div>
             </div>
 
             <div class="search-bar-container">
@@ -2733,7 +2809,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 </div>
             </div>
 
-            <form id="allocForm" class="income-form-grid finance-allocation-form" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleAllocSubmit(event)">
+            <button class="btn-add finance-entry-open" id="financeEntryOpen_allocation" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_allocation" aria-expanded="false" onclick="financeOpenEntryDialog('allocation')">＋ Add Allocation</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_allocation" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_allocation" hidden onkeydown="financeEntryDialogKeydown(event,'allocation')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_allocation">Add Allocation</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('allocation')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="allocForm" class="income-form-grid finance-allocation-form" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleAllocSubmit(event)">
                 <label for="allocNameInput">Envelope / category
                     <input type="text" id="allocNameInput" class="auto-cap" placeholder="e.g. Savings" required>
                 </label>
@@ -2747,11 +2829,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 </label>
                 <div class="finance-allocation-form-actions">
                     <button type="submit" id="allocSubmitButton" class="btn-add">Add Allocation</button>
-                    <button type="button" id="allocCancelEdit" class="btn-secondary" onclick="financeCancelAllocationEdit()" hidden>Cancel</button>
+                    <button type="button" id="allocCancelEdit" class="btn-secondary" onclick="financeCancelEntryDialog('allocation')" hidden>Cancel</button>
                 </div>
             </form>
             <p class="finance-allocation-preview" id="allocPreview" role="status" aria-live="polite">Enter a dollar amount or choose Percentage of pay.</p>
-            <p class="settings-muted-note" id="allocPercentHelp">Percentages use the average of the selected month’s recorded paychecks. Percentage-based amounts update when that average changes; dollar amounts stay fixed.</p>
+            <p class="settings-muted-note" id="allocPercentHelp">Percentages use the average of the selected month’s recorded paychecks. Percentage-based amounts update when that average changes; dollar amounts stay fixed.</p><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('allocation')">Cancel</button></div></div>
+        </div>
+      </div>
         </div>
 
         <div class="allocation-card">
@@ -2792,7 +2876,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
             <div id="scanStatusText" class="scan-status-text">🔍 Extracting and auto-saving details...</div>
 
-            <form id="essoForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleEssoSubmit(event)">
+            <button class="btn-add finance-entry-open" id="financeEntryOpen_esso" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_esso" aria-expanded="false" onclick="financeOpenEntryDialog('esso')">＋ Add Payment Slot</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_esso" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_esso" hidden onkeydown="financeEntryDialogKeydown(event,'esso')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_esso">Add ESSO Payment Slot</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('esso')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="essoForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" onsubmit="handleEssoSubmit(event)">
                 <input type="text" id="essoNameInput" class="auto-cap" placeholder="Recipient / Slot Name" required>
                 <input type="number" id="essoAmountInput" step="0.01" min="0" placeholder="Payment Amount ($)" required>
                 <div class="custom-date-wrapper" onclick="openDateModal('essoDueDateInput')">
@@ -2800,7 +2890,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                     <input type="date" id="essoDueDateInput" required style="display:none;" onchange="updateDateDisplay('essoDueDateInput', 'essoDueDateDisplay')">
                 </div>
                 <button type="submit" class="btn-add">Save Entry</button>
-            </form>
+            </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('esso')">Cancel</button></div></div>
+        </div>
+      </div>
         </div>
 
         <div class="search-bar-container">
@@ -2846,7 +2938,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
         <div class="form-card">
             <h3 style="color: var(--text); margin-bottom: 12px;">Create Payment Plan</h3>
-            <form id="paymentPlanForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));" onsubmit="handlePaymentPlanSubmit(event)">
+            <button class="btn-add finance-entry-open" id="financeEntryOpen_paymentPlan" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_paymentPlan" aria-expanded="false" onclick="financeOpenEntryDialog('paymentPlan')">＋ Add Payment Plan</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_paymentPlan" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_paymentPlan" hidden onkeydown="financeEntryDialogKeydown(event,'paymentPlan')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_paymentPlan">Create Payment Plan</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('paymentPlan')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="paymentPlanForm" class="income-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));" onsubmit="handlePaymentPlanSubmit(event)">
                 <input type="text" id="planNameInput" class="auto-cap" placeholder="Plan / Creditor Name" required>
                 <input type="number" id="planAmountInput" step="0.01" min="0" placeholder="Total Amount ($)" required>
                 <input type="text" id="planRecipientInput" placeholder="Where to send money (Recipient)">
@@ -2879,7 +2977,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                     <input type="date" id="planEndDateInput" required style="display:none;" onchange="updateDateDisplay('planEndDateInput', 'planEndDateDisplay')">
                 </div>
                 <button type="submit" class="btn-add">Save Plan</button>
-            </form>
+            </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('paymentPlan')">Cancel</button></div></div>
+        </div>
+      </div>
         </div>
 
         <div class="search-bar-container">
@@ -2905,7 +3005,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
       <div class="form-card">
         <h3 style="margin-bottom:10px">Add / Edit Pay in 4 Purchase</h3>
         <p style="color:var(--text-muted);margin-bottom:14px">Track Affirm, Klarna, Afterpay, PayPal Pay in 4, Zip, or any store. Choose your payment limit and schedule.</p>
-        <form id="p4Form" onsubmit="submitPayFour(event)" class="income-form-grid" style="grid-template-columns:repeat(auto-fit,minmax(185px,1fr))">
+        <button class="btn-add finance-entry-open" id="financeEntryOpen_payFour" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_payFour" aria-expanded="false" onclick="financeOpenEntryDialog('payFour')">＋ Add Pay in 4 Purchase</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_payFour" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_payFour" hidden onkeydown="financeEntryDialogKeydown(event,'payFour')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_payFour">Add Pay in 4 Purchase</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('payFour')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="p4Form" onsubmit="submitPayFour(event)" class="income-form-grid" style="grid-template-columns:repeat(auto-fit,minmax(185px,1fr))">
           <input type="hidden" id="p4Id">
           <label>Provider / Payment Service<input id="p4Provider" placeholder="e.g. Klarna" required maxlength="80"></label>
           <label>Store / Place<input id="p4Store" placeholder="e.g. Best Buy" required maxlength="100"></label>
@@ -2917,7 +3023,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           <label>Last Payment / End Date<input id="p4End" type="date" required></label>
           <label>Owner<select id="p4Owner"><option value="his">His</option><option value="her">Hers</option><option value="combined">Combined</option></select></label>
           <div style="display:flex;gap:8px;align-items:end"><button class="btn-add" id="p4SubmitButton" type="submit">Save Plan</button><button class="btn-secondary" type="button" onclick="p4ResetForm()">Clear</button></div>
-        </form>
+        </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('payFour')">Cancel</button></div></div>
+        </div>
+      </div>
         <p style="color:var(--text-muted);font-size:.8rem;margin-top:12px">The first installment is scheduled on the start date. You can edit the end date to distribute installments across your preferred timeframe.</p>
       </div>
       <div class="search-bar-container"><input class="search-input" id="p4Search" oninput="renderPayFour()" placeholder="🔎 Search provider, store or purchase..."></div>
@@ -2941,7 +3049,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
         <div class="form-card">
             <h3 style="color: var(--text); margin-bottom: 12px;">Add Purchase Item & Web Research</h3>
-            <form id="purchaseForm" class="income-form-grid" style="grid-template-columns: 1fr;" onsubmit="handlePurchaseSubmit(event)">
+            <button class="btn-add finance-entry-open" id="financeEntryOpen_purchase" type="button" aria-haspopup="dialog" aria-controls="financeEntryDialog_purchase" aria-expanded="false" onclick="financeOpenEntryDialog('purchase')">＋ Add Purchase Item</button>
+      <div class="finance-guide-overlay finance-entry-modal" id="financeEntryDialog_purchase" role="dialog" aria-modal="true" aria-labelledby="financeEntryTitle_purchase" hidden onkeydown="financeEntryDialogKeydown(event,'purchase')">
+        <div class="finance-guide-panel">
+          <div class="finance-guide-top expense-dialog-heading"><div><span class="finance-guide-kicker">Household Finance</span><h2 id="financeEntryTitle_purchase">Add Purchase Item</h2></div>
+            <button class="expense-dialog-close" type="button" onclick="financeCancelEntryDialog('purchase')" aria-label="Close form">×</button>
+          </div>
+          <div class="finance-guide-scroll"><form id="purchaseForm" class="income-form-grid" style="grid-template-columns: 1fr;" onsubmit="handlePurchaseSubmit(event)">
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
                     <input type="text" id="purchaseNameInput" class="auto-cap" placeholder="Item Name" required>
                     <input type="number" id="purchasePriceInput" step="0.01" min="0" placeholder="Price ($)" required>
@@ -2983,7 +3097,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 </div>
 
                 <button type="submit" class="btn-add" style="margin-top: 12px;">Save Purchase Item</button>
-            </form>
+            </form><div class="finance-entry-modal-footer"><button type="button" class="btn-secondary" onclick="financeCancelEntryDialog('purchase')">Cancel</button></div></div>
+        </div>
+      </div>
         </div>
 
         <div class="search-bar-container">
@@ -3650,8 +3766,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         render();
     }
     function financeProfileNotice(msg){
-        const el=document.getElementById('financeProfileMessage');
-        if(el)el.textContent=msg;
+        for(const id of ['financeProfileMessage','financeProfileCreateDialogStatus','financeProfileRenameDialogStatus']){
+            const el=document.getElementById(id);if(el)el.textContent=msg;
+        }
     }
     function financeCreateProfile(e){
         e.preventDefault();if(!financeAuthUser)return;
@@ -3667,6 +3784,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('financeNewProfileName').value='';
         financeSelectProfile(id);
         financeProfileNotice('Profile created. Default keeps all your previous tracker records.');
+        financeHideEntryDialog('profileCreate');
     }
     function financeRenameProfile(e){
         e.preventDefault();if(!financeAuthUser||financeSelectedShared())return;
@@ -3678,6 +3796,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         }
         d.financeProfiles[id].name=name;
         void saveData(d);render();financeProfileNotice('Profile name saved.');
+        document.getElementById('financeRenameProfileName').value='';
+        financeHideEntryDialog('profileRename');
     }
     function renderFinanceProfiles(d){
         if(!financeAuthUser)return;
@@ -4227,8 +4347,11 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     }
 
     function closeFullDateModal() {
+        const input=activeDateInputId ? document.getElementById(activeDateInputId) : null;
         document.getElementById('fullDateModal').classList.remove('active');
         activeDateInputId = null;
+        if(financeEntryDialogActive && input?.closest('.finance-entry-modal'))
+            input.closest('.custom-date-wrapper')?.focus();
     }
 
     function changeFullDateMonth(delta) {
@@ -4356,7 +4479,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         section.querySelectorAll('details').forEach(item=>item.open=true);
         section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
     }
-    const financeLatestUpdateId='2026-10-28-adjustable-glass-13';
+    const financeLatestUpdateId='2026-10-30-entry-popups-14';
     let financeReleasePreviousFocus=null;
     const financeUpdateSeenKey=()=>financeAuthUser
         ?'finance_release_ack_v1_u_'+financeAuthUser.id:null;
@@ -4457,8 +4580,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     const financeTodoSeenKey=()=>financeAuthUser ? 'finance_todo_reminder_seen_v1_'+financeAuthUser.id : null;
     const financeTodoElement=id=>document.getElementById(id);
     function financeTodoStatus(msg){
-        const el=financeTodoElement('financeTodoStatus');
-        if(el)el.textContent=msg;
+        for(const id of ['financeTodoStatus','financeTodoDialogStatus']){
+            const el=financeTodoElement(id);if(el)el.textContent=msg;
+        }
     }
     function financeTodoPending(){
         return financeTodoCache.filter(x=>x && !x.completed);
@@ -4628,6 +4752,108 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             }
         }
     }
+    let financeEntryDialogActive=null;
+    let financeEntryReturnFocus=null;
+    let financeEntryDateMarker=null;
+    function financeOpenEntryDialog(key,title){
+        const dialog=document.getElementById('financeEntryDialog_'+key);
+        if(!dialog || (financeEntryDialogActive && financeEntryDialogActive!==key))return;
+        if(!dialog.hidden)return;
+        financeEntryDialogActive=key;
+        financeEntryReturnFocus=document.activeElement;
+        const heading=dialog.querySelector('h2');
+        if(title && heading)heading.textContent=title;
+        else if(key==='allocation' && heading)heading.textContent='Add Allocation';
+        else if(key==='payFour' && heading)heading.textContent='Add Pay in 4 Purchase';
+        if(key==='profileCreate'||key==='profileRename'||key==='todo'||key==='owed'){
+            const statusId=key==='profileCreate'?'financeProfileCreateDialogStatus':
+                key==='profileRename'?'financeProfileRenameDialogStatus':
+                key==='todo'?'financeTodoDialogStatus':'financeOwedDialogStatus';
+            const status=document.getElementById(statusId);if(status)status.textContent='';
+        }
+        const opener=document.getElementById('financeEntryOpen_'+key);
+        if(opener)opener.setAttribute('aria-expanded','true');
+        const picker=document.getElementById('fullDateModal');
+        if(picker && picker.parentNode && !dialog.contains(picker)){
+            financeEntryDateMarker=document.createComment('date picker position');
+            picker.parentNode.insertBefore(financeEntryDateMarker,picker);
+            dialog.appendChild(picker);
+        }
+        dialog.hidden=false;document.body.classList.add('finance-entry-dialog-open');
+        const scroll=dialog.querySelector('.finance-guide-scroll');if(scroll)scroll.scrollTop=0;
+        for(const wrapper of dialog.querySelectorAll('.custom-date-wrapper')){
+            if(wrapper.dataset.financePopupReady)continue;
+            wrapper.dataset.financePopupReady='true';
+            const label=wrapper.querySelector('.custom-date-trigger');
+            wrapper.dataset.financeDefaultDateLabel=label?.textContent||'Select Date';
+            wrapper.setAttribute('role','button');wrapper.setAttribute('tabindex','0');
+            wrapper.setAttribute('aria-label',wrapper.dataset.financeDefaultDateLabel);
+            wrapper.addEventListener('keydown',event=>{
+                if(event.key==='Enter'||event.key===' '){event.preventDefault();wrapper.click();}
+            });
+        }
+        const first=dialog.querySelector('input:not([type="hidden"]):not([style*="display:none"]):not([style*="display: none"]),select,textarea');
+        first?.focus();
+    }
+    function financeHideEntryDialog(key){
+        const dialog=document.getElementById('financeEntryDialog_'+key);
+        if(!dialog||dialog.hidden)return;
+        const picker=document.getElementById('fullDateModal');
+        if(picker?.classList.contains('active'))closeFullDateModal();
+        if(financeEntryDateMarker?.parentNode && picker){
+            financeEntryDateMarker.parentNode.replaceChild(picker,financeEntryDateMarker);
+            financeEntryDateMarker=null;
+        }
+        dialog.hidden=true;
+        document.body.classList.remove('finance-entry-dialog-open');
+        document.getElementById('financeEntryOpen_'+key)?.setAttribute('aria-expanded','false');
+        financeEntryDialogActive=null;
+        const fallback=document.getElementById('financeEntryOpen_'+key)||
+            document.getElementById(key==='todo'?'financeTodoOpenForm':key==='owed'?'financeOwedOpenForm':'');
+        const target=financeEntryReturnFocus?.isConnected && !financeEntryReturnFocus.closest('[hidden]')
+            ?financeEntryReturnFocus:fallback;
+        financeEntryReturnFocus=null;target?.focus();
+    }
+    function financeCancelEntryDialog(key){
+        const dialog=document.getElementById('financeEntryDialog_'+key);
+        if(!dialog||dialog.hidden||dialog.querySelector('button[type="submit"]:disabled'))return;
+        if(key==='todo'){financeResetTodoForm();return;}
+        if(key==='owed'){financeResetOwedForm();return;}
+        if(key==='allocation')financeCancelAllocationEdit();
+        else if(key==='payFour')p4ResetForm();
+        else dialog.querySelector('form')?.reset();
+        for(const wrapper of dialog.querySelectorAll('.custom-date-wrapper')){
+            const label=wrapper.querySelector('.custom-date-trigger');
+            if(label){label.textContent=wrapper.dataset.financeDefaultDateLabel||'Select Date';label.style.color='var(--text-muted)';}
+        }
+        if(key==='purchase'){
+            document.getElementById('purchasePlanOptionsContainer').style.display='none';
+            document.getElementById('purchaseSearchInfoBox').style.display='none';
+        }
+        financeHideEntryDialog(key);
+    }
+    function financeEntryDialogKeydown(event,key){
+        const dialog=document.getElementById('financeEntryDialog_'+key);
+        const picker=document.getElementById('fullDateModal');
+        const dateOpen=picker && dialog.contains(picker) && picker.classList.contains('active');
+        if(event.key==='Escape'){
+            event.preventDefault();event.stopPropagation();
+            if(dateOpen)closeFullDateModal();else financeCancelEntryDialog(key);
+            return;
+        }
+        if(event.key!=='Tab')return;
+        const scope=dateOpen?picker:dialog.querySelector('.finance-guide-panel');
+        const controls=Array.from(scope.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'))
+            .filter(el=>!el.closest('[hidden]') && el.getClientRects().length);
+        if(!controls.length){event.preventDefault();return;}
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey && (document.activeElement===first || !scope.contains(document.activeElement))){
+            event.preventDefault();last.focus();
+        }else if(!event.shiftKey && document.activeElement===last){
+            event.preventDefault();first.focus();
+        }
+    }
+
     function financeToggleEntryForm(type, open){
         const prefix=type==='owed'?'financeOwed':'financeTodo';
         const form=document.getElementById(prefix+'Form');
@@ -4638,8 +4864,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         form.hidden=!show;
         if(title)title.hidden=!show;
         button.setAttribute('aria-expanded',String(show));
-        button.textContent=show?'✕ Close Form':(type==='owed'?'＋ Add What I Owe':'＋ Add Task');
-        if(show)form.querySelector('input:not([type="hidden"])')?.focus();
+        if(show)financeOpenEntryDialog(type);
+        else financeHideEntryDialog(type);
     }
     function financeResetTodoForm(){
         financeTodoElement('financeTodoForm')?.reset();
@@ -4730,7 +4956,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     const financeOwedRemaining=row=>Math.max(0,Number(row.original_cents||0)-Number(row.paid_cents||0));
     const financeOwedMoney=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format((Number(cents)||0)/100);
     function financeOwedStatus(message){
-        const el=financeOwedEl('financeOwedStatus');if(el)el.textContent=message;
+        for(const id of ['financeOwedStatus','financeOwedDialogStatus']){
+            const el=financeOwedEl(id);if(el)el.textContent=message;
+        }
     }
     function financeParseMoney(value){
         const v=String(value||'').trim();
@@ -5658,6 +5886,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         }
         initializeAllDateDisplays();
         render();
+        financeHideEntryDialog(owner+'Pay');
     }
 
     function deletePaycheck(id, owner) {
@@ -5796,8 +6025,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('allocSubmitButton').textContent = 'Save Changes';
         document.getElementById('allocCancelEdit').hidden = false;
         financeAllocationModeChanged(false);
-        document.getElementById('allocForm').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
-        document.getElementById('allocNameInput').focus();
+        financeOpenEntryDialog('allocation','Edit Allocation');
     }
     function handleAllocSubmit(e) {
         e.preventDefault();
@@ -5838,6 +6066,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         saveData(data);
         financeCancelAllocationEdit();
         renderAllocationView();
+        financeHideEntryDialog('allocation');
     }
     function deleteAllocBucket(id) {
         const data = getStoredData();
@@ -6191,6 +6420,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('essoDueDateDisplay').textContent = 'Select Due Date';
         document.getElementById('essoDueDateDisplay').style.color = 'var(--text-muted)';
         render();
+        financeHideEntryDialog('esso');
     }
 
     function toggleEssoPaid(id) {
@@ -6429,6 +6659,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('planEndDateDisplay').textContent = 'End Date';
         document.getElementById('planEndDateDisplay').style.color = 'var(--text-muted)';
         render();
+        financeHideEntryDialog('paymentPlan');
         triggerSaveIndicator('✓ Payment Plan Saved');
     }
 
@@ -6648,6 +6879,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('purchaseStartDateDisplay').textContent = 'Start Date';
         document.getElementById('purchaseStartDateDisplay').style.color = 'var(--text-muted)';
         render();
+        financeHideEntryDialog('purchase');
         triggerSaveIndicator('✓ Purchase Item Saved & Synced');
     }
 
@@ -6754,6 +6986,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         document.getElementById('p4Form').reset();
         document.getElementById('p4Id').value='';
         document.getElementById('p4SubmitButton').textContent='Save Plan';
+        const title=document.getElementById('financeEntryTitle_payFour');
+        if(title)title.textContent='Add Pay in 4 Purchase';
     }
     function submitPayFour(event) {
         event.preventDefault();
@@ -6774,7 +7008,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         }
         const plan={id:edit?.id||('p4_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),provider:val('p4Provider').trim(),store:val('p4Store').trim(),description:val('p4Description').trim(),amountCents:amount,count,frequency:freq,startDate:start,endDate:end,owner:val('p4Owner'),installments,createdAt:edit?.createdAt||new Date().toISOString()};
         if(edit) Object.assign(edit,plan); else data.payFourPlans.push(plan);
-        saveData(data); p4ResetForm(); renderPayFour();
+        saveData(data); p4ResetForm(); renderPayFour(); financeHideEntryDialog('payFour');
     }
     function p4Toggle(id,index) {
         const data=getStoredData(), plan=(data.payFourPlans||[]).find(p=>p.id===id);
@@ -6790,7 +7024,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         set('p4Amount',(plan.amountCents/100).toFixed(2));set('p4Count',plan.count);set('p4Frequency',plan.frequency);
         set('p4Start',plan.startDate);set('p4End',plan.endDate);set('p4Owner',plan.owner||'his');
         document.getElementById('p4SubmitButton').textContent='Update Plan';
-        document.getElementById('p4Form').scrollIntoView({behavior:'smooth',block:'start'});
+        financeOpenEntryDialog('payFour','Edit Pay in 4 Purchase');
     }
     function p4Delete(id) {
         if(!confirm('Delete this Pay in 4 plan and its payment history?'))return;
@@ -7727,6 +7961,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         }
         initializeAllDateDisplays();
         render();
+        financeHideEntryDialog(owner+'Entry');
     }
 
     function togglePaid(id) {
