@@ -90,6 +90,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
             gap: 12px;
             width: 100%;
         }
@@ -465,6 +466,13 @@
         }
         .settings-muted-note {color:var(--text-muted);font-size:.8rem;line-height:1.55;}
         .finance-settings-shortcut {position:relative;}
+        button.finance-expenses-shortcut {width:auto;flex:0 0 auto;}
+        .finance-expenses-shortcut[aria-current="page"] .btn-icon-hdr {
+            border-color:var(--accent-his);
+            background-color:rgba(56,189,248,.15);
+        }
+        .finance-expenses-shortcut[aria-current="page"] .icon-btn-label {color:var(--text);}
+        .finance-expenses-shortcut:focus-visible {outline:3px solid #7dd3fc;outline-offset:3px;border-radius:12px;}
         .sync-attention-dot {display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--urgent);box-shadow:0 0 0 3px rgba(239,68,68,.13);margin-left:7px;vertical-align:middle;}
         .sync-attention-dot[hidden] {display:none!important;}
         .settings-header-warning {position:absolute;right:3px;top:3px;}
@@ -1760,6 +1768,17 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                     </div>
                     <span class="icon-btn-label">Menu</span>
                 </button>
+
+                <button class="icon-btn-container finance-expenses-shortcut" id="financeExpensesShortcut" type="button"
+                        onclick="switchMainPage('expenses')" title="Open Monthly Expenses" aria-label="Open Monthly Expenses">
+                    <span class="btn-icon-hdr" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"></path>
+                            <path d="M9 7h6M9 11h6M9 15h4"></path>
+                        </svg>
+                    </span>
+                    <span class="icon-btn-label">Expenses</span>
+                </button>
             </div>
             
             <div class="header-controls">
@@ -1916,7 +1935,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">🧾</span><div>
           <h3>Monthly Expense Tracker</h3>
-          <p>Record His, Hers and Together spending by month and category. Combined shows all purchases without double counting joint spending.</p>
+          <p>Use the Expenses shortcut at the top of any page to record His, Hers and Together spending by month and category. Combined shows all purchases without double counting joint spending.</p>
         </div></article>
         <article class="finance-guide-item"><span class="finance-guide-emoji" aria-hidden="true">💰</span><div>
           <h3>Money Allocation</h3>
@@ -5097,6 +5116,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             if(button.classList.contains('active'))button.setAttribute('aria-current','page');
             else button.removeAttribute('aria-current');
         });
+        const expenseShortcut = document.getElementById('financeExpensesShortcut');
+        if (view === 'expenses') expenseShortcut.setAttribute('aria-current','page');
+        else expenseShortcut.removeAttribute('aria-current');
         closeDrawer();
 
         if (shouldSave) {
