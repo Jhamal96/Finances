@@ -1195,6 +1195,24 @@
     .expense-form .expense-full{grid-column:1/-1}
     .expense-form-actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
     .expense-form-actions button{width:auto;min-height:42px}
+    .expense-field[hidden]{display:none!important}
+    .expense-add-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+    .expense-add-actions .btn-add{width:auto}
+    .finance-expense-notice{margin:0;color:var(--text-muted);font-size:.86rem;line-height:1.4}
+    .finance-expense-notice:empty{display:none}
+    dialog.expense-dialog:not([open]){display:none}
+    dialog.expense-dialog[open]{display:flex}
+    dialog.expense-dialog{position:fixed;inset:0;margin:auto;width:min(720px,calc(100% - 24px));
+      max-width:720px;max-height:min(90vh,900px);max-height:min(90dvh,900px);padding:0}
+    dialog.expense-dialog::backdrop{background:rgba(3,9,23,.8);backdrop-filter:blur(8px)}
+    dialog.expense-dialog.expense-dialog-fallback{box-shadow:0 0 0 100vmax rgba(3,9,23,.8),0 25px 70px rgba(0,0,0,.55)}
+    .expense-dialog-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .expense-dialog-heading h2{margin-bottom:6px}
+    .expense-dialog-close{width:40px;min-width:40px;height:40px;min-height:40px;padding:0;
+      border-radius:11px;background:var(--card-bg);font-size:1.5rem;line-height:1;cursor:pointer}
+    .expense-dialog-close:focus-visible{outline:3px solid #7dd3fc;outline-offset:3px}
+    .expense-dialog .expense-source-manager{margin-top:16px}
+    @media(max-width:480px){.expense-add-actions .btn-add{width:100%}}
     .expense-row{display:flex;gap:12px;justify-content:space-between;align-items:center;border-bottom:1px solid var(--card-border);padding:13px 0}
     .expense-row:last-child{border-bottom:0}
     .expense-row-title{font-weight:760;overflow-wrap:anywhere}
@@ -2022,6 +2040,10 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     <section id="mainExpensesView" class="expense-page" style="display:none" aria-labelledby="expensePageTitle">
       <h2 id="expensePageTitle">🧾 Monthly Expense Tracker</h2>
       <p class="expense-intro">Track individual purchases and money spent together. <strong>Combined Spending = His + Hers + Together</strong>, with no double counting. All registered household accounts can view and update the same expense ledger.</p>
+      <div class="expense-add-actions">
+        <button class="btn-add" id="financeAddExpenseButton" type="button" onclick="financeOpenNewExpenseDialog()" aria-haspopup="dialog" aria-controls="financeExpenseDialog">＋ Add Monthly Expense</button>
+        <p id="financeExpensePageStatus" class="finance-expense-notice" role="status" aria-live="polite"></p>
+      </div>
       <div class="expense-toolbar">
         <label for="expenseMonth">Month</label>
         <input type="month" id="expenseMonth" onchange="financeRenderExpenses()">
@@ -2039,9 +2061,17 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         <button class="expense-stat" id="expenseCombinedStat" type="button" onclick="financeSetExpenseView('combined')" aria-pressed="false">
           <span>👥 Combined Spending</span><strong id="expenseCombinedTotal">$0.00</strong><small id="expenseTogetherSubtotal">Includes $0.00 together</small></button>
       </div>
-      <div class="expense-panel">
-        <h3 id="expenseFormTitle">Add Monthly Expense</h3>
-        <p class="expense-intro" style="margin-bottom:13px">Choose <strong>Together</strong> for purchases made jointly. They are included once in Combined Spending and not added to either personal total.</p>
+      <dialog id="financeExpenseDialog" class="expense-dialog finance-guide-panel" aria-modal="true" aria-labelledby="expenseFormTitle"
+              oncancel="event.preventDefault();financeCloseExpenseDialog()" onkeydown="financeExpenseDialogKeydown(event)">
+        <div class="finance-guide-top expense-dialog-heading">
+          <div>
+            <span class="finance-guide-kicker">Monthly Expenses</span>
+            <h2 id="expenseFormTitle">Add Monthly Expense</h2>
+            <p>Choose <strong>Together</strong> for purchases made jointly.</p>
+          </div>
+          <button class="expense-dialog-close" id="financeExpenseDialogClose" type="button" onclick="financeCloseExpenseDialog()" aria-label="Close expense form">×</button>
+        </div>
+        <div class="finance-guide-scroll">
         <form id="expenseForm" class="expense-form" onsubmit="financeSaveExpense(event)">
           <input id="expenseEditId" type="hidden">
           <div class="expense-field"><label for="expenseDescription">What was purchased? *</label>
@@ -2059,7 +2089,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           <div class="expense-field expense-full" id="expenseSingleMethodWrap"><label for="expensePaymentSource">Payment Method *</label>
             <div class="expense-payment-source-actions">
               <select id="expensePaymentSource" required aria-label="Payment method used"></select>
-              <button type="button" class="btn-secondary" onclick="financeOpenPaymentSources()">＋ Add / Manage Methods</button>
+              <button type="button" class="btn-secondary" id="financeOpenPaymentMethodsButton" onclick="financeOpenPaymentSources()">＋ Add / Manage Methods</button>
             </div>
             <p class="expense-intro" style="margin:3px 0 0">Choose what you paid with (for example Cash App, Chase Debit Card or cash). The household manages this shared list.</p>
           </div>
@@ -2083,6 +2113,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
               <div class="expense-field"><label for="expenseSplitCashAmount">Cash portion ($)</label>
                 <input id="expenseSplitCashAmount" type="number" min="0.01" step="0.01" max="9999999" placeholder="0.00" oninput="financeUpdateSplitRemainder()"></div>
             </div>
+            <div class="expense-form-actions"><button type="button" class="btn-secondary" id="financeOpenSplitPaymentMethodsButton" onclick="financeOpenPaymentSources()">＋ Add / Manage Methods</button></div>
             <p class="expense-split-check" id="expenseSplitCheck" role="status" aria-live="polite">The two portions must add up to the purchase total.</p>
           </div>
           <div class="expense-field" id="expenseCustomCategoryWrap" hidden><label for="expenseCustomCategory">Custom category *</label>
@@ -2100,10 +2131,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
           </div>
           <div class="expense-form-actions">
             <button class="btn-add" type="submit" id="expenseSubmit">+ Save Expense</button>
-            <button class="btn-secondary" type="button" onclick="financeResetExpenseForm()">Clear / Cancel</button>
+            <button class="btn-secondary" id="financeExpenseDialogCancel" type="button" onclick="financeCloseExpenseDialog()">Cancel</button>
           </div>
         </form>
-      </div>
       <div class="expense-panel expense-source-manager" id="expensePaymentSourceManager" hidden>
         <h3>💳 Manage Payment Methods</h3>
         <p class="expense-intro">Add or rename the cash, cards and apps you use. Removing a method hides it from future expenses, but keeps the label on previous purchases.</p>
@@ -2120,6 +2150,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         <p id="expensePaymentSourceMessage" class="expense-intro" role="status" aria-live="polite"></p>
         <div id="expensePaymentSourceList" class="expense-source-list"></div>
       </div>
+        </div>
+      </dialog>
       <div class="expense-panel">
         <h3 id="expenseListTitle">His Expenses</h3>
         <p class="expense-intro" id="expenseListSubheading">Monthly purchase details</p>
@@ -7001,9 +7033,13 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         card.scrollIntoView({behavior:'smooth',block:'nearest'});
         document.getElementById('expensePaymentSourceName')?.focus();
     }
-    function financeClosePaymentSources(){
+    function financeClosePaymentSources(restoreFocus=true){
         document.getElementById('expensePaymentSourceManager').hidden=true;
         financeResetPaymentSourceForm();
+        if(restoreFocus && document.getElementById('financeExpenseDialog')?.open){
+            const split=!document.getElementById('expenseSplitSection').hidden;
+            document.getElementById(split?'financeOpenSplitPaymentMethodsButton':'financeOpenPaymentMethodsButton')?.focus();
+        }
     }
     function financeResetPaymentSourceForm(){
         document.getElementById('expensePaymentSourceEditId').value='';
@@ -7174,7 +7210,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         rows.replaceChildren();
         if(!filtered.length){
             const empty=document.createElement('p');
-            empty.className='expense-empty';empty.textContent='No expenses for this month and selection. Add one above.';
+            empty.className='expense-empty';empty.textContent='No expenses for this month and selection. Use Add Monthly Expense to record one.';
             rows.append(empty);
         }
         for(const item of filtered){
@@ -7288,6 +7324,56 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 filter.add(new Option(e.category,e.category));
         }
     }
+    let financeExpenseDialogReturnFocus=null;
+    function financeExpensePageStatus(message){
+        const status=document.getElementById('financeExpensePageStatus');
+        if(status)status.textContent=message;
+    }
+    function financeShowExpenseDialog(){
+        const dialog=document.getElementById('financeExpenseDialog');
+        if(dialog.open)return;
+        financeExpenseDialogReturnFocus=document.activeElement;
+        financeExpensePageStatus('');
+        financeClosePaymentSources(false);
+        if(typeof dialog.showModal==='function')dialog.showModal();
+        else{dialog.classList.add('expense-dialog-fallback');dialog.setAttribute('open','');}
+        dialog.querySelector('.finance-guide-scroll').scrollTop=0;
+        document.getElementById('expenseDescription').focus();
+    }
+    function financeOpenNewExpenseDialog(){
+        financeEnsureExpenseMonth();
+        financeResetExpenseForm();
+        financeShowExpenseDialog();
+    }
+    function financeCloseExpenseDialog(force=false){
+        const dialog=document.getElementById('financeExpenseDialog');
+        if(!dialog.open || (!force && document.getElementById('expenseSubmit').disabled))return;
+        if(typeof dialog.close==='function')dialog.close();
+        else dialog.removeAttribute('open');
+        dialog.classList.remove('expense-dialog-fallback');
+        financeClosePaymentSources(false);
+        financeResetExpenseForm();
+        const target=financeExpenseDialogReturnFocus?.isConnected
+            ?financeExpenseDialogReturnFocus:document.getElementById('financeAddExpenseButton');
+        financeExpenseDialogReturnFocus=null;
+        target?.focus();
+    }
+    function financeExpenseDialogKeydown(event){
+        if(event.key==='Escape'){
+            event.preventDefault();financeCloseExpenseDialog();return;
+        }
+        if(event.key!=='Tab')return;
+        const dialog=document.getElementById('financeExpenseDialog');
+        const controls=Array.from(dialog.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'))
+            .filter(el=>!el.closest('[hidden]') && el.getClientRects().length);
+        if(!controls.length){event.preventDefault();return;}
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey && (document.activeElement===first || !dialog.contains(document.activeElement))){
+            event.preventDefault();last.focus();
+        }else if(!event.shiftKey && document.activeElement===last){
+            event.preventDefault();first.focus();
+        }
+    }
     function financeResetExpenseForm(){
         financeExpensePendingFiles=[];
         const picker=document.getElementById('financeExpenseReceiptInput');if(picker)picker.value='';
@@ -7313,6 +7399,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     let financeExpensePendingFiles=[];
     function financeExpenseReceiptStatus(message){
         const n=document.getElementById('financeExpenseReceiptStatus');if(n)n.textContent=message;
+        if(message && !document.getElementById('financeExpenseDialog')?.open)financeExpensePageStatus(message);
     }
     function financeShowStagedExpenseReceipts(){
         const n=document.getElementById('financeExpenseStagedReceiptList');if(!n)return;
@@ -7427,6 +7514,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         if(existing)Object.assign(existing,entry);
         else data.monthlyExpenses.push(entry);
         const button=document.getElementById('expenseSubmit');button.disabled=true;
+        const closeButtons=['financeExpenseDialogClose','financeExpenseDialogCancel'].map(id=>document.getElementById(id));
+        closeButtons.forEach(control=>control.disabled=true);
         const uploaded=[];
         try{
             if(financeExpensePendingFiles.length){
@@ -7440,8 +7529,9 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 warnSync('Your expense and receipt references are saved locally. Check Settings → Cloud Sync.');
                 return;
             }
-            financeResetExpenseForm();financeRenderExpenses();
-            financeExpenseReceiptStatus(uploaded.length?
+            financeRenderExpenses();
+            financeCloseExpenseDialog(true);
+            financeExpensePageStatus(uploaded.length?
                 'Expense and '+uploaded.length+' receipt(s) saved in the shared household.':'Expense saved to household cloud.');
         }catch(err){
             if(uploaded.length){
@@ -7449,11 +7539,12 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
                 catch(e){console.warn('Orphan receipt cleanup failed',e);}
             }
             financeExpenseReceiptStatus('Save failed: '+(err?.message||'Could not upload files')+'. Try again.');
-        }finally{button.disabled=false;}
+        }finally{button.disabled=false;closeButtons.forEach(control=>control.disabled=false);}
     }
     function financeEditExpense(id){
         const entry=financeExpenseItems(getPrivateAccountData()).find(x=>x.id===id);
         if(!entry)return;
+        financeResetExpenseForm();
         document.getElementById('expenseEditId').value=entry.id;
         document.getElementById('expenseDescription').value=entry.description||'';
         document.getElementById('expenseAmount').value=(Number(entry.amountCents||0)/100).toFixed(2);
@@ -7480,8 +7571,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         financeExpenseReceiptStatus('Already attached: '+(entry.attachments?.length||0)+'. Choose files to add more.');
         document.getElementById('expenseFormTitle').textContent='Edit Expense';
         document.getElementById('expenseSubmit').textContent='✓ Save Changes';
-        document.getElementById('expenseForm').scrollIntoView({behavior:'smooth',block:'center'});
-        document.getElementById('expenseDescription').focus();
+        financeShowExpenseDialog();
     }
     async function financeDeleteExpense(id){
         if(!confirm('Delete this expense from the shared household?'))return;
