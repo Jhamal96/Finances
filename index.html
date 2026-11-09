@@ -1368,6 +1368,32 @@
     @media(max-width:480px){.expense-payment-split-grid{grid-template-columns:1fr}
       .expense-payment-type-summary{grid-template-columns:1fr}}
     
+
+.finance-calendar-shortcut{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:4px 0 18px;padding:12px;border-radius:16px;border:1px solid var(--card-border);background:var(--card-bg)}
+.finance-calendar-shortcut span{font-size:.84rem;color:var(--text-muted)}
+.finance-calendar-header-link{white-space:nowrap}
+.finance-calendar-legend{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px;font-size:.78rem}
+.finance-calendar-legend span{padding:7px 9px;border-radius:10px;border:1px solid var(--card-border);background:var(--card-bg);font-weight:700}
+.finance-calendar-legend .legend-paid{color:#34d399}.finance-calendar-legend .legend-future{color:#93c5fd}
+.finance-calendar-legend .legend-soon{color:#facc15}.finance-calendar-legend .legend-today{color:#fb923c}
+.finance-calendar-legend .legend-overdue{color:#fb7185}
+.finance-calendar-day.due-paid{border-color:#10b981;background:rgba(16,185,129,.11)}
+.finance-calendar-day.due-future{border-color:#60a5fa;background:rgba(59,130,246,.09)}
+.finance-calendar-day.due-soon{border-color:#eab308;background:rgba(234,179,8,.18)}
+.finance-calendar-day.due-today{border-color:#f97316;background:rgba(249,115,22,.18)}
+.finance-calendar-day.due-overdue{border-color:#f43f5e;background:rgba(244,63,94,.17)}
+.finance-calendar-day.due-paid .finance-calendar-due,.finance-calendar-bill.due-paid .finance-calendar-amount{color:#34d399}
+.finance-calendar-day.due-future .finance-calendar-due,.finance-calendar-bill.due-future .finance-calendar-amount{color:#93c5fd}
+.finance-calendar-day.due-soon .finance-calendar-due,.finance-calendar-bill.due-soon .finance-calendar-amount{color:#facc15}
+.finance-calendar-day.due-today .finance-calendar-due,.finance-calendar-bill.due-today .finance-calendar-amount{color:#fb923c}
+.finance-calendar-day.due-overdue .finance-calendar-due,.finance-calendar-bill.due-overdue .finance-calendar-amount{color:#fb7185}
+.finance-calendar-status{font-size:.66rem;font-weight:700;color:var(--text);overflow-wrap:anywhere}
+.finance-calendar-bill.due-soon{border-left:3px solid #eab308;padding-left:10px}
+.finance-calendar-bill.due-today{border-left:3px solid #f97316;padding-left:10px}
+.finance-calendar-bill.due-overdue{border-left:3px solid #f43f5e;padding-left:10px}
+.finance-calendar-bill.due-paid{border-left:3px solid #10b981;padding-left:10px}
+@media(max-width:600px){.finance-calendar-header-link{font-size:.75rem;padding:8px}.finance-calendar-status{font-size:.54rem}.finance-calendar-shortcut button{width:100%}}
+
 /* Household finance bills calendar — follows existing theme and Liquid Glass colors. */
 .finance-bills-calendar{max-width:1100px;margin:0 auto;color:var(--text);padding-bottom:28px}
 .finance-calendar-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
@@ -1876,6 +1902,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
             <div class="finance-shared-heading"><h1 id="mainPageHeaderTitle">Household Dashboard</h1><span class="finance-shared-heading-tag" title="All registered, verified Finance emails share and edit the same finances">🌐 Shared Household</span></div>
             <span class="save-indicator" id="saveIndicator">✓ Synced</span>
+            <button type="button" class="btn-secondary finance-calendar-header-link" onclick="switchMainPage('calendar')" title="Open bills calendar">📅 Bills Calendar</button>
         </div>
     </header>
     <div class="finance-cloud-result" id="financeCloudResult" role="status" aria-live="polite" hidden data-kind="info">
@@ -2551,6 +2578,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         <button type="button" class="btn-secondary" onclick="financeCalendarMove(1)" aria-label="Next month">›</button>
         <button type="button" class="btn-secondary" onclick="financeCalendarToday()">Today</button>
       </div>
+      <div class="finance-calendar-legend" aria-label="Due date colors"><span class="legend-paid">● Paid</span><span class="legend-future">● Upcoming (8+ days)</span><span class="legend-soon">● Approaching (1–7 days)</span><span class="legend-today">● Due today</span><span class="legend-overdue">● Overdue</span></div>
       <div class="finance-calendar-summary" id="financeCalendarSummary" aria-live="polite"></div>
       <div class="finance-calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
       <div class="finance-calendar-grid" id="financeCalendarGrid" role="grid" aria-label="Monthly bill due dates"></div>
@@ -2559,6 +2587,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     </section>
     <!-- MAIN PAGE 1: Household Dashboard View -->
     <div id="mainDashboardView">
+        <div class="finance-calendar-shortcut"><button type="button" class="btn-add" onclick="switchMainPage('calendar')">📅 View Bills Calendar</button><span>See due dates, upcoming payments, and overdue bills in one place.</span></div>
         <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:12px;">🔁 Automatic month rollover is on. Recurring entries are copied forward after cloud sync; previous months and payment history stay intact.</p>
         <!-- Date & Month Indicator Bar -->
         <div class="date-info-bar">
@@ -5340,6 +5369,20 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         for(const item of (Array.isArray(data?.esso)?data.esso:[]))add(item,'household','ESSO');
         return items.sort((a,b)=>a.date.localeCompare(b.date)||a.name.localeCompare(b.name));
     }
+    function financeCalendarStatus(item,today) {
+        if(item.paid)return 'paid';
+        if(item.date<today)return 'overdue';
+        if(item.date===today)return 'today';
+        const days=Math.round((new Date(item.date+'T12:00:00')-new Date(today+'T12:00:00'))/86400000);
+        return days<=7?'soon':'future';
+    }
+    function financeCalendarStatusLabel(status) {
+        return ({paid:'Paid',overdue:'Overdue',today:'Due today',soon:'Due within 7 days',future:'Upcoming'})[status]||'Scheduled';
+    }
+    function financeCalendarDayStatus(dayItems,today) {
+        const statuses=dayItems.map(i=>financeCalendarStatus(i,today));
+        return ['overdue','today','soon','future','paid'].find(s=>statuses.includes(s))||'future';
+    }
     function financeRenderBillsCalendar(data) {
         const section=document.getElementById('mainCalendarView');
         if(!section || section.style.display!=='block')return;
@@ -5362,14 +5405,16 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         for(let day=1;day<=days;day++){
             const date=financeCalendarMonth+'-'+String(day).padStart(2,'0');
             const due=items.filter(x=>x.date===date);
-            const btn=document.createElement('button');btn.type='button';btn.className='finance-calendar-day'+(date===today?' is-today':'');
+            const status=due.length?financeCalendarDayStatus(due,today):'';
+            const btn=document.createElement('button');btn.type='button';btn.className='finance-calendar-day'+(date===today?' is-today':'')+(status?' due-'+status:'');
             btn.setAttribute('role','gridcell');btn.setAttribute('aria-pressed',String(financeCalendarSelectedDate===date));
-            btn.setAttribute('aria-label',day+' '+first.toLocaleDateString(undefined,{month:'long'})+': '+due.length+' bills due');
+            btn.setAttribute('aria-label',day+' '+first.toLocaleDateString(undefined,{month:'long'})+': '+due.length+' bills due'+(due.length?', '+financeCalendarStatusLabel(status):''));
             const number=document.createElement('span');number.className='finance-calendar-date';number.textContent=String(day);btn.append(number);
             if(due.length){
                 const count=document.createElement('span');count.className='finance-calendar-count';count.textContent=due.length+' bill'+(due.length===1?'':'s');btn.append(count);
                 const total=document.createElement('span');total.className='finance-calendar-due'+(due.every(x=>x.paid)?' finance-calendar-paid':'');
                 total.textContent=due.reduce((s,x)=>s+x.amount,0).toLocaleString(undefined,{style:'currency',currency:'USD'});btn.append(total);
+                const badge=document.createElement('span');badge.className='finance-calendar-status';badge.textContent=financeCalendarStatusLabel(status);btn.append(badge);
             }
             btn.addEventListener('click',()=>{financeCalendarSelectedDate=date;financeRenderBillsCalendar();});
             grid.append(btn);
@@ -5380,11 +5425,12 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const chosen=items.filter(x=>x.date===financeCalendarSelectedDate);
         if(!chosen.length){const p=document.createElement('p');p.textContent='No bills scheduled for this date.';detail.append(p);}
         for(const item of chosen){
-            const line=document.createElement('div');line.className='finance-calendar-bill';
+            const status=financeCalendarStatus(item,today);
+            const line=document.createElement('div');line.className='finance-calendar-bill due-'+status;
             const desc=document.createElement('div');const name=document.createElement('strong');name.textContent=item.name;
-            const meta=document.createElement('small');meta.textContent=(item.owner==='his'?'His':item.owner==='her'?'Hers':'Household')+' · '+item.category+' · '+(item.paid?'Paid':'Unpaid');
+            const meta=document.createElement('small');meta.textContent=(item.owner==='his'?'His':item.owner==='her'?'Hers':'Household')+' · '+item.category+' · '+financeCalendarStatusLabel(status);
             desc.append(name,meta);
-            const amount=document.createElement('strong');amount.textContent=item.amount.toLocaleString(undefined,{style:'currency',currency:'USD'});amount.style.color=item.paid?'var(--paid)':'var(--bills)';
+            const amount=document.createElement('strong');amount.textContent=item.amount.toLocaleString(undefined,{style:'currency',currency:'USD'});amount.className='finance-calendar-amount';
             line.append(desc,amount);detail.append(line);
         }
     }
