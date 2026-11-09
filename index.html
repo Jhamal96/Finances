@@ -1367,7 +1367,32 @@
     .expense-payment-type-card span{font-size:.82rem;color:var(--text-muted)}
     @media(max-width:480px){.expense-payment-split-grid{grid-template-columns:1fr}
       .expense-payment-type-summary{grid-template-columns:1fr}}
-    </style>
+    
+/* Household finance bills calendar — follows existing theme and Liquid Glass colors. */
+.finance-bills-calendar{max-width:1100px;margin:0 auto;color:var(--text);padding-bottom:28px}
+.finance-calendar-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.finance-calendar-head h2{margin:0 0 5px}.finance-calendar-head p,.finance-calendar-note{color:var(--text-muted);font-size:.88rem}
+.finance-calendar-toolbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;margin:16px 0}
+.finance-calendar-toolbar h3{min-width:190px;text-align:center;margin:0;font-size:1.1rem}
+.finance-calendar-summary{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 18px}
+.finance-calendar-summary span{background:var(--card-bg);border:1px solid var(--card-border);padding:9px 12px;border-radius:13px}
+.finance-calendar-weekdays,.finance-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.finance-calendar-weekdays span{text-align:center;font-size:.76rem;color:var(--text-muted);padding:8px 0}
+.finance-calendar-day{background:var(--card-bg);color:var(--text);border:1px solid var(--card-border);border-radius:12px;min-height:92px;cursor:pointer;padding:8px;text-align:left;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.finance-calendar-day:focus-visible{outline:2px solid var(--accent-his);outline-offset:2px}
+.finance-calendar-day[aria-pressed="true"]{border-color:var(--accent-his);box-shadow:0 0 0 1px var(--accent-his)}
+.finance-calendar-day.is-today .finance-calendar-date{color:var(--accent-his);font-weight:900}
+.finance-calendar-day .finance-calendar-count{font-size:.7rem;color:var(--text-muted)}
+.finance-calendar-day .finance-calendar-due{font-size:.75rem;font-weight:800;color:var(--bills);overflow-wrap:anywhere}
+.finance-calendar-day .finance-calendar-paid{color:var(--paid)}
+.finance-calendar-blank{min-height:70px}
+.finance-calendar-detail{margin-top:18px;padding:16px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px}
+.finance-calendar-detail h3{margin:0 0 12px}
+.finance-calendar-bill{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--card-border)}
+.finance-calendar-bill small{display:block;color:var(--text-muted);margin-top:3px}
+@media(max-width:600px){.finance-calendar-weekdays,.finance-calendar-grid{gap:3px}.finance-calendar-day{min-height:71px;padding:5px;border-radius:9px}.finance-calendar-day .finance-calendar-due{font-size:.64rem}.finance-calendar-day .finance-calendar-count{font-size:.6rem}.finance-calendar-blank{min-height:50px}.finance-calendar-toolbar{gap:6px}.finance-calendar-toolbar h3{min-width:125px;font-size:.94rem}}
+
+</style>
     <script>
         // Detect an installed app before the first paint (avoids an Install-button flash).
         (() => {
@@ -1767,6 +1792,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         <div class="drawer-nav-row"><button class="drawer-link" id="navPaymentPlan" onclick="switchMainPage('paymentPlan')">💳 Payment Plans</button><button class="drawer-tab-open" onclick="openFinanceTab('paymentPlan')" title="Open Payment Plans in a new tab" aria-label="Open Payment Plans in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPayFour" onclick="switchMainPage('payFour')">🛍️ Pay in 4 Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('payFour')" title="Open Pay in 4 in a new tab" aria-label="Open Pay in 4 in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navPurchasePlan" onclick="switchMainPage('purchasePlan')">🛒 Purchase Plan</button><button class="drawer-tab-open" onclick="openFinanceTab('purchasePlan')" title="Open Purchase Plan in a new tab" aria-label="Open Purchase Plan in a new tab">↗</button></div>
+        <div class="drawer-nav-row"><button class="drawer-link" id="navCalendar" onclick="switchMainPage('calendar')">📅 Bills Calendar</button><button class="drawer-tab-open" onclick="openFinanceTab('calendar')" title="Open Bills Calendar in a new tab" aria-label="Open Bills Calendar in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navExpenses" onclick="switchMainPage('expenses')">🧾 Monthly Expense Tracker</button><button class="drawer-tab-open" onclick="openFinanceTab('expenses')" title="Open Monthly Expenses in a new tab" aria-label="Open Monthly Expenses in a new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navTodo" onclick="switchMainPage('todo')">✅ My To-Do List <span id="financeTodoNavCount" hidden></span></button><button class="drawer-tab-open" onclick="openFinanceTab('todo')" title="Open personal To-Dos in new tab" aria-label="Open personal To-Dos in new tab">↗</button></div>
         <div class="drawer-nav-row"><button class="drawer-link" id="navOwed" onclick="switchMainPage('owed')">💸 What I Owe <span id="financeOwedNavCount" hidden></span></button><button class="drawer-tab-open" onclick="openFinanceTab('owed')" title="Open private What I Owe in new tab">↗</button></div>
@@ -2513,6 +2539,24 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         </div>
     </section>
 
+    <!-- Read-only bill calendar from the existing saved finance records. -->
+    <section id="mainCalendarView" class="finance-bills-calendar" style="display:none" aria-labelledby="financeCalendarTitle">
+      <div class="finance-calendar-head">
+        <div><h2 id="financeCalendarTitle">📅 Bills Calendar</h2><p>View the due dates for existing household bills and ESSO payments. Select a day to see details.</p></div>
+        <button type="button" class="btn-secondary" onclick="switchMainPage('dashboard')">Household Dashboard</button>
+      </div>
+      <div class="finance-calendar-toolbar">
+        <button type="button" class="btn-secondary" onclick="financeCalendarMove(-1)" aria-label="Previous month">‹</button>
+        <h3 id="financeCalendarMonthLabel" aria-live="polite"></h3>
+        <button type="button" class="btn-secondary" onclick="financeCalendarMove(1)" aria-label="Next month">›</button>
+        <button type="button" class="btn-secondary" onclick="financeCalendarToday()">Today</button>
+      </div>
+      <div class="finance-calendar-summary" id="financeCalendarSummary" aria-live="polite"></div>
+      <div class="finance-calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div class="finance-calendar-grid" id="financeCalendarGrid" role="grid" aria-label="Monthly bill due dates"></div>
+      <div class="finance-calendar-detail"><h3 id="financeCalendarDayTitle">Selected day</h3><div id="financeCalendarDayBills"></div></div>
+      <p class="finance-calendar-note">This view shows saved due dates only. Bills without a valid due date are not placed on the calendar. To update or mark a bill paid, use the Household Dashboard or ESSO Due Date page.</p>
+    </section>
     <!-- MAIN PAGE 1: Household Dashboard View -->
     <div id="mainDashboardView">
         <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:12px;">🔁 Automatic month rollover is on. Recurring entries are copied forward after cloud sync; previous months and payment history stay intact.</p>
@@ -3550,7 +3594,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     const FINANCE_TAB_DASHBOARD_KEY = 'finance_tab_dashboard_v1';
     const FINANCE_TAB_ALLOC_KEY = 'finance_tab_alloc_v1';
     const FINANCE_TAB_MONTH_KEY = 'finance_tab_month_v1';
-    const FINANCE_TAB_ALLOWED = ['dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','todo','owed','profiles','settings'];
+    const FINANCE_TAB_ALLOWED = ['calendar','dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','todo','owed','profiles','settings'];
     const financeSourceId = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : String(Math.random());
     const financeBaseSnapshots = new WeakMap();
     const financeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('household_finance_master_v12') : null;
@@ -5260,6 +5304,91 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         financeOwedStatus('Entry deleted.');
     }
 
+
+    // Bills Calendar reads the existing shared snapshot; it never creates or overwrites financial data.
+    let financeCalendarMonth = new Date().toISOString().slice(0,7);
+    let financeCalendarSelectedDate = new Date().toLocaleDateString('en-CA');
+    function financeCalendarLocalDate(date) {
+        return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+    }
+    financeCalendarMonth = financeCalendarLocalDate(new Date()).slice(0,7);
+    financeCalendarSelectedDate = financeCalendarLocalDate(new Date());
+    function financeCalendarMove(offset) {
+        const parts=financeCalendarMonth.split('-').map(Number);
+        const d=new Date(parts[0],parts[1]-1+offset,1);
+        financeCalendarMonth=financeCalendarLocalDate(d).slice(0,7);
+        financeCalendarSelectedDate=financeCalendarMonth+'-01';
+        financeRenderBillsCalendar();
+    }
+    function financeCalendarToday() {
+        financeCalendarSelectedDate=financeCalendarLocalDate(new Date());
+        financeCalendarMonth=financeCalendarSelectedDate.slice(0,7);
+        financeRenderBillsCalendar();
+    }
+    function financeCalendarItems(data,month) {
+        const items=[];
+        const add=(item,owner,category)=>{
+            if(!item || typeof item.dueDate!=='string')return;
+            const date=item.dueDate.slice(0,10);
+            if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date.slice(0,7)!==month)return;
+            const actual=new Date(date+'T12:00:00');
+            if(!Number.isFinite(actual.getTime())||financeCalendarLocalDate(actual)!==date)return;
+            items.push({date,name:String(item.name||item.title||category||'Bill'),owner,category,amount:Number(item.amount)||0,paid:item.isPaid===true});
+        };
+        const m=data?.months?.[month];
+        for(const owner of ['his','her'])for(const item of (Array.isArray(m?.[owner])?m[owner]:[]))add(item,owner,'Bill');
+        for(const item of (Array.isArray(data?.esso)?data.esso:[]))add(item,'household','ESSO');
+        return items.sort((a,b)=>a.date.localeCompare(b.date)||a.name.localeCompare(b.name));
+    }
+    function financeRenderBillsCalendar(data) {
+        const section=document.getElementById('mainCalendarView');
+        if(!section || section.style.display!=='block')return;
+        const state=data||getStoredData();
+        const [year,month]=financeCalendarMonth.split('-').map(Number);
+        const first=new Date(year,month-1,1),days=new Date(year,month,0).getDate();
+        const items=financeCalendarItems(state,financeCalendarMonth);
+        document.getElementById('financeCalendarMonthLabel').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+        const amount=items.filter(x=>!x.paid).reduce((sum,x)=>sum+x.amount,0);
+        const paid=items.filter(x=>x.paid).length;
+        const summary=document.getElementById('financeCalendarSummary');
+        summary.replaceChildren();
+        for(const label of [items.length+' scheduled',paid+' paid',items.length-paid+' unpaid','Unpaid total: '+amount.toLocaleString(undefined,{style:'currency',currency:'USD'})]){
+            const el=document.createElement('span');el.textContent=label;summary.append(el);
+        }
+        const grid=document.getElementById('financeCalendarGrid');
+        grid.replaceChildren();
+        for(let b=0;b<first.getDay();b++){const blank=document.createElement('span');blank.className='finance-calendar-blank';blank.setAttribute('aria-hidden','true');grid.append(blank);}
+        const today=financeCalendarLocalDate(new Date());
+        for(let day=1;day<=days;day++){
+            const date=financeCalendarMonth+'-'+String(day).padStart(2,'0');
+            const due=items.filter(x=>x.date===date);
+            const btn=document.createElement('button');btn.type='button';btn.className='finance-calendar-day'+(date===today?' is-today':'');
+            btn.setAttribute('role','gridcell');btn.setAttribute('aria-pressed',String(financeCalendarSelectedDate===date));
+            btn.setAttribute('aria-label',day+' '+first.toLocaleDateString(undefined,{month:'long'})+': '+due.length+' bills due');
+            const number=document.createElement('span');number.className='finance-calendar-date';number.textContent=String(day);btn.append(number);
+            if(due.length){
+                const count=document.createElement('span');count.className='finance-calendar-count';count.textContent=due.length+' bill'+(due.length===1?'':'s');btn.append(count);
+                const total=document.createElement('span');total.className='finance-calendar-due'+(due.every(x=>x.paid)?' finance-calendar-paid':'');
+                total.textContent=due.reduce((s,x)=>s+x.amount,0).toLocaleString(undefined,{style:'currency',currency:'USD'});btn.append(total);
+            }
+            btn.addEventListener('click',()=>{financeCalendarSelectedDate=date;financeRenderBillsCalendar();});
+            grid.append(btn);
+        }
+        const day=new Date(financeCalendarSelectedDate+'T12:00:00');
+        document.getElementById('financeCalendarDayTitle').textContent=Number.isNaN(day.getTime())?'Selected day':day.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+        const detail=document.getElementById('financeCalendarDayBills');detail.replaceChildren();
+        const chosen=items.filter(x=>x.date===financeCalendarSelectedDate);
+        if(!chosen.length){const p=document.createElement('p');p.textContent='No bills scheduled for this date.';detail.append(p);}
+        for(const item of chosen){
+            const line=document.createElement('div');line.className='finance-calendar-bill';
+            const desc=document.createElement('div');const name=document.createElement('strong');name.textContent=item.name;
+            const meta=document.createElement('small');meta.textContent=(item.owner==='his'?'His':item.owner==='her'?'Hers':'Household')+' · '+item.category+' · '+(item.paid?'Paid':'Unpaid');
+            desc.append(name,meta);
+            const amount=document.createElement('strong');amount.textContent=item.amount.toLocaleString(undefined,{style:'currency',currency:'USD'});amount.style.color=item.paid?'var(--paid)':'var(--bills)';
+            line.append(desc,amount);detail.append(line);
+        }
+    }
+
     function switchMainPage(view, shouldSave = true) {
         const dashboardView = document.getElementById('mainDashboardView');
         const allocationView = document.getElementById('mainAllocationView');
@@ -5270,6 +5399,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const settingsView = document.getElementById('mainSettingsView');
         const profilesView = document.getElementById('mainProfilesView');
         const expenseView = document.getElementById('mainExpensesView');
+        const calendarView = document.getElementById('mainCalendarView');
+        const navCalendar = document.getElementById('navCalendar');
         const todoView=document.getElementById('mainTodoView');
         const owedView=document.getElementById('mainOwedView');
         const navPayFour = document.getElementById('navPayFour');
@@ -5295,6 +5426,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         settingsView.style.display = 'none';
         profilesView.style.display = 'none';
         expenseView.style.display = 'none';
+        calendarView.style.display = 'none';
         todoView.style.display='none';
         owedView.style.display='none';
         
@@ -5307,10 +5439,17 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         navSettings.classList.remove('active');
         navProfiles.classList.remove('active');
         navExpenses.classList.remove('active');
+        navCalendar.classList.remove('active');
         navTodo.classList.remove('active');
         navOwed.classList.remove('active');
 
-        if (view === 'allocation') {
+        if (view === 'calendar') {
+            calendarView.style.display = 'block';
+            headerTitle.textContent = 'Bills Calendar';
+            navCalendar.classList.add('active');
+            monthCalendarBtn.style.display = 'none';
+            financeRenderBillsCalendar();
+        } else if (view === 'allocation') {
             allocationView.style.display = 'block';
             headerTitle.textContent = 'Money Allocation';
             navAllocation.classList.add('active');
@@ -7852,6 +7991,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const data = getStoredData();
         renderFinanceProfiles(data);
         if(document.getElementById('mainExpensesView')?.style.display==='block')financeRenderExpenses(data);
+        if(document.getElementById('mainCalendarView')?.style.display==='block')financeRenderBillsCalendar(data);
         const selectedMonth = monthPicker.value;
         const monthEntries=Object.values(data.months||{}).reduce((n,m)=>n+['his','her','hisPay','herPay'].reduce((a,k)=>a+(Array.isArray(m?.[k])?m[k].length:0),0),0);
         const otherEntries=['esso','paymentPlans','payFourPlans','purchasePlans'].reduce((n,k)=>n+(Array.isArray(data[k])?data[k].length:0),0);
