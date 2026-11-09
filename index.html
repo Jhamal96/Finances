@@ -2488,6 +2488,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
             <div class="settings-button-row">
                 <button type="button" class="btn-secondary" onclick="handleManualRefresh()">↻ Refresh From Cloud</button>
+                <button type="button" class="btn-secondary" onclick="financeCheckCloudHealth()">◉ Check Sync Health</button>
                 <button type="button" class="btn-secondary" onclick="financeDownloadCloudCopy()">↓ Download Cloud Backup</button>
                 <button type="button" class="btn-secondary" onclick="acceptCloudCopy()">Restore Cloud to Device…</button>
                 <button type="button" class="btn-secondary" onclick="financeUploadThisDevice()">☁ Upload This Device</button>
@@ -5478,6 +5479,34 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     window.addEventListener('focus',()=>{void financeAutoRefreshAccount();if(financeAuthUser){void financeLoadTodos();void financeLoadOwed();}});
     setInterval(()=>{void financeAutoRefreshAccount();if(financeAuthUser&&document.visibilityState==='visible'){void financeLoadTodos();void financeLoadOwed();}},60000);
 
+    // Read-only health check; never writes or replaces local financial records.
+    async function financeCheckCloudHealth() {
+        if (!financeAuthUser) { financeSyncNotice('Sign in required','Sign in before checking household cloud access.','warning'); return; }
+        const uid=financeAuthUser.id;
+        financeSyncNotice('Checking cloud sync','Reading the shared household revision without changing your data…','info');
+        try {
+            await saveQueue.catch(()=>{});
+            const {data,error}=await financeReadSharedHousehold();
+            if (financeAuthUser?.id !== uid) return;
+            if (error) throw error;
+            const deviceRaw=financeStableRaw(localStorage.getItem(FINANCE_STORAGE_KEY));
+            const cloudRaw=financeStableStringify(data.payload);
+            const confirmedRaw=financeStableRaw(localStorage.getItem(FINANCE_CONFIRMED_KEY));
+            const aligned=deviceRaw===cloudRaw;
+            const cloudTime=data.updated_at?new Date(data.updated_at).toLocaleString():'unknown';
+            const detail='Cloud revision '+data.revision+' · Last cloud save: '+cloudTime+'. '+
+                (aligned?'This device matches the current shared household copy.':
+                confirmedRaw===cloudRaw?'This device contains changes not yet saved to the cloud.':
+                'This device differs from the cloud copy. Back up both versions and use Refresh From Cloud to reconcile safely.');
+            financeSyncNotice(aligned?'Cloud connection verified':'Cloud reachable · device needs reconciliation',detail,aligned?'success':'warning');
+            if (!aligned) setSettingsSyncAttention(true,detail);
+            else if (!locallyUnsynced) clearSyncWarning();
+        } catch(err) {
+            console.error('Finance read-only sync check failed',err);
+            warnSync('Cloud verification failed: '+(err?.message||'Connection problem')+'. Your device data was not changed.');
+        }
+    }
+
     async function handleManualRefresh() {
         const btn=document.getElementById('refreshBtn');
         if(!financeAuthUser || isImporting){
@@ -5495,7 +5524,8 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
             await saveQueue.catch(()=>{});
             const ok=await syncFromCloud(false,true);
             await Promise.allSettled([financeLoadTodos({showReminder:false}),financeLoadOwed({showReminder:false})]);
-            if(ok)triggerSaveIndicator('✓ Shared finance and private lists refreshed');
+            if(ok && !locallyUnsynced) triggerSaveIndicator('✓ Shared household refreshed');
+            else if(ok && locallyUnsynced) triggerSaveIndicator('⚠ Device edits awaiting cloud upload');
         }catch(err){
             console.error('Manual cloud refresh failed:',err);
             warnSync('Refresh failed: '+(err?.message||'Unable to contact Supabase'));
