@@ -25,7 +25,7 @@
     }
     Object.entries(data.months||{}).forEach(([month,entry])=>{
       for(const owner of ['his','her']){
-        (entry?.[owner]||[]).forEach((x,i)=>push('Bill',month,x.name||x.title,x.dueDate,x.amount,x.isPaid||x.paid,owner,x.id??i));
+        (Array.isArray(entry?.[owner])?entry[owner]:[]).forEach((x,i)=>push('Bill',month,x.name||x.title,x.dueDate,x.amount,x.isPaid||x.paid,owner,x.id??i));
       }
     });
     (data.esso||[]).forEach((x,i)=>push('ESSO','esso',x.name||x.title,x.dueDate,x.amount,x.isPaid||x.paid,'together',x.id??i));
@@ -34,7 +34,7 @@
     const incomes=[];
     Object.entries(data.months||{}).forEach(([month,entry])=>{
       for(const [key,owner] of [['hisPay','his'],['herPay','her']]){
-        (entry?.[key]||[]).forEach((x,i)=>{const dt=day(x.date||x.payDate||x.receivedDate);if(valid(dt))incomes.push({date:dt,amount:Number(x.amount)||0,owner,id:x.id??i});});
+        (Array.isArray(entry?.[key])?entry[key]:[]).forEach((x,i)=>{const dt=day(x.date||x.payDate||x.receivedDate);if(valid(dt))incomes.push({date:dt,amount:Number(x.amount)||0,owner,id:x.id??i});});
       }
     });
     return {obligations:obligations.sort((a,b)=>a.date.localeCompare(b.date)),expenses,incomes};
@@ -51,8 +51,8 @@
     const overdue=unpaid.filter(x=>x.date<now);
     const remaining=sum(upcoming,x=>x.amount)+sum(overdue,x=>x.amount);
     const balance=Number(prefs.balance)||0,reserve=Number(prefs.reserve)||0;
-    const spend=balance-remaining-reserve;
-    const currentWeek=weekStart(now,Number(prefs.weekStart)||6),weekEnd=daysFrom(currentWeek,6);
+    const spend=Math.round((balance-remaining-reserve)*100)/100;
+    const currentWeek=weekStart(now,Number(prefs.weekStart??6)),weekEnd=daysFrom(currentWeek,6);
     const prevWeek=daysFrom(currentWeek,-7);
     const inRange=(d,a,b)=>d>=a&&d<=b;
     const expenseAmount=x=>cents(x.amountCents);
