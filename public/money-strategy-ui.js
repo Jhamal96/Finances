@@ -41,7 +41,7 @@
   }
   function settingsKey(){return 'finance_strategy_preferences_v1_'+(typeof financeAuthUser!=='undefined'&&financeAuthUser?.id||'locked');}
   function preferences(){try{return JSON.parse(localStorage.getItem(settingsKey())||'{}');}catch{return {};}}
-  function savePreferences(){if(!financeAuthUser)return;const p={balance:Math.max(0,Number(el('strategyBalance').value)||0),reserve:Math.max(0,Number(el('strategyReserve').value)||0),weekStart:Number(el('strategyWeekStart').value)||6,checkIn:el('strategyCheckIn').checked};localStorage.setItem(settingsKey(),JSON.stringify(p));moneyStrategyRender();}
+  function savePreferences(){if(!financeAuthUser)return;const p={balance:Math.max(0,Number(el('strategyBalance').value)||0),reserve:Math.max(0,Number(el('strategyReserve').value)||0),weekStart:Number(el('strategyWeekStart').value),checkIn:el('strategyCheckIn').checked};localStorage.setItem(settingsKey(),JSON.stringify(p));moneyStrategyRender();}
   function report(){
     if(!financeAuthUser)return;
     const data=getStoredData(), {obligations,expenses,incomes}=records(data);
@@ -78,11 +78,11 @@
     el('strategyBalance').value=balance;
     el('strategyReserve').value=reserve;
     el('strategyWeekStart').value=String(prefs.weekStart??6);
-    el('strategyCheckIn').checked=!!prefs.checkIn;
+    el('strategyCheckIn').checked=prefs.checkIn!==false;
     el('strategyAlert').hidden=!overdue.length;
     el('strategyAlert').textContent=overdue.length+' overdue obligation(s) detected. Review the payment status in the original tracker.';
-    if(prefs.checkIn && !sessionStorage.getItem('strategy_checkin_'+now+'_'+financeAuthUser.id) && !document.hidden){
-      sessionStorage.setItem('strategy_checkin_'+now+'_'+financeAuthUser.id,'1');
+    if(prefs.checkIn!==false && !localStorage.getItem('strategy_checkin_'+now+'_'+financeAuthUser.id) && !document.hidden){
+      localStorage.setItem('strategy_checkin_'+now+'_'+financeAuthUser.id,'1');
       el('strategyCheckInNotice').hidden=false;
       el('strategyCheckInNotice').textContent='Daily check-in: '+upcoming.length+' payments due within 30 days, '+overdue.length+' overdue. Estimated safe-to-spend: '+usd(spend)+'.';
     }
