@@ -1747,7 +1747,21 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 })();
 </script>
 
-</head>
+<style>
+.strategy-view{padding:18px 0 36px;max-width:1100px;margin:auto}
+.strategy-note{color:var(--text-muted);line-height:1.5;font-size:.88rem;margin:10px 0 16px}
+.strategy-controls{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.strategy-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+.strategy-metric,.strategy-panel{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:16px}
+.strategy-metric small{display:block;color:var(--text-muted);margin-bottom:6px}.strategy-metric strong{font-size:1.35rem}
+.strategy-panel{margin:16px 0}.strategy-obligations{list-style:none;max-height:360px;overflow:auto}
+.strategy-obligations li{padding:10px 0;border-bottom:1px solid var(--card-border);line-height:1.6}
+.strategy-alert{padding:12px 16px;background:#512126;color:#fff;border-radius:12px;margin:10px 0}
+.strategy-chart-row{display:grid;grid-template-columns:85px 1fr 110px;gap:10px;align-items:center;margin:12px 0;font-size:.8rem}
+.strategy-chart-row>div{display:grid;gap:3px}.strategy-chart-spend{height:8px;background:#38bdf8;border-radius:5px}.strategy-chart-income{height:8px;background:#34d399;border-radius:5px}
+.strategy-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:end;gap:14px}
+.strategy-form label{display:grid;gap:8px}.strategy-form input:not([type=checkbox]),.strategy-form select{width:100%;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--card-border);border-radius:8px}
+</style></head>
 <body>
 <div class="ajd-opening" aria-hidden="true"><div class="ajd-opening-inner">
   <div class="ajd-opening-art"><div class="ajd-opening-mark"><span class="ajd-opening-fallback">$</span><img src="/icon-192.png" alt="" onerror="this.style.display='none'"></div></div>
@@ -2589,8 +2603,26 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
       <p class="finance-calendar-note">This view shows saved due dates only. Bills without a valid due date are not placed on the calendar. To update or mark a bill paid, use the Household Dashboard or ESSO Due Date page.</p>
     </section>
     <!-- MAIN PAGE 1: Household Dashboard View -->
-    <div id="mainDashboardView">
-        <div class="finance-calendar-shortcut"><button type="button" class="btn-add" onclick="switchMainPage('calendar')">📅 View Bills Calendar</button><span>See due dates, upcoming payments, and overdue bills in one place.</span></div>
+    <section id="mainStrategyView" class="strategy-view" style="display:none" aria-labelledby="strategyTitle">
+<h2 id="strategyTitle">Money Strategy &amp; Insights</h2>
+<p class="strategy-note">Estimates from saved financial records. No connected bank accounts or automatic transfers.</p>
+<div class="strategy-controls"><button type="button" class="btn-secondary" onclick="moneyStrategyRender()">Refresh insights</button><button type="button" class="btn-secondary" onclick="switchMainPage('calendar')">Bills calendar</button></div>
+<div id="strategyAlert" class="strategy-alert" role="status" hidden></div><div id="strategyCheckInNotice" class="strategy-alert" role="status" hidden></div>
+<button type="button" class="btn-secondary" onclick="moneyStrategyDismissCheckIn()">Dismiss check-in</button>
+<div id="strategyMetrics" class="strategy-metrics" aria-live="polite"></div><p id="strategySafety" class="strategy-note"></p>
+<div class="strategy-panel"><h3>Upcoming obligations</h3><ul id="strategyUpcoming" class="strategy-obligations"></ul></div>
+<div class="strategy-panel"><h3>Weekly review</h3><p id="strategyWeek"></p></div>
+<div class="strategy-panel"><h3>Six-month comparison</h3><p class="strategy-note">Blue: recorded spending. Green: recorded paychecks.</p><div id="strategyTrends"></div><p id="strategyYear"></p></div>
+<div class="strategy-panel"><h3>Planning preferences</h3><p class="strategy-note">These manual settings are saved only in this browser, not synced to the cloud.</p>
+<div class="strategy-form">
+<label>Confirmed balance ($)<input id="strategyBalance" type="number" min="0" step="0.01"></label>
+<label>Emergency reserve ($)<input id="strategyReserve" type="number" min="0" step="0.01"></label>
+<label>Week starts<select id="strategyWeekStart"><option value="6">Saturday</option><option value="0">Sunday</option><option value="1">Monday</option></select></label>
+<label><input id="strategyCheckIn" type="checkbox"> Daily check-in</label>
+<button class="btn-add" type="button" onclick="moneyStrategySavePreferences()">Save preferences</button></div></div>
+<p class="strategy-note">Shared wallets, spouse approvals, recurring payment editor, and cloud notification delivery are not yet released.</p>
+</section><div id="mainDashboardView">
+        <div class="finance-calendar-shortcut"><button type="button" class="btn-add" onclick="switchMainPage(&quot;strategy&quot;)">Money Strategy &amp; Insights</button><button type="button" class="btn-add" onclick="switchMainPage('calendar')">📅 View Bills Calendar</button><span>See due dates, upcoming payments, and overdue bills in one place.</span></div>
         <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:12px;">🔁 Automatic month rollover is on. Recurring entries are copied forward after cloud sync; previous months and payment history stay intact.</p>
         <!-- Date & Month Indicator Bar -->
         <div class="date-info-bar">
@@ -3626,7 +3658,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
     const FINANCE_TAB_DASHBOARD_KEY = 'finance_tab_dashboard_v1';
     const FINANCE_TAB_ALLOC_KEY = 'finance_tab_alloc_v1';
     const FINANCE_TAB_MONTH_KEY = 'finance_tab_month_v1';
-    const FINANCE_TAB_ALLOWED = ['calendar','dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','todo','owed','profiles','settings'];
+    const FINANCE_TAB_ALLOWED = ['strategy','calendar','dashboard','allocation','esso','paymentPlan','payFour','purchasePlan','expenses','todo','owed','profiles','settings'];
     const financeSourceId = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : String(Math.random());
     const financeBaseSnapshots = new WeakMap();
     const financeChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('household_finance_master_v12') : null;
@@ -5449,6 +5481,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         const profilesView = document.getElementById('mainProfilesView');
         const expenseView = document.getElementById('mainExpensesView');
         const calendarView = document.getElementById('mainCalendarView');
+        const strategyView = document.getElementById('mainStrategyView');
         const navCalendar = document.getElementById('navCalendar');
         const todoView=document.getElementById('mainTodoView');
         const owedView=document.getElementById('mainOwedView');
@@ -5476,6 +5509,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         profilesView.style.display = 'none';
         expenseView.style.display = 'none';
         calendarView.style.display = 'none';
+        strategyView.style.display = 'none';
         todoView.style.display='none';
         owedView.style.display='none';
         
@@ -5492,7 +5526,11 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         navTodo.classList.remove('active');
         navOwed.classList.remove('active');
 
-        if (view === 'calendar') {
+        if (view === 'strategy') {
+            strategyView.style.display = 'block';
+            headerTitle.textContent = 'Money Strategy & Insights';
+            monthCalendarBtn.style.display = 'none';
+        } else if (view === 'calendar') {
             calendarView.style.display = 'block';
             headerTitle.textContent = 'Bills Calendar';
             navCalendar.classList.add('active');
@@ -5575,6 +5613,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         }
 
         render();
+        if(view==='strategy') moneyStrategyRender();
         if(view==='dashboard'){
             financeMaybeShowFeatureGuide();
             queueMicrotask(()=>{financeMaybeShowTodoReminder();financeMaybeShowOwedReminder();});
@@ -8041,6 +8080,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
         renderFinanceProfiles(data);
         if(document.getElementById('mainExpensesView')?.style.display==='block')financeRenderExpenses(data);
         if(document.getElementById('mainCalendarView')?.style.display==='block')financeRenderBillsCalendar(data);
+        if(document.getElementById('mainStrategyView')?.style.display==='block')moneyStrategyRender();
         const selectedMonth = monthPicker.value;
         const monthEntries=Object.values(data.months||{}).reduce((n,m)=>n+['his','her','hisPay','herPay'].reduce((a,k)=>a+(Array.isArray(m?.[k])?m[k].length:0),0),0);
         const otherEntries=['esso','paymentPlans','payFourPlans','purchasePlans'].reduce((n,k)=>n+(Array.isArray(data[k])?data[k].length:0),0);
@@ -8827,6 +8867,7 @@ html.ajd-opening-enabled .ajd-opening{position:fixed;inset:0;z-index:2147483647;
 
 </script>
 
+<script src="./money-strategy-ui.js"></script>
 </body>
 </html>
 
